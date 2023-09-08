@@ -1,4 +1,4 @@
-# Onboard Protocol
+# Onboard Protocol 🏦
 
 This repository contains the core mvp smart contract code for Onboard Protocol. 
 This is a high level description of the system, assuming
@@ -24,7 +24,7 @@ one pager.
     conditions, to be altered on a live system.
   - allows for the addition of novel collateral types (e.g. whitelisting)
 
-  ## Collateral, Adapters and Wrappers
+## Collateral, Adapters and Wrappers 💶
 
 Collateral is the foundation of NGNx and NGNx creation is not possible
 without it. There are many potential candidates for collateral, whether
