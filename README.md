@@ -5,6 +5,8 @@ This is a high level description of the system, assuming
 familiarity with the basic economic mechanics as described in the
 one pager.
 
+Please find the architecture doc here: https://descentcollective.notion.site/Protocol-Architecture-d6d0565808c141108986fcbf03f30048?pvs=4 🚧 (Still in development)
+
 ## Design Considerations
 
 - Token agnostic
