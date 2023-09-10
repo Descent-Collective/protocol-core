@@ -29,6 +29,7 @@ contract NGNX is
 
     // -- ERRORS --
     error NotLive(string error);
+    error InsufficientFunds(string error);
 
     function initialize(address[] memory trustedForwarder) public initializer {
         __AccessControl_init();
@@ -80,10 +81,10 @@ contract NGNX is
             account != msg.sender &&
             allowance(msg.sender, account) != type(uint).max
         ) {
-            require(
-                allowance(msg.sender, account) >= amount,
-                "NGNx/insufficient-allowance"
-            );
+            if (allowance(msg.sender, account) <= amount) {
+                revert NotLive("NGNX/not-live");
+            }
+
             decreaseAllowance(account, amount);
         }
         _burn(account, amount);
