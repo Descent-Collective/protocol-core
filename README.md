@@ -13,9 +13,11 @@ Please find the architecture doc here: https://descentcollective.notion.site/Pro
   - system doesn't care about the implementation of external tokens
   - can operate entirely independently of other systems, provided an authority assigns
     initial collateral to users in the system and provides price data.
+  - can introduce new stablecoins to the system
+  - can add any kind of collateral
 
-- Verifiable
-  - designed from the bottom up to be amenable to formal verification
+- Upgradeable & Verifiable
+  - designed from the bottom up to be upgradeable
   - the core vault and balance database makes *no* external calls and
     contains *no* precision loss (i.e. no division)
 
