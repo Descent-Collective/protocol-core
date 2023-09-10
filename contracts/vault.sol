@@ -215,14 +215,35 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         return (availableNGNx[owner], _vault.unlockedCollateral);
     }
 
+    /**
+     * @dev Decreases the balance of available NGNx balance a user has
+     * @param _vaultId ID of the vault tied to the user
+     * @param amount amount of ngnx to be withdrawn
+     */
     function withdrawNGNX(
         uint _vaultId,
         uint256 amount
     ) external isLive returns (bool) {
         address _owner = ownerMapping[_vaultId];
         SafeMathUpgradeable.sub(availableNGNx[_owner], amount);
+        Vault storage _vault = vaultMapping[_vaultId];
+        Collateral memory _colllateral = collateralMapping[
+            _vault.collateralName
+        ];
+
+        uint256 collateralAmount = SafeMathUpgradeable.div(
+            amount,
+            _colllateral.price
+        );
+
+        SafeMathUpgradeable.sub(_vault.unlockedCollateral, collateralAmount);
+        SafeMathUpgradeable.add(_vault.lockedCollateral, collateralAmount);
 
         emit NGNXWithdrawan(amount, _owner, _vaultId);
         return true;
     }
+
+    function withdrawUnlockedCollateral(
+        uint _vaultId
+    ) external isLive returns (bool) {}
 }
