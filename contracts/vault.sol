@@ -324,9 +324,13 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         return _colllateral;
     }
 
-    function getVaultCountForOwner(
+    function getVaultCountForOwner(address owner) external view returns (uint) {
+        return vaultCountMapping[owner];
+    }
+
+    function getAvailableNGNXsForOwner(
         address owner
     ) external view returns (uint256) {
-        return vaultCountMapping[owner];
+        return availableNGNx[owner];
     }
 }
