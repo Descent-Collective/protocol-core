@@ -14,12 +14,17 @@ contract NGNX is AccessControl, ERC20, ERC20Permit {
 
     // --- ERC20 Data ---
     string public constant version = "1";
+    uint public live; // Active Flag
+
+    // -- EVENTS --
+    event Cage();
 
     constructor()
         ERC20("NGNX Stablecoin", "NGNX")
         ERC20Permit("NGNX Stablecoin")
     {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        live = 1;
     }
 
     /**
@@ -37,6 +42,7 @@ contract NGNX is AccessControl, ERC20, ERC20Permit {
      * @param amount amount of tokens to mint
      */
     function mint(address account, uint amount) external returns (bool) {
+        require(live == 1, "NGNX/not-live");
         require(hasRole(MINTER_ROLE, account));
         _mint(account, amount);
         return true;
@@ -48,6 +54,7 @@ contract NGNX is AccessControl, ERC20, ERC20Permit {
      * @param amount amount of tokens to burn
      */
     function burn(address account, uint amount) external returns (bool) {
+        require(live == 1, "NGNX/not-live");
         if (
             account != msg.sender &&
             allowance(msg.sender, account) != type(uint).max
@@ -99,5 +106,11 @@ contract NGNX is AccessControl, ERC20, ERC20Permit {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
         uint256 tokenBalance = token.balanceOf(address(this));
         token.transfer(account, tokenBalance);
+    }
+
+    function cage() public {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
+        live = 0;
+        emit Cage();
     }
 }
