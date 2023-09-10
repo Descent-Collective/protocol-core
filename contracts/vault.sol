@@ -59,6 +59,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         address indexed owner,
         uint vaultId
     );
+    event NGNXWithdrawan(uint256 amount, address indexed owner, uint vaultId);
 
     // - Vault type --
     enum VaultStateEnum {
@@ -212,5 +213,16 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
             _vaultId
         );
         return (availableNGNx[owner], _vault.unlockedCollateral);
+    }
+
+    function withdrawNGNX(
+        uint _vaultId,
+        uint256 amount
+    ) external isLive returns (bool) {
+        address _owner = ownerMapping[_vaultId];
+        SafeMathUpgradeable.sub(availableNGNx[_owner], amount);
+
+        emit NGNXWithdrawan(amount, _owner, _vaultId);
+        return true;
     }
 }
