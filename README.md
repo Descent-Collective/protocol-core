@@ -42,9 +42,6 @@ around native ether.
 In the protocol, we abstract all of these different token behaviours away behind
 *Adapters*.
 
-Adapters manipulate a single core system function: `modifyCollateralBalance`, which
-modifies user collateral balances.
-
 Adapters should be very small and well defined contracts. Adapters are
 very powerful and should be carefully vetted by IDEALLY BY $OSN holders. Some
 examples are given in `adapter.sol`. Note that the adapter is the only
