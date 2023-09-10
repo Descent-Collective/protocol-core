@@ -287,4 +287,46 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         emit VaultCleansed(amount, _owner, _vaultId);
         return true;
     }
+
+    // --GETTER METHODS --------------------------------
+
+    function getVaultId() external view returns (uint) {
+        return vaultId;
+    }
+
+    function getVaultById(
+        uint256 _vaultId
+    ) external view returns (Vault memory) {
+        Vault memory _vault = vaultMapping[_vaultId];
+
+        return _vault;
+    }
+
+    function getVaultOwner(uint256 _vaultId) external view returns (address) {
+        address _owner = ownerMapping[_vaultId];
+        return _owner;
+    }
+
+    function getCollateralData(
+        bytes32 _collateralName
+    ) external view returns (Collateral memory) {
+        Collateral memory _colllateral = collateralMapping[_collateralName];
+
+        return _colllateral;
+    }
+
+    function getCollateralDataByVaultId(
+        uint _vaultId
+    ) external view returns (Collateral memory) {
+        Collateral memory _colllateral = collateralMapping[
+            vaultMapping[_vaultId].collateralName
+        ];
+        return _colllateral;
+    }
+
+    function getVaultCountForOwner(
+        address owner
+    ) external view returns (uint256) {
+        return vaultCountMapping[owner];
+    }
 }
