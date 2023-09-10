@@ -41,6 +41,12 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
     mapping(address => uint256) public availableNGNx; // owner => available ngnx balance -- waiting to be minted
     mapping(address => uint256) public unlockedCollateral; // owner => collateral balance -- unlocked collateral, not tied to a vault yet
 
+    // -- ERRORS --
+    error NotLive(string error);
+
+    // -- EVENTS --
+    event VaultCreated(uint vaultId, address indexed owner);
+
     // - Vault type --
     enum VaultStateEnum {
         Idle, // Vault has just been created and users can deposit tokens into vault
@@ -53,7 +59,38 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         live = 1;
     }
 
-    function createVault(address owner) external returns (uint) {
+    // modifier
+    modifier isLive() {
+        if (live != 1) {
+            revert NotLive("CoreVault/not-live");
+        }
+        _;
+    }
+
+    // -- ADMIN --
+
+    function cage() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        live = 0;
+    }
+
+    function createCollateralType(
+        bytes32 collateralName,
+        uint256 rate,
+        uint256 price,
+        uint256 debtCeiling,
+        uint256 debtFloor
+    ) external isLive onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
+        Collateral storage _collateral = collateralMapping[collateralName];
+
+        _collateral.rate = rate;
+        _collateral.price = price;
+        _collateral.debtCeiling = debtCeiling;
+        _collateral.debtFloor = debtFloor;
+
+        return true;
+    }
+
+    function createVault(address owner) external isLive returns (uint) {
         vaultId += 1;
 
         Vault storage _vault = vaultMapping[vaultId];
@@ -63,6 +100,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
 
         ownerMapping[vaultId] = owner;
 
+        emit VaultCreated(vaultId, owner);
         return vaultId;
     }
 }
