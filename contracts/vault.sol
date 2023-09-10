@@ -60,7 +60,12 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         uint vaultId
     );
     event NGNXWithdrawan(uint256 amount, address indexed owner, uint vaultId);
-
+    event CollateralWithdrawan(
+        uint256 amount,
+        address indexed owner,
+        uint vaultId
+    );
+    event VaultCleansed(uint256 amount, address indexed owner, uint vaultId);
     // - Vault type --
     enum VaultStateEnum {
         Idle, // Vault has just been created and users can deposit tokens into vault
@@ -243,7 +248,43 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         return true;
     }
 
+    /**
+     * @dev Decreases the balance of unlocked collateral in the vault
+     * @param _vaultId ID of the vault tied to the user
+     * @param amount amount of collateral to be withdrawn
+     */
     function withdrawUnlockedCollateral(
-        uint _vaultId
-    ) external isLive returns (bool) {}
+        uint _vaultId,
+        uint256 amount
+    ) external isLive returns (bool) {
+        Vault storage _vault = vaultMapping[_vaultId];
+
+        SafeMathUpgradeable.sub(_vault.unlockedCollateral, amount);
+
+        address _owner = ownerMapping[_vaultId];
+
+        emit CollateralWithdrawan(amount, _owner, vaultId);
+
+        return true;
+    }
+
+    /**
+     * @dev recapitalize vault after debt has been paid
+     * @param _vaultId ID of the vault tied to the user
+     * @param amount amount of collateral to be withdrawn
+     */
+    function cleanseVault(
+        uint _vaultId,
+        uint256 amount
+    ) external isLive returns (bool) {
+        Vault storage _vault = vaultMapping[_vaultId];
+
+        SafeMathUpgradeable.sub(_vault.lockedCollateral, amount);
+        SafeMathUpgradeable.add(_vault.lockedCollateral, amount);
+
+        address _owner = ownerMapping[_vaultId];
+
+        emit VaultCleansed(amount, _owner, _vaultId);
+        return true;
+    }
 }
