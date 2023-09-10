@@ -27,6 +27,9 @@ contract NGNX is
     // -- EVENTS --
     event Cage();
 
+    // -- ERRORS --
+    error NotLive(string error);
+
     function initialize(address[] memory trustedForwarder) public initializer {
         __AccessControl_init();
 
@@ -42,8 +45,9 @@ contract NGNX is
      * @dev sets a minter role
      * @param account address for the minter role
      */
-    function setMinterRole(address account) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
+    function setMinterRole(
+        address account
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(MINTER_ROLE, account);
     }
 
@@ -52,9 +56,13 @@ contract NGNX is
      * @param account address to send the minted tokens to
      * @param amount amount of tokens to mint
      */
-    function mint(address account, uint amount) external returns (bool) {
-        require(live == 1, "NGNX/not-live");
-        require(hasRole(MINTER_ROLE, account));
+    function mint(
+        address account,
+        uint amount
+    ) external onlyRole(MINTER_ROLE) returns (bool) {
+        if (live != 1) {
+            revert NotLive("NGNX/not-live");
+        }
         _mint(account, amount);
         return true;
     }
@@ -65,7 +73,9 @@ contract NGNX is
      * @param amount amount of tokens to burn
      */
     function burn(address account, uint amount) external returns (bool) {
-        require(live == 1, "NGNX/not-live");
+        if (live != 1) {
+            revert NotLive("NGNX/not-live");
+        }
         if (
             account != msg.sender &&
             allowance(msg.sender, account) != type(uint).max
@@ -98,8 +108,7 @@ contract NGNX is
     /**
      * @dev withdraw native tokens. For cases where people mistakenly send ether to this address
      */
-    function withdraw() public virtual {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
+    function withdraw() public virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 etherBalance = address(this).balance;
         payable(msg.sender).transfer(etherBalance);
     }
@@ -112,15 +121,13 @@ contract NGNX is
     function withdrawToken(
         address tokenAddress,
         address account
-    ) public virtual {
+    ) public virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         IERC20 token = IERC20(tokenAddress);
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
         uint256 tokenBalance = token.balanceOf(address(this));
         token.transfer(account, tokenBalance);
     }
 
-    function cage() public {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
+    function cage() public onlyRole(DEFAULT_ADMIN_ROLE) {
         live = 0;
         emit Cage();
     }
