@@ -54,3 +54,55 @@ token that it represents.
 There can be a multitude of adapters for each collateral type, for
 different requirements. For example, ETH collateral could have an
 adapter for native ether and *also* for WETH.
+
+## Usage
+
+### Prerequisites
+
+-   [git](https://git-scm.com/downloads)
+-   [nodeJS](https://nodejs.org/en/download/)
+-   [brew](https://brew.sh/)
+-   [foundry](https://getfoundry.sh) - You can run `sh ./setup.sh` to install Foundry and its dependencies.
+-   [Hardhat](https://hardhat.org)
+
+### Setup
+
+-   Clone the repository
+
+    ```bash
+    git clone https://github.com/pnslabs/pns-contracts.git
+    cd pns-contracts
+    ```
+
+-   Install packages
+
+    ```
+    yarn
+    ```
+
+ -   Build contracts
+
+    ```
+    yarn build
+    ```
+
+
+### Deploying
+
+Create a .env in the root with:
+
+```
+PRIVATE_KEY=PRIVATE_KEY
+ALCHEMY_API_KEY=
+```
+
+Then run:
+```
+yarn run deploy:ethereum_goerli
+```
+
+## Run unit tests
+
+```shell
+yarn run test
+```
