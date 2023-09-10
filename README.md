@@ -36,11 +36,6 @@ native ether, ERC20 tokens, other fungible token standards like ERC777,
 non-fungible tokens, or any number of other financial instruments. For now,
 our focus is on stablecoin collaterals.
 
-Token wrappers are one solution to the need to standardise collateral
-behaviour in NGNx. Inconsistent decimals and transfer semantics are
-reasons for wrapping. For example, the WETH token is an ERC20 wrapper
-around native ether.
-
 In the protocol, we abstract all of these different token behaviours away behind
 *Adapters*.
 
