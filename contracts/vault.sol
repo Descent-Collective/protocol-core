@@ -38,6 +38,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
     mapping(address => uint) public firstVault; // Owner => First VaultId
     mapping(address => uint) public lastVault; // Owner => Last VaultId
     mapping(uint => List) public list; // VaultID => Prev & Next VaultID (double linked list)
+    mapping(address => uint) public vaultCountMapping; // Owner => Amount of Vaults
     mapping(address => uint256) public availableNGNx; // owner => available ngnx balance -- waiting to be minted
     mapping(address => uint256) public unlockedCollateral; // owner => collateral balance -- unlocked collateral, not tied to a vault yet
 
@@ -75,6 +76,14 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         live = 0;
     }
 
+    /**
+     * @dev Creates a collateral type that'll be accepted by the system
+     * @param collateralName name of the collateral. e.g. 'USDC-A'
+     * @param rate stablecoin debt multiplier (accumulated stability fees).
+     * @param price collateral price with safety margin, i.e. the maximum stablecoin allowed per unit of collateral.
+     * @param debtCeiling the debt ceiling for a specific collateral type.
+     * @param debtFloor the minimum possible debt of a Vault.
+     */
     function createCollateralType(
         bytes32 collateralName,
         uint256 rate,
@@ -93,6 +102,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         return true;
     }
 
+    /**
+     * @dev Creates/Initializing a  vault
+     * @param owner address that owns the vault
+     */
     function createVault(address owner) external isLive returns (uint) {
         if (owner == address(0)) {
             revert ZeroAddress("CoreVault/owner address is zero ");
@@ -106,6 +119,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         _vault.vaultState = VaultStateEnum.Idle;
 
         ownerMapping[vaultId] = owner;
+        vaultCountMapping[owner] += 1;
 
         // add new vault to double linked list and pointers
         if (firstVault[owner] == 0) {
@@ -123,4 +137,6 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         emit VaultCreated(vaultId, owner);
         return vaultId;
     }
+
+    function collateralizeVault() external isLive returns (uint, uint) {}
 }
