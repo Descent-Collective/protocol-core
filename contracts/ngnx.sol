@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 
 contract NGNX is AccessControl, ERC20, ERC20Permit {
     // Create a new role identifier for the minter role
@@ -61,6 +62,9 @@ contract NGNX is AccessControl, ERC20, ERC20Permit {
         return true;
     }
 
+    /**
+     * @dev Approve by signature -- doesn't require gas
+     */
     function permitToken(
         address owner,
         address spender,
@@ -71,5 +75,29 @@ contract NGNX is AccessControl, ERC20, ERC20Permit {
         bytes32 s
     ) external {
         permit(owner, spender, value, expiry, v, r, s);
+    }
+
+    /**
+     * @dev withdraw native tokens. For cases where people mistakenly send ether to this address
+     */
+    function withdraw() public virtual {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
+        uint256 etherBalance = address(this).balance;
+        payable(msg.sender).transfer(etherBalance);
+    }
+
+    /**
+     * @dev withdraw erc20 tokens. For cases where people mistakenly send other tokens to this address
+     * @param tokenAddress address of the token to withdraw
+     * @param account account to withdraw tokens to
+     */
+    function withdrawToken(
+        address tokenAddress,
+        address account
+    ) public virtual {
+        IERC20 token = IERC20(tokenAddress);
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
+        uint256 tokenBalance = token.balanceOf(address(this));
+        token.transfer(account, tokenBalance);
     }
 }
