@@ -48,6 +48,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
     // -- ERRORS --
     error NotLive(string error);
     error ZeroAddress(string error);
+    error UnrecognizedParam(string error);
 
     // -- EVENTS --
     event VaultCreated(uint vaultId, address indexed owner);
@@ -108,6 +109,20 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         _collateral.debtFloor = debtFloor;
 
         emit CollateralAdded(_collateralName);
+        return true;
+    }
+
+    function updateCollateralData(
+        bytes32 _collateralName,
+        bytes32 param,
+        uint256 data
+    ) external isLive onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
+        Collateral storage _collateral = collateralMapping[_collateralName];
+        if (param == "price") _collateral.price = data;
+        else if (param == "debtCeiling") _collateral.debtCeiling = data;
+        else if (param == "debtFloor") _collateral.debtFloor = data;
+        else revert UnrecognizedParam("CoreVault/collateral data unrecognized");
+
         return true;
     }
 
@@ -190,6 +205,12 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         // increase total debt
         debt = SafeMathUpgradeable.add(debt, availableNGNx[owner]);
 
+        emit VaultCollateralized(
+            _vault.unlockedCollateral,
+            availableNGNx[owner],
+            owner,
+            _vaultId
+        );
         return (availableNGNx[owner], _vault.unlockedCollateral);
     }
 }
