@@ -2,13 +2,21 @@
 pragma solidity 0.8.21;
 
 //  ==========  External imports    ==========
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
+import "./helpers/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract NGNX is AccessControl, ERC20, ERC20Permit {
+contract NGNX is
+    Initializable,
+    AccessControlUpgradeable,
+    ERC20Upgradeable,
+    ERC20PermitUpgradeable,
+    ERC2771ContextUpgradeable
+{
     // Create a new role identifier for the minter role
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
@@ -19,10 +27,13 @@ contract NGNX is AccessControl, ERC20, ERC20Permit {
     // -- EVENTS --
     event Cage();
 
-    constructor()
-        ERC20("NGNX Stablecoin", "NGNX")
-        ERC20Permit("NGNX Stablecoin")
-    {
+    function initialize(address[] memory trustedForwarder) public initializer {
+        __AccessControl_init();
+
+        __ERC20_init("NGNX Stablecoin", "NGNX");
+        __ERC20Permit_init("NGNX Stablecoin");
+
+        __ERC2771Context_init_unchained(trustedForwarder);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         live = 1;
     }
@@ -112,5 +123,25 @@ contract NGNX is AccessControl, ERC20, ERC20Permit {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender));
         live = 0;
         emit Cage();
+    }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
+        return ContextUpgradeable._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
+        return ContextUpgradeable._msgData();
     }
 }

@@ -16,9 +16,10 @@
     "url": "https://github.com/Descent-Collective/protocol-v1.git"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
     "dotenv": "^16.0.3",
-    "ethers": "^5.7.2",
+    "ethers": "^6.1.0",
     "hardhat": "^2.17.2",
     "hardhat-contract-sizer": "^2.6.1",
     "ts-node": "^10.9.1",
@@ -26,6 +27,7 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.9.3"
+    "@openzeppelin/contracts": "^4.9.3",
+    "@openzeppelin/contracts-upgradeable": "^4.9.3"
   }
 }
