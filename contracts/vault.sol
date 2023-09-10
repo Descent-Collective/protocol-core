@@ -43,9 +43,11 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
 
     // -- ERRORS --
     error NotLive(string error);
+    error ZeroAddress(string error);
 
     // -- EVENTS --
     event VaultCreated(uint vaultId, address indexed owner);
+    event CollateralAdded(bytes32 collateralName);
 
     // - Vault type --
     enum VaultStateEnum {
@@ -87,18 +89,36 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         _collateral.debtCeiling = debtCeiling;
         _collateral.debtFloor = debtFloor;
 
+        emit CollateralAdded(collateralName);
         return true;
     }
 
     function createVault(address owner) external isLive returns (uint) {
+        if (owner == address(0)) {
+            revert ZeroAddress("CoreVault/owner address is zero ");
+        }
         vaultId += 1;
 
         Vault storage _vault = vaultMapping[vaultId];
 
         _vault.lockedCollateral = 0;
         _vault.normalisedDebt = 0;
+        _vault.vaultState = VaultStateEnum.Idle;
 
         ownerMapping[vaultId] = owner;
+
+        // add new vault to double linked list and pointers
+        if (firstVault[owner] == 0) {
+            firstVault[owner] = vaultId;
+        }
+        if (lastVault[owner] != 0) {
+            list[vaultId].prev = lastVault[owner];
+            list[lastVault[owner]].next = vaultId;
+        }
+
+        lastVault[owner] = vaultId;
+
+        vault.push(_vault);
 
         emit VaultCreated(vaultId, owner);
         return vaultId;
