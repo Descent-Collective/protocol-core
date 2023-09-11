@@ -161,7 +161,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         uint256 _vaultId
     ) external isLive returns (uint, uint) {
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral memory _collateral = collateralMapping[
+        Collateral storage _collateral = collateralMapping[
             _vault.collateralName
         ];
 
@@ -169,7 +169,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _vault.unlockedCollateral,
             amount
         );
-
+        _collateral.TotalCollateralValue = SafeMathUpgradeable.add(
+            _collateral.TotalCollateralValue,
+            amount
+        );
         /* Collateral price will be updated frequently from the Price module(this is a function of current price / liquidation ratio) and stored in the
          ** collateral struct for every given collateral.
          */
@@ -238,8 +241,16 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         uint256 amount
     ) external isLive returns (bool) {
         Vault storage _vault = vaultMapping[_vaultId];
+        Collateral storage _collateral = collateralMapping[
+            _vault.collateralName
+        ];
 
         SafeMathUpgradeable.sub(_vault.unlockedCollateral, amount);
+
+        _collateral.TotalCollateralValue = SafeMathUpgradeable.sub(
+            _collateral.TotalCollateralValue,
+            amount
+        );
 
         address _owner = ownerMapping[_vaultId];
 

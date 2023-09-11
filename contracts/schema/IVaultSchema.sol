@@ -5,6 +5,7 @@ interface IVaultSchema {
     // -- Vault DATA --
     struct Collateral {
         uint256 TotalNormalisedDebt; // Total Normalised Debt
+        uint256 TotalCollateralValue;
         uint256 rate; // Accumulated Rates
         uint256 price; // Price with Safety Margin. I.E. Price after liquidation ratio has been set
         uint256 debtCeiling; // Debt Ceiling
