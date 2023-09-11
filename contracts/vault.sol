@@ -205,9 +205,6 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
             debtAmount
         );
 
-        // increase total debt
-        debt = SafeMathUpgradeable.add(debt, availableNGNx[owner]);
-
         emit VaultCollateralized(
             _vault.unlockedCollateral,
             availableNGNx[owner],
@@ -246,6 +243,9 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
             amount
         );
         _collateral.TotalNormalisedDebt += _vault.normalisedDebt;
+
+        // increase total debt
+        debt = SafeMathUpgradeable.add(debt, amount);
 
         _vault.vaultState = VaultStateEnum.Active;
 
@@ -293,6 +293,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         );
 
         SafeMathUpgradeable.sub(_vault.lockedCollateral, collateralAmount);
+
         SafeMathUpgradeable.add(_vault.unlockedCollateral, collateralAmount);
 
         address _owner = ownerMapping[_vaultId];
