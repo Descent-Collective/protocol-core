@@ -5,30 +5,9 @@ pragma solidity 0.8.21;
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable//utils/math/SafeMathUpgradeable.sol";
+import "./schema/IVaultSchema.sol";
 
-contract CoreVault is Initializable, AccessControlUpgradeable {
-    // -- Vault DATA --
-    struct Collateral {
-        uint256 TotalNormalisedDebt; // Total Normalised Debt
-        uint256 rate; // Accumulated Rates
-        uint256 price; // Price with Safety Margin. I.E. Price after liquidation ratio has been set
-        uint256 debtCeiling; // Debt Ceiling
-        uint256 debtFloor; // Debt Floor
-    }
-
-    struct Vault {
-        uint256 lockedCollateral; // Locked Collateral in the system
-        uint256 unlockedCollateral; // unlocked Collateral in the system
-        uint256 normalisedDebt; // Normalised Debt is a value that when you multiply by the correct rate gives the up-to-date, current stablecoin debt.
-        bytes32 collateralName;
-        VaultStateEnum vaultState;
-    }
-
-    struct List {
-        uint prev;
-        uint next;
-    }
-
+contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     using SafeMathUpgradeable for uint256;
 
     uint256 public debt; // sum of all ngnx issued
@@ -66,12 +45,8 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         uint vaultId
     );
     event VaultCleansed(uint256 amount, address indexed owner, uint vaultId);
+
     // - Vault type --
-    enum VaultStateEnum {
-        Idle, // Vault has just been created and users can deposit tokens into vault
-        Active, // Vault has locked collaterals - users has minted NGNx
-        Inactive // Vault has no locked collateral
-    }
 
     function initialize() public initializer {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
