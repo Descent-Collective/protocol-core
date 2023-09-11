@@ -186,7 +186,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         uint256 _vaultId
     ) external isLive returns (uint, uint) {
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral memory _colllateral = collateralMapping[
+        Collateral memory _collateral = collateralMapping[
             _vault.collateralName
         ];
 
@@ -198,10 +198,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         /* Collateral price will be updated frequently from the Price module(this is a function of current price / liquidation ratio) and stored in the
          ** collateral struct for every given collateral.
          */
-        uint256 debtAmount = SafeMathUpgradeable.mul(
-            amount,
-            _colllateral.price
-        );
+        uint256 debtAmount = SafeMathUpgradeable.mul(amount, _collateral.price);
 
         availableNGNx[owner] = SafeMathUpgradeable.add(
             availableNGNx[owner],
@@ -232,17 +229,25 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         address _owner = ownerMapping[_vaultId];
         SafeMathUpgradeable.sub(availableNGNx[_owner], amount);
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral memory _colllateral = collateralMapping[
+        Collateral storage _collateral = collateralMapping[
             _vault.collateralName
         ];
 
         uint256 collateralAmount = SafeMathUpgradeable.div(
             amount,
-            _colllateral.price
+            _collateral.price
         );
 
         SafeMathUpgradeable.sub(_vault.unlockedCollateral, collateralAmount);
         SafeMathUpgradeable.add(_vault.lockedCollateral, collateralAmount);
+
+        _vault.normalisedDebt = SafeMathUpgradeable.add(
+            _vault.normalisedDebt,
+            amount
+        );
+        _collateral.TotalNormalisedDebt += _vault.normalisedDebt;
+
+        _vault.vaultState = VaultStateEnum.Active;
 
         emit NGNXWithdrawan(amount, _owner, _vaultId);
         return true;
@@ -278,11 +283,25 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
         uint256 amount
     ) external isLive returns (bool) {
         Vault storage _vault = vaultMapping[_vaultId];
+        Collateral memory _collateral = collateralMapping[
+            _vault.collateralName
+        ];
 
-        SafeMathUpgradeable.sub(_vault.lockedCollateral, amount);
-        SafeMathUpgradeable.add(_vault.lockedCollateral, amount);
+        uint256 collateralAmount = SafeMathUpgradeable.div(
+            amount,
+            _collateral.price
+        );
+
+        SafeMathUpgradeable.sub(_vault.lockedCollateral, collateralAmount);
+        SafeMathUpgradeable.add(_vault.unlockedCollateral, collateralAmount);
 
         address _owner = ownerMapping[_vaultId];
+
+        _vault.normalisedDebt = SafeMathUpgradeable.sub(
+            _vault.normalisedDebt,
+            amount
+        );
+        _vault.vaultState = VaultStateEnum.Inactive;
 
         emit VaultCleansed(amount, _owner, _vaultId);
         return true;
@@ -310,18 +329,18 @@ contract CoreVault is Initializable, AccessControlUpgradeable {
     function getCollateralData(
         bytes32 _collateralName
     ) external view returns (Collateral memory) {
-        Collateral memory _colllateral = collateralMapping[_collateralName];
+        Collateral memory _collateral = collateralMapping[_collateralName];
 
-        return _colllateral;
+        return _collateral;
     }
 
     function getCollateralDataByVaultId(
         uint _vaultId
     ) external view returns (Collateral memory) {
-        Collateral memory _colllateral = collateralMapping[
+        Collateral memory _collateral = collateralMapping[
             vaultMapping[_vaultId].collateralName
         ];
-        return _colllateral;
+        return _collateral;
     }
 
     function getVaultCountForOwner(address owner) external view returns (uint) {
