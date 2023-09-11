@@ -85,7 +85,6 @@ contract CollateralAdapter is Initializable, AccessControlUpgradeable {
     }
 }
 
-
 contract NGNxAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
     INGNX public ngnx; // NGNx contract
@@ -100,10 +99,7 @@ contract NGNxAdapter is Initializable, AccessControlUpgradeable {
     error ZeroAmount(string error);
     error NotOwner(string error);
 
-    function initialize(
-        address _vault,
-        address _ngnx,
-    ) public initializer {
+    function initialize(address _vault, address _ngnx) public initializer {
         __AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         vaultContract = IVault(_vault);
@@ -142,9 +138,9 @@ contract NGNxAdapter is Initializable, AccessControlUpgradeable {
             revert NotOwner("Adapter/owner-not-match");
         }
         // calls the withdrawNGNx vault contrarct method
-        vaultContract.withdrawNGNx(_vaultId, amount);
+        vaultContract.withdrawNGNX(_vaultId, amount);
         // burns the NGNx tokens from the user
-        ngnx.mint(owner, amount)
+        ngnx.mint(owner, amount);
 
         emit NGNxExited(_vaultId, owner, amount);
     }
