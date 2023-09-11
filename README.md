@@ -64,8 +64,8 @@ adapter for native ether and *also* for WETH.
 -   Clone the repository
 
     ```bash
-    git clone https://github.com/pnslabs/pns-contracts.git
-    cd pns-contracts
+    git clone https://github.com/Descent-Collective/protocol-v1.git
+    cd protocol-v1
     ```
 
 -   Install packages
