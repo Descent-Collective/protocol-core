@@ -80,7 +80,8 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         uint256 rate,
         uint256 price,
         uint256 debtCeiling,
-        uint256 debtFloor
+        uint256 debtFloor,
+        uint256 badDebtGracePeriod
     ) external isLive onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
         Collateral storage _collateral = collateralMapping[_collateralName];
 
@@ -88,6 +89,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         _collateral.price = price;
         _collateral.debtCeiling = debtCeiling;
         _collateral.debtFloor = debtFloor;
+        _collateral.badDebtGracePeriod = badDebtGracePeriod;
 
         emit CollateralAdded(_collateralName);
         return true;

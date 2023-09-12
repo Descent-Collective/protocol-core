@@ -31,13 +31,13 @@ contract NGNX is
     error NotLive(string error);
     error InsufficientFunds(string error);
 
-    function initialize(address[] memory trustedForwarder) public initializer {
+    function initialize(address[] memory trustedForwarders) public initializer {
         __AccessControl_init();
 
         __ERC20_init("NGNX Stablecoin", "NGNX");
         __ERC20Permit_init("NGNX Stablecoin");
 
-        __ERC2771Context_init_unchained(trustedForwarder);
+        __ERC2771Context_init_unchained(trustedForwarders);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         live = 1;
     }

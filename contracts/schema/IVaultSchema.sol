@@ -10,6 +10,7 @@ interface IVaultSchema {
         uint256 price; // Price with Safety Margin. I.E. Price after liquidation ratio has been set
         uint256 debtCeiling; // Debt Ceiling
         uint256 debtFloor; // Debt Floor
+        uint256 badDebtGracePeriod; // period of grace before liquidation happens
     }
 
     struct Vault {
