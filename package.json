@@ -7,9 +7,7 @@
     "coverage": "npx hardhat coverage",
     "deploy": "npx hardhat run scripts/deploy.ts",
     "deploy:baseGoerli": "npx hardhat run scripts/deploy.ts --network baseGoerli",
-    "deploy:goerli": "npx hardhat run scripts/deploy --network goerli",
-    "compile:circuits": "bash scripts/compile-circuits.sh",
-    "setup:circom": "bash scripts/setup-circom.sh"
+    "deploy:goerli": "npx hardhat run scripts/deploy --network goerli"
   },
   "repository": {
     "type": "git",
