@@ -3,6 +3,7 @@ import "dotenv/config";
 import "hardhat-contract-sizer";
 import "@typechain/hardhat";
 import "@openzeppelin/hardhat-upgrades";
+import { ethers } from "ethers";
 
 require("dotenv").config();
 
@@ -37,19 +38,20 @@ module.exports = {
           ? [process.env.PRIVATE_KEY_GANACHE]
           : [],
       allowUnlimitedContractSize: true,
-
+      gasPrice: parseInt(`${ethers.parseUnits("132", "gwei")}`),
       blockGasLimit: 12000000,
     },
     ethereum_mainnet: {
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: parseInt(`${ethers.parseUnits("132", "gwei")}`),
     },
     ethereum_goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-
+      gasPrice: parseInt(`${ethers.parseUnits("132", "gwei")}`),
       blockGasLimit: 12000000,
     },
   },

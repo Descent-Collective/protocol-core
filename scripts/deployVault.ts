@@ -1,11 +1,8 @@
-import { keccak256 } from "ethers";
 import { ethers, upgrades } from "hardhat";
 import hre from "hardhat";
 
 async function deployContract() {
   let adminAccount;
-
-  let vaultContract;
 
   console.log(hre.network.name, "network name");
   [adminAccount] = await ethers.getSigners();
@@ -14,9 +11,10 @@ async function deployContract() {
 
   const Vault = await ethers.getContractFactory("CoreVault");
 
-  vaultContract = await upgrades.deployProxy(Vault, [adminAddress], {
+  const vaultContract = await upgrades.deployProxy(Vault, [], {
     initializer: "initialize",
   });
+  console.log(vaultContract);
   await vaultContract.deployed();
 
   console.log("Core Vault Contract Deployed to", vaultContract.address);
@@ -24,7 +22,7 @@ async function deployContract() {
   await verify(vaultContract.address, []);
 
   // after contract is deployed, you want to add collateral types to the system
-  const collateraType = keccak256("USDC-A");
+  const collateraType = ethers.encodeBytes32String("USDC-A");
   const rate = BigInt("0");
   const price = BigInt("540");
   const debtCeiling = BigInt("10000000000000");
