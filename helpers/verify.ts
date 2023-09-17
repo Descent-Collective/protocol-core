@@ -1,6 +1,6 @@
 const { run: _run } = require("hardhat");
 
-const verify = async (contractAddress: any, args: any) => {
+export const verify = async (contractAddress: any, args: any) => {
   console.log("Verifying Etherscan contract...");
   try {
     await _run("verify:verify", {
@@ -15,5 +15,3 @@ const verify = async (contractAddress: any, args: any) => {
     }
   }
 };
-
-module.exports = { verify };

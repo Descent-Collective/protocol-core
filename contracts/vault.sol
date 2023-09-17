@@ -305,10 +305,22 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
     function getCollateralData(
         bytes32 _collateralName
-    ) external view returns (Collateral memory) {
+    )
+        external
+        view
+        returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256)
+    {
         Collateral memory _collateral = collateralMapping[_collateralName];
 
-        return _collateral;
+        return (
+            _collateral.TotalNormalisedDebt,
+            _collateral.TotalCollateralValue,
+            _collateral.rate,
+            _collateral.price,
+            _collateral.debtCeiling,
+            _collateral.debtFloor,
+            _collateral.badDebtGracePeriod
+        );
     }
 
     function getCollateralDataByVaultId(

@@ -7,7 +7,7 @@
     "coverage": "npx hardhat coverage",
     "deploy": "npx hardhat run scripts/deploy.ts",
     "deploy:baseGoerli": "npx hardhat run scripts/deploy.ts --network base_goerli",
-    "deployVault:goerli": "npx hardhat run scripts/deployVault.ts --network ethereum_goerli"
+    "deploy:goerli": "npx hardhat run scripts/deploy.ts --network ethereum_goerli"
   },
   "repository": {
     "type": "git",
