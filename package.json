@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "compile": "npx hardhat compile",
-    "test": "npx hardhat test test/test.ts",
+    "test": "npx hardhat test test/vault.t.ts",
     "coverage": "npx hardhat coverage",
     "deploy:local": "npx hardhat run scripts/deploy.ts --network localhost",
     "deploy:baseGoerli": "npx hardhat run scripts/deploy.ts --network base_goerli",

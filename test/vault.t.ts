@@ -73,4 +73,13 @@ describe("Onboard Vault", async () => {
       )
     ).to.emit(vaultContract, "CollateralAdded");
   });
+
+  it("should create a vault", async () => {
+    await expect(
+      vaultContract.createVault(adminAddress, collateraType)
+    ).to.emit(vaultContract, "VaultCreated");
+
+    const res = await vaultContract.getVaultId();
+    console.log(BigInt(res).toString(), "vaultId");
+  });
 });
