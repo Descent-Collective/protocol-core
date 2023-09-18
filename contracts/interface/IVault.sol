@@ -38,6 +38,10 @@ interface IVault is IVaultSchema {
 
     function getVaultOwner(uint256 _vaultId) external view returns (address);
 
+    function getVaultsForOwner(
+        address owner
+    ) external view returns (uint[] memory);
+
     function getCollateralData(
         bytes32 _collateralName
     )
