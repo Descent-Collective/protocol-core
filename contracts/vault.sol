@@ -4,11 +4,11 @@ pragma solidity 0.8.21;
 //  ==========  External imports    ==========
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable//utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./schema/IVaultSchema.sol";
 
 contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
-    using SafeMathUpgradeable for uint256;
+    using SafeMath for uint256;
 
     uint256 public debt; // sum of all ngnx issued
     uint256 public live; // Active Flag
@@ -104,6 +104,9 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         if (param == "price") _collateral.price = data;
         else if (param == "debtCeiling") _collateral.debtCeiling = data;
         else if (param == "debtFloor") _collateral.debtFloor = data;
+        else if (param == "rate") _collateral.rate = data;
+        else if (param == "badDebtGracePeriod")
+            _collateral.badDebtGracePeriod = data;
         else revert UnrecognizedParam("CoreVault/collateral data unrecognized");
 
         return true;
@@ -167,23 +170,20 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _vault.collateralName
         ];
 
-        _vault.unlockedCollateral = SafeMathUpgradeable.add(
+        _vault.unlockedCollateral = SafeMath.add(
             _vault.unlockedCollateral,
             amount
         );
-        _collateral.TotalCollateralValue = SafeMathUpgradeable.add(
+        _collateral.TotalCollateralValue = SafeMath.add(
             _collateral.TotalCollateralValue,
             amount
         );
         /* Collateral price will be updated frequently from the Price module(this is a function of current price / liquidation ratio) and stored in the
          ** collateral struct for every given collateral.
          */
-        uint256 debtAmount = SafeMathUpgradeable.mul(amount, _collateral.price);
+        uint256 debtAmount = SafeMath.mul(amount, _collateral.price);
 
-        availableNGNx[owner] = SafeMathUpgradeable.add(
-            availableNGNx[owner],
-            debtAmount
-        );
+        availableNGNx[owner] = SafeMath.add(availableNGNx[owner], debtAmount);
 
         emit VaultCollateralized(
             _vault.unlockedCollateral,
@@ -204,28 +204,22 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         uint256 amount
     ) external isLive returns (bool) {
         address _owner = ownerMapping[_vaultId];
-        SafeMathUpgradeable.sub(availableNGNx[_owner], amount);
+        SafeMath.sub(availableNGNx[_owner], amount);
         Vault storage _vault = vaultMapping[_vaultId];
         Collateral storage _collateral = collateralMapping[
             _vault.collateralName
         ];
 
-        uint256 collateralAmount = SafeMathUpgradeable.div(
-            amount,
-            _collateral.price
-        );
+        uint256 collateralAmount = SafeMath.div(amount, _collateral.price);
 
-        SafeMathUpgradeable.sub(_vault.unlockedCollateral, collateralAmount);
-        SafeMathUpgradeable.add(_vault.lockedCollateral, collateralAmount);
+        SafeMath.sub(_vault.unlockedCollateral, collateralAmount);
+        SafeMath.add(_vault.lockedCollateral, collateralAmount);
 
-        _vault.normalisedDebt = SafeMathUpgradeable.add(
-            _vault.normalisedDebt,
-            amount
-        );
+        _vault.normalisedDebt = SafeMath.add(_vault.normalisedDebt, amount);
         _collateral.TotalNormalisedDebt += _vault.normalisedDebt;
 
         // increase total debt
-        debt = SafeMathUpgradeable.add(debt, amount);
+        debt = SafeMath.add(debt, amount);
 
         _vault.vaultState = VaultStateEnum.Active;
 
@@ -247,9 +241,9 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _vault.collateralName
         ];
 
-        SafeMathUpgradeable.sub(_vault.unlockedCollateral, amount);
+        SafeMath.sub(_vault.unlockedCollateral, amount);
 
-        _collateral.TotalCollateralValue = SafeMathUpgradeable.sub(
+        _collateral.TotalCollateralValue = SafeMath.sub(
             _collateral.TotalCollateralValue,
             amount
         );
@@ -275,21 +269,15 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _vault.collateralName
         ];
 
-        uint256 collateralAmount = SafeMathUpgradeable.div(
-            amount,
-            _collateral.price
-        );
+        uint256 collateralAmount = SafeMath.div(amount, _collateral.price);
 
-        SafeMathUpgradeable.sub(_vault.lockedCollateral, collateralAmount);
+        SafeMath.sub(_vault.lockedCollateral, collateralAmount);
 
-        SafeMathUpgradeable.add(_vault.unlockedCollateral, collateralAmount);
+        SafeMath.add(_vault.unlockedCollateral, collateralAmount);
 
         address _owner = ownerMapping[_vaultId];
 
-        _vault.normalisedDebt = SafeMathUpgradeable.sub(
-            _vault.normalisedDebt,
-            amount
-        );
+        _vault.normalisedDebt = SafeMath.sub(_vault.normalisedDebt, amount);
         _vault.vaultState = VaultStateEnum.Inactive;
 
         emit VaultCleansed(amount, _owner, _vaultId);
@@ -317,10 +305,22 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
     function getCollateralData(
         bytes32 _collateralName
-    ) external view returns (Collateral memory) {
+    )
+        external
+        view
+        returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256)
+    {
         Collateral memory _collateral = collateralMapping[_collateralName];
 
-        return _collateral;
+        return (
+            _collateral.TotalNormalisedDebt,
+            _collateral.TotalCollateralValue,
+            _collateral.rate,
+            _collateral.price,
+            _collateral.debtCeiling,
+            _collateral.debtFloor,
+            _collateral.badDebtGracePeriod
+        );
     }
 
     function getCollateralDataByVaultId(

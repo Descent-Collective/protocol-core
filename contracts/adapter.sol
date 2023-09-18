@@ -4,7 +4,6 @@ pragma solidity 0.8.21;
 //  ==========  External imports    ==========
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable//utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./interface/IVault.sol";
@@ -85,7 +84,7 @@ contract CollateralAdapter is Initializable, AccessControlUpgradeable {
     }
 }
 
-contract NGNxAdapter is Initializable, AccessControlUpgradeable {
+contract NGNXAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
     INGNX public ngnx; // NGNx contract
     uint public live; // Active Flag

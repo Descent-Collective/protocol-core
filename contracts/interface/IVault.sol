@@ -40,7 +40,10 @@ interface IVault is IVaultSchema {
 
     function getCollateralData(
         bytes32 _collateralName
-    ) external view returns (Collateral memory);
+    )
+        external
+        view
+        returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256);
 
     function getCollateralDataByVaultId(
         uint _vaultId
