@@ -30,7 +30,7 @@ async function deployContract() {
   const debtCeiling = BigInt("10000000000000");
   const debtFloor = BigInt("1");
   const badDebtGracePeriod = BigInt("0");
-  const collateralAdded = await vaultContract.createCollateralType(
+  await vaultContract.createCollateralType(
     collateraType,
     rate,
     price,
@@ -38,8 +38,6 @@ async function deployContract() {
     debtFloor,
     badDebtGracePeriod
   );
-  console.log(collateraType, "collateral type");
-  console.log(collateralAdded, "collateral addded");
 
   // deploy ngnx contract
   const NGNXToken = await ethers.getContractFactory("NGNX");
@@ -90,13 +88,13 @@ async function deployContract() {
   // collateral functions
 
   const collateralData = await vaultContract.getCollateralData(collateraType);
-  console.log(collateralData[0], "TotalNormalisedDebt");
-  console.log(BigInt(collateralData[1]), "TotalCollateralValue");
-  console.log(BigInt(collateralData[2]), "rate");
-  console.log(BigInt(collateralData[3]), "price");
-  console.log(BigInt(collateralData[4]), "debt ceiling");
-  console.log(BigInt(collateralData[5]), "debt floor");
-  console.log(BigInt(collateralData[6]), "bad debt grace period");
+  console.log(collateralData[0].toString(), "TotalNormalisedDebt");
+  console.log(BigInt(collateralData[1]).toString(), "TotalCollateralValue");
+  console.log(BigInt(collateralData[2]).toString(), "rate");
+  console.log(BigInt(collateralData[3]).toString(), "price");
+  console.log(BigInt(collateralData[4]).toString(), "debt ceiling");
+  console.log(BigInt(collateralData[5]).toString(), "debt floor");
+  console.log(BigInt(collateralData[6]).toString(), "bad debt grace period");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
