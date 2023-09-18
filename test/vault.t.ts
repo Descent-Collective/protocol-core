@@ -5,6 +5,9 @@ import hre from "hardhat";
 describe("Onboard Vault", async () => {
   let adminAccount;
   let vaultContract: any;
+  let ngnxContract: any;
+  let usdcAdaptercontract: any;
+  let ngnxAdapterContract: any;
   const collateraType = ethers.encodeBytes32String("USDC-A");
 
   [adminAccount] = await ethers.getSigners();
@@ -22,20 +25,16 @@ describe("Onboard Vault", async () => {
 
     // deploy ngnx contract
     const NGNXToken = await ethers.getContractFactory("NGNX");
-    const ngnxContract = await upgrades.deployProxy(
-      NGNXToken,
-      [[adminAddress]],
-      {
-        initializer: "initialize",
-      }
-    );
+    ngnxContract = await upgrades.deployProxy(NGNXToken, [[adminAddress]], {
+      initializer: "initialize",
+    });
     await ngnxContract.waitForDeployment();
 
     // Deploy Adapter contracts
     const vaultContractAddress = await vaultContract.getAddress();
     const usdcAddress = "0x07865c6E87B9F70255377e024ace6630C1Eaa37F";
     const USDCAdapter = await ethers.getContractFactory("CollateralAdapter");
-    const usdcAdaptercontract = await upgrades.deployProxy(
+    usdcAdaptercontract = await upgrades.deployProxy(
       USDCAdapter,
       [vaultContractAddress, collateraType, usdcAddress],
       {
@@ -47,7 +46,7 @@ describe("Onboard Vault", async () => {
     // Deploy ngnx Adapter contracts
     const NGNXAdapter = await ethers.getContractFactory("NGNXAdapter");
     const ngnxAddress = await ngnxContract.getAddress();
-    const ngnxAdapterContract = await upgrades.deployProxy(
+    ngnxAdapterContract = await upgrades.deployProxy(
       NGNXAdapter,
       [vaultContractAddress, ngnxAddress],
       {
