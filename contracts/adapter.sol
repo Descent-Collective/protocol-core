@@ -84,7 +84,7 @@ contract CollateralAdapter is Initializable, AccessControlUpgradeable {
     }
 }
 
-contract NGNxAdapter is Initializable, AccessControlUpgradeable {
+contract NGNXAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
     INGNX public ngnx; // NGNx contract
     uint public live; // Active Flag

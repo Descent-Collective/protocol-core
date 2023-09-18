@@ -54,6 +54,13 @@ module.exports = {
       gasPrice: parseInt(`${ethers.parseUnits("132", "gwei")}`),
       blockGasLimit: 12000000,
     },
+    base_goerli: {
+      url: `https://base-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: parseInt(`${ethers.parseUnits("132", "gwei")}`),
+      blockGasLimit: 12000000,
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

@@ -5,7 +5,7 @@
     "compile": "npx hardhat compile",
     "test": "npx hardhat test test/test.ts",
     "coverage": "npx hardhat coverage",
-    "deploy": "npx hardhat run scripts/deploy.ts",
+    "deploy:local": "npx hardhat run scripts/deploy.ts --network localhost",
     "deploy:baseGoerli": "npx hardhat run scripts/deploy.ts --network base_goerli",
     "deploy:goerli": "npx hardhat run scripts/deploy.ts --network ethereum_goerli"
   },

@@ -11,6 +11,7 @@ async function deployContract() {
   console.log(adminAddress, "address");
 
   const Vault = await ethers.getContractFactory("CoreVault");
+  console.log("post vault init");
 
   const vaultContract = await upgrades.deployProxy(Vault, [], {
     initializer: "initialize",
@@ -58,7 +59,7 @@ async function deployContract() {
   const USDCAdapter = await ethers.getContractFactory("CollateralAdapter");
   const usdcAdaptercontract = await upgrades.deployProxy(
     USDCAdapter,
-    [vaultContractAddress, usdcAddress, collateraType],
+    [vaultContractAddress, collateraType, usdcAddress],
     {
       initializer: "initialize",
     }
@@ -70,7 +71,7 @@ async function deployContract() {
     await usdcAdaptercontract.getAddress()
   );
   // Deploy ngnx Adapter contracts
-  const NGNXAdapter = await ethers.getContractFactory("CollateralAdapter");
+  const NGNXAdapter = await ethers.getContractFactory("NGNXAdapter");
   const ngnxAddress = await ngnxContract.getAddress();
   const ngnxAdapterContract = await upgrades.deployProxy(
     NGNXAdapter,
@@ -89,12 +90,13 @@ async function deployContract() {
   // collateral functions
 
   const collateralData = await vaultContract.getCollateralData(collateraType);
-  console.log(collateralData[0], "collateral type: ");
-  console.log(BigInt(collateralData[1]), "rate");
-  console.log(BigInt(collateralData[2]), "price");
-  console.log(BigInt(collateralData[3]), "debt ceiling");
-  console.log(BigInt(collateralData[4]), "debt floor");
-  console.log(BigInt(collateralData[5]), "bad debt grace period");
+  console.log(collateralData[0], "TotalNormalisedDebt");
+  console.log(BigInt(collateralData[1]), "TotalCollateralValue");
+  console.log(BigInt(collateralData[2]), "rate");
+  console.log(BigInt(collateralData[3]), "price");
+  console.log(BigInt(collateralData[4]), "debt ceiling");
+  console.log(BigInt(collateralData[5]), "debt floor");
+  console.log(BigInt(collateralData[6]), "bad debt grace period");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
