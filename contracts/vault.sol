@@ -323,22 +323,41 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         );
     }
 
-    function getCollateralDataByVaultId(
-        uint _vaultId
-    ) external view returns (Collateral memory) {
-        Collateral memory _collateral = collateralMapping[
-            vaultMapping[_vaultId].collateralName
-        ];
-        return _collateral;
-    }
-
     function getVaultCountForOwner(address owner) external view returns (uint) {
         return vaultCountMapping[owner];
+    }
+
+    function getVaultsForOwner(
+        address owner
+    ) external view returns (uint[] memory ids) {
+        uint count = _getVaultCountForOwner(owner);
+        ids = new uint[](count);
+
+        uint i = 0;
+
+        uint id = firstVault[owner];
+
+        while (id > 0) {
+            ids[i] = id;
+            (, id) = _getList(id);
+            i++;
+        }
     }
 
     function getAvailableNGNXsForOwner(
         address owner
     ) external view returns (uint256) {
         return availableNGNx[owner];
+    }
+
+    function _getVaultCountForOwner(
+        address owner
+    ) internal view returns (uint) {
+        return vaultCountMapping[owner];
+    }
+
+    function _getList(uint id) internal view returns (uint, uint) {
+        List memory _list = list[id];
+        return (_list.prev, _list.next);
     }
 }
