@@ -35,7 +35,7 @@ module.exports = {
       url: `http://127.0.0.1:8545`,
       accounts:
         process.env.PRIVATE_KEY_GANACHE !== undefined
-          ? [process.env.PRIVATE_KEY_GANACHE]
+          ? [`0x${process.env.PRIVATE_KEY_GANACHE}`]
           : [],
       allowUnlimitedContractSize: true,
       gasPrice: parseInt(`${ethers.parseUnits("132", "gwei")}`),
