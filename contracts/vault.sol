@@ -280,6 +280,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
         uint256 collateralAmount = SafeMath.div(amount, _collateral.price);
 
+        address _owner = ownerMapping[_vaultId];
+
+        availableNGNx[_owner] = SafeMath.add(availableNGNx[_owner], amount);
+
         _vault.lockedCollateral = SafeMath.sub(
             _vault.lockedCollateral,
             collateralAmount
@@ -289,8 +293,6 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _vault.unlockedCollateral,
             collateralAmount
         );
-
-        address _owner = ownerMapping[_vaultId];
 
         _vault.normalisedDebt = SafeMath.sub(_vault.normalisedDebt, amount);
         _vault.vaultState = VaultStateEnum.Inactive;

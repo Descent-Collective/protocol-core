@@ -236,4 +236,46 @@ describe("Onboard Vault", async () => {
     const vault = await vaultContract.getVaultById(BigInt(res).toString());
     console.log(vault, "vault data");
   });
+  it("should pay back NGNX", async () => {
+    const res = await vaultContract.getVaultId();
+
+    const userNgnxbalance = await ngnxContract.balanceOf(adminAddress);
+
+    console.log(ethers.formatUnits(userNgnxbalance, 6), "NGNX Balance");
+
+    const approveTx = await ngnxContract.approve(
+      await ngnxAdapterContract.getAddress(),
+      userNgnxbalance
+    );
+
+    await approveTx.wait();
+
+    await expect(
+      ngnxAdapterContract.exit(
+        userNgnxbalance,
+        adminAddress,
+        BigInt(res).toString()
+      )
+    ).to.emit(ngnxAdapterContract, "NGNxJoined");
+
+    const userNgnxbalanceAfterPayBack = await ngnxContract.balanceOf(
+      adminAddress
+    );
+
+    console.log(
+      ethers.formatUnits(userNgnxbalanceAfterPayBack, 6),
+      "NGNX Balance"
+    );
+
+    const availableNGNxAfterPayBack =
+      await vaultContract.getAvailableNGNXsForOwner(adminAddress);
+
+    console.log(
+      Number(ethers.formatUnits(availableNGNxAfterPayBack, 6)),
+      " available NGNX after withdrawal"
+    );
+
+    const vault = await vaultContract.getVaultById(BigInt(res).toString());
+    console.log(vault, "vault data");
+  });
 });
