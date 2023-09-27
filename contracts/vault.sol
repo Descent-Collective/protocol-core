@@ -257,7 +257,14 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             amount
         );
 
+        uint256 ngnxxAmount = SafeMath.mul(amount, _collateral.price);
+
         address _owner = ownerMapping[_vaultId];
+
+        availableNGNx[_owner] = SafeMath.sub(
+            availableNGNx[_owner],
+            ngnxxAmount
+        );
 
         emit CollateralWithdrawan(amount, _owner, vaultId);
 
@@ -267,7 +274,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     /**
      * @dev recapitalize vault after debt has been paid
      * @param _vaultId ID of the vault tied to the user
-     * @param amount amount of collateral to be withdrawn
+     * @param amount amount of NGNx to pay back
      */
     function cleanseVault(
         uint _vaultId,

@@ -278,4 +278,37 @@ describe("Onboard Vault", async () => {
     const vault = await vaultContract.getVaultById(BigInt(res).toString());
     console.log(vault, "vault data");
   });
+  it("should withdraw unlocked collateral", async () => {
+    const res = await vaultContract.getVaultId();
+
+    const balanceBeforeWithdrawal = await usdcTokenContract.balanceOf(
+      adminAddress
+    );
+
+    console.log(
+      ethers.formatUnits(balanceBeforeWithdrawal, 6),
+      "USDC Balance Before Withdrawal"
+    );
+
+    await expect(
+      usdcAdaptercontract.exit(
+        "100000000",
+        adminAddress,
+        BigInt(res).toString()
+      )
+    ).to.emit(usdcAdaptercontract, "CollateralExited");
+
+    const balanceAfterWithdrawal = await usdcTokenContract.balanceOf(
+      adminAddress
+    );
+
+    console.log(
+      ethers.formatUnits(balanceAfterWithdrawal, 6),
+      "USDC Balance After Withdrawal"
+    );
+
+    expect(Number(balanceAfterWithdrawal)).to.be.greaterThan(
+      Number(balanceBeforeWithdrawal)
+    );
+  });
 });
