@@ -138,7 +138,7 @@ contract NGNXAdapter is Initializable, AccessControlUpgradeable {
         }
         // calls the withdrawNGNx vault contrarct method
         vaultContract.withdrawNGNX(_vaultId, amount);
-        // burns the NGNx tokens from the user
+        // mints the NGNx tokens to the user
         ngnx.mint(owner, amount);
 
         emit NGNxExited(_vaultId, owner, amount);

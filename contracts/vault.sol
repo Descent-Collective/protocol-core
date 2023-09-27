@@ -204,7 +204,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         uint256 amount
     ) external isLive returns (bool) {
         address _owner = ownerMapping[_vaultId];
-        SafeMath.sub(availableNGNx[_owner], amount);
+        availableNGNx[_owner] = SafeMath.sub(availableNGNx[_owner], amount);
         Vault storage _vault = vaultMapping[_vaultId];
         Collateral storage _collateral = collateralMapping[
             _vault.collateralName
@@ -212,8 +212,14 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
         uint256 collateralAmount = SafeMath.div(amount, _collateral.price);
 
-        SafeMath.sub(_vault.unlockedCollateral, collateralAmount);
-        SafeMath.add(_vault.lockedCollateral, collateralAmount);
+        _vault.unlockedCollateral = SafeMath.sub(
+            _vault.unlockedCollateral,
+            collateralAmount
+        );
+        _vault.lockedCollateral = SafeMath.add(
+            _vault.lockedCollateral,
+            collateralAmount
+        );
 
         _vault.normalisedDebt = SafeMath.add(_vault.normalisedDebt, amount);
         _collateral.TotalNormalisedDebt += _vault.normalisedDebt;
@@ -241,7 +247,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _vault.collateralName
         ];
 
-        SafeMath.sub(_vault.unlockedCollateral, amount);
+        _vault.unlockedCollateral = SafeMath.sub(
+            _vault.unlockedCollateral,
+            amount
+        );
 
         _collateral.TotalCollateralValue = SafeMath.sub(
             _collateral.TotalCollateralValue,
@@ -271,9 +280,15 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
         uint256 collateralAmount = SafeMath.div(amount, _collateral.price);
 
-        SafeMath.sub(_vault.lockedCollateral, collateralAmount);
+        _vault.lockedCollateral = SafeMath.sub(
+            _vault.lockedCollateral,
+            collateralAmount
+        );
 
-        SafeMath.add(_vault.unlockedCollateral, collateralAmount);
+        _vault.unlockedCollateral = SafeMath.add(
+            _vault.unlockedCollateral,
+            collateralAmount
+        );
 
         address _owner = ownerMapping[_vaultId];
 

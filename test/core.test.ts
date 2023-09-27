@@ -186,4 +186,54 @@ describe("Onboard Vault", async () => {
     );
     console.log(ethers.formatUnits(availableNGNx, 6), "available NGNx");
   });
+
+  it("should mint NGNX from vault", async () => {
+    const res = await vaultContract.getVaultId();
+
+    const availableNGNx = await vaultContract.getAvailableNGNXsForOwner(
+      adminAddress
+    );
+
+    // set minter role for NGNX
+    await ngnxContract.setMinterRole(await ngnxAdapterContract.getAddress());
+
+    const availableNGNxBeforeWithdrawal =
+      await vaultContract.getAvailableNGNXsForOwner(adminAddress);
+
+    console.log(
+      Number(ethers.formatUnits(availableNGNxBeforeWithdrawal, 6)),
+      " available NGNX before withdrawal"
+    );
+
+    await expect(
+      ngnxAdapterContract.exit(
+        availableNGNx,
+        adminAddress,
+        BigInt(res).toString()
+      )
+    ).to.emit(ngnxAdapterContract, "NGNxExited");
+
+    const userNgnxbalance = await ngnxContract.balanceOf(adminAddress);
+
+    console.log(ethers.formatUnits(userNgnxbalance, 6), "NGNX Balance");
+
+    expect(Number(ethers.formatUnits(userNgnxbalance, 6))).to.be.greaterThan(
+      0,
+      "NGNX Balance is greater than 0"
+    );
+    const availableNGNxAfterWithdrawal =
+      await vaultContract.getAvailableNGNXsForOwner(adminAddress);
+
+    console.log(
+      Number(ethers.formatUnits(availableNGNxAfterWithdrawal, 6)),
+      " available NGNX after withdrawal"
+    );
+    expect(Number(ethers.formatUnits(availableNGNxAfterWithdrawal, 6))).equal(
+      0,
+      "NGNX available balance is 0"
+    );
+
+    const vault = await vaultContract.getVaultById(BigInt(res).toString());
+    console.log(vault, "vault data");
+  });
 });
