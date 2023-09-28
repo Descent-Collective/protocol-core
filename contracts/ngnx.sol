@@ -10,6 +10,8 @@ import "./helpers/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+import "hardhat/console.sol";
+
 contract NGNX is
     Initializable,
     AccessControlUpgradeable,
@@ -74,18 +76,18 @@ contract NGNX is
      * @param amount amount of tokens to burn
      */
     function burn(address account, uint amount) external returns (bool) {
+        console.log(amount, account, msg.sender);
         if (live != 1) {
             revert NotLive("NGNX/not-live");
         }
         if (
             account != msg.sender &&
-            allowance(msg.sender, account) != type(uint).max
+            allowance(account, msg.sender) != type(uint).max
         ) {
-            if (allowance(msg.sender, account) <= amount) {
+            if (allowance(account, msg.sender) < amount) {
+                console.log(allowance(msg.sender, account));
                 revert NotLive("NGNX/not-live");
             }
-
-            decreaseAllowance(account, amount);
         }
         _burn(account, amount);
         return true;

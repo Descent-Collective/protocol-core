@@ -67,10 +67,11 @@ contract CollateralAdapter is Initializable, AccessControlUpgradeable {
         if (vaultOwner != owner) {
             revert NotOwner("Adapter/owner-not-match");
         }
-        // transfers the collateral from adapter contract to user
-        collateralContract.transfer(owner, amount);
+
         // calls vault contract to exit it
         vaultContract.withdrawUnlockedCollateral(_vaultId, amount);
+        // transfers the collateral from adapter contract to user
+        collateralContract.transfer(owner, amount);
 
         emit CollateralExited(_vaultId, owner, amount);
     }

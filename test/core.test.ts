@@ -250,8 +250,18 @@ describe("Onboard Vault", async () => {
 
     await approveTx.wait();
 
+    const allowance = await ngnxContract.allowance(
+      adminAddress,
+      await ngnxAdapterContract.getAddress()
+    );
+    console.log(
+      await ngnxAdapterContract.getAddress(),
+      "ngnx adapter contract"
+    );
+    console.log(allowance, "allowance for contract");
+
     await expect(
-      ngnxAdapterContract.exit(
+      ngnxAdapterContract.join(
         userNgnxbalance,
         adminAddress,
         BigInt(res).toString()
