@@ -1,6 +1,6 @@
-# Onboard Protocol 🏦
+# Descent Protocol 🏦
 
-This repository contains the core mvp smart contract code for Onboard Protocol. 
+This repository contains the core mvp smart contract code for Descent Protocol. 
 This is a high level description of the system, assuming
 familiarity with the basic economic mechanics as described in the
 one pager.
@@ -30,7 +30,7 @@ Please find the architecture doc here: https://descentcollective.notion.site/Pro
 
 ## Collateral & Adapters 💶
 
-Collateral is the foundation of NGNx and NGNx creation is not possible
+Collateral is the foundation of xNGN and xNGN creation is not possible
 without it. There are many potential candidates for collateral, whether
 native ether, ERC20 tokens, other fungible token standards like ERC777,
 non-fungible tokens, or any number of other financial instruments. For now,
