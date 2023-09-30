@@ -85,7 +85,7 @@ contract CollateralAdapter is Initializable, AccessControlUpgradeable {
     }
 }
 
-contract NGNAdapter is Initializable, AccessControlUpgradeable {
+contract xNGNAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
     IxNGN public xNGN; // NGNx contract
     uint public live; // Active Flag
@@ -138,7 +138,7 @@ contract NGNAdapter is Initializable, AccessControlUpgradeable {
             revert NotOwner("Adapter/owner-not-match");
         }
         // calls the withdrawNGNx vault contrarct method
-        vaultContract.withdrawNGNX(_vaultId, amount);
+        vaultContract.withdrawxNGN(_vaultId, amount);
         // mints the xNGN tokens to the user
         xNGN.mint(owner, amount);
 
