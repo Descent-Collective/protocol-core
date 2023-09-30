@@ -91,8 +91,8 @@ contract xNGNAdapter is Initializable, AccessControlUpgradeable {
     uint public live; // Active Flag
 
     // -- EVENTS --
-    event NGNxJoined(uint vaultId, address indexed owner, uint256 amount);
-    event NGNxExited(uint vaultId, address indexed owner, uint256 amount);
+    event xNGNJoined(uint vaultId, address indexed owner, uint256 amount);
+    event xNGNExited(uint vaultId, address indexed owner, uint256 amount);
 
     // -- ERRORS --
     error NotLive(string error);
@@ -121,7 +121,7 @@ contract xNGNAdapter is Initializable, AccessControlUpgradeable {
         // burns the xNGN tokens from the user
         xNGN.burn(owner, amount);
 
-        emit NGNxJoined(_vaultId, owner, amount);
+        emit xNGNJoined(_vaultId, owner, amount);
     }
 
     function exit(
@@ -142,7 +142,7 @@ contract xNGNAdapter is Initializable, AccessControlUpgradeable {
         // mints the xNGN tokens to the user
         xNGN.mint(owner, amount);
 
-        emit NGNxExited(_vaultId, owner, amount);
+        emit xNGNExited(_vaultId, owner, amount);
     }
 
     //  ==========  Modifiers  ==========

@@ -6,9 +6,9 @@ import USDCAbi from "./abis/usdc.json";
 describe("Onboard Vault", async () => {
   let adminAccount;
   let vaultContract: any;
-  let ngnxContract: any;
+  let xNGNContract: any;
   let usdcAdaptercontract: any;
-  let ngnxAdapterContract: any;
+  let xNGNAdapterContract: any;
   let usdcTokenContract: any;
   let usdcTokenContractWithOwner: any;
   let usdcTokenContractWithSigner: any;
@@ -89,11 +89,11 @@ describe("Onboard Vault", async () => {
     await vaultContract.waitForDeployment();
 
     // deploy ngnx contract
-    const NGNXToken = await ethers.getContractFactory("NGNX");
-    ngnxContract = await upgrades.deployProxy(NGNXToken, [[adminAddress]], {
+    const xNGNToken = await ethers.getContractFactory("xNGN");
+    xNGNContract = await upgrades.deployProxy(xNGNToken, [[adminAddress]], {
       initializer: "initialize",
     });
-    await ngnxContract.waitForDeployment();
+    await xNGNContract.waitForDeployment();
 
     // Deploy Adapter contracts
     const vaultContractAddress = await vaultContract.getAddress();
@@ -108,16 +108,16 @@ describe("Onboard Vault", async () => {
     await usdcAdaptercontract.waitForDeployment();
 
     // Deploy ngnx Adapter contracts
-    const NGNXAdapter = await ethers.getContractFactory("NGNXAdapter");
-    const ngnxAddress = await ngnxContract.getAddress();
-    ngnxAdapterContract = await upgrades.deployProxy(
-      NGNXAdapter,
-      [vaultContractAddress, ngnxAddress],
+    const xNGNAdapter = await ethers.getContractFactory("xNGNAdapter");
+    const xngnAddress = await xNGNContract.getAddress();
+    xNGNAdapterContract = await upgrades.deployProxy(
+      xNGNAdapter,
+      [vaultContractAddress, xngnAddress],
       {
         initializer: "initialize",
       }
     );
-    await ngnxAdapterContract.waitForDeployment();
+    await xNGNAdapterContract.waitForDeployment();
   });
 
   it("should create a collateral type", async () => {
@@ -181,39 +181,39 @@ describe("Onboard Vault", async () => {
     const vault = await vaultContract.getVaultById(BigInt(res).toString());
     console.log(vault, "vault data");
 
-    const availableNGNx = await vaultContract.getAvailableNGNXsForOwner(
+    const availablexNGN = await vaultContract.getavailablexNGNsForOwner(
       adminAddress
     );
-    console.log(ethers.formatUnits(availableNGNx, 6), "available NGNx");
+    console.log(ethers.formatUnits(availablexNGN, 6), "available NGNx");
   });
 
   it("should mint NGNX from vault", async () => {
     const res = await vaultContract.getVaultId();
 
-    const availableNGNx = await vaultContract.getAvailableNGNXsForOwner(
+    const availablexNGN = await vaultContract.getavailablexNGNsForOwner(
       adminAddress
     );
 
     // set minter role for NGNX
-    await ngnxContract.setMinterRole(await ngnxAdapterContract.getAddress());
+    await xNGNContract.setMinterRole(await xNGNAdapterContract.getAddress());
 
-    const availableNGNxBeforeWithdrawal =
-      await vaultContract.getAvailableNGNXsForOwner(adminAddress);
+    const availablexNGNBeforeWithdrawal =
+      await vaultContract.getavailablexNGNsForOwner(adminAddress);
 
     console.log(
-      Number(ethers.formatUnits(availableNGNxBeforeWithdrawal, 6)),
+      Number(ethers.formatUnits(availablexNGNBeforeWithdrawal, 6)),
       " available NGNX before withdrawal"
     );
 
     await expect(
-      ngnxAdapterContract.exit(
-        availableNGNx,
+      xNGNAdapterContract.exit(
+        availablexNGN,
         adminAddress,
         BigInt(res).toString()
       )
-    ).to.emit(ngnxAdapterContract, "NGNxExited");
+    ).to.emit(xNGNAdapterContract, "xNGNExited");
 
-    const userNgnxbalance = await ngnxContract.balanceOf(adminAddress);
+    const userNgnxbalance = await xNGNContract.balanceOf(adminAddress);
 
     console.log(ethers.formatUnits(userNgnxbalance, 6), "NGNX Balance");
 
@@ -221,14 +221,14 @@ describe("Onboard Vault", async () => {
       0,
       "NGNX Balance is greater than 0"
     );
-    const availableNGNxAfterWithdrawal =
-      await vaultContract.getAvailableNGNXsForOwner(adminAddress);
+    const availablexNGNAfterWithdrawal =
+      await vaultContract.getavailablexNGNsForOwner(adminAddress);
 
     console.log(
-      Number(ethers.formatUnits(availableNGNxAfterWithdrawal, 6)),
+      Number(ethers.formatUnits(availablexNGNAfterWithdrawal, 6)),
       " available NGNX after withdrawal"
     );
-    expect(Number(ethers.formatUnits(availableNGNxAfterWithdrawal, 6))).equal(
+    expect(Number(ethers.formatUnits(availablexNGNAfterWithdrawal, 6))).equal(
       0,
       "NGNX available balance is 0"
     );
@@ -239,36 +239,36 @@ describe("Onboard Vault", async () => {
   it("should pay back NGNX", async () => {
     const res = await vaultContract.getVaultId();
 
-    const userNgnxbalance = await ngnxContract.balanceOf(adminAddress);
+    const userNgnxbalance = await xNGNContract.balanceOf(adminAddress);
 
     console.log(ethers.formatUnits(userNgnxbalance, 6), "NGNX Balance");
 
-    const approveTx = await ngnxContract.approve(
-      await ngnxAdapterContract.getAddress(),
+    const approveTx = await xNGNContract.approve(
+      await xNGNAdapterContract.getAddress(),
       userNgnxbalance
     );
 
     await approveTx.wait();
 
-    const allowance = await ngnxContract.allowance(
+    const allowance = await xNGNContract.allowance(
       adminAddress,
-      await ngnxAdapterContract.getAddress()
+      await xNGNAdapterContract.getAddress()
     );
     console.log(
-      await ngnxAdapterContract.getAddress(),
+      await xNGNAdapterContract.getAddress(),
       "ngnx adapter contract"
     );
     console.log(allowance, "allowance for contract");
 
     await expect(
-      ngnxAdapterContract.join(
+      xNGNAdapterContract.join(
         userNgnxbalance,
         adminAddress,
         BigInt(res).toString()
       )
-    ).to.emit(ngnxAdapterContract, "NGNxJoined");
+    ).to.emit(xNGNAdapterContract, "xNGNJoined");
 
-    const userNgnxbalanceAfterPayBack = await ngnxContract.balanceOf(
+    const userNgnxbalanceAfterPayBack = await xNGNContract.balanceOf(
       adminAddress
     );
 
@@ -277,11 +277,11 @@ describe("Onboard Vault", async () => {
       "NGNX Balance"
     );
 
-    const availableNGNxAfterPayBack =
-      await vaultContract.getAvailableNGNXsForOwner(adminAddress);
+    const availablexNGNAfterPayBack =
+      await vaultContract.getavailablexNGNsForOwner(adminAddress);
 
     console.log(
-      Number(ethers.formatUnits(availableNGNxAfterPayBack, 6)),
+      Number(ethers.formatUnits(availablexNGNAfterPayBack, 6)),
       " available NGNX after withdrawal"
     );
 
