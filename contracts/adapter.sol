@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./interface/IVault.sol";
-import "./interface/INgnx.sol";
+import "./interface/IxNGN.sol";
 
 contract CollateralAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
@@ -85,9 +85,9 @@ contract CollateralAdapter is Initializable, AccessControlUpgradeable {
     }
 }
 
-contract NGNXAdapter is Initializable, AccessControlUpgradeable {
+contract NGNAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
-    INGNX public ngnx; // NGNx contract
+    IxNGN public xNGN; // NGNx contract
     uint public live; // Active Flag
 
     // -- EVENTS --
@@ -99,11 +99,11 @@ contract NGNXAdapter is Initializable, AccessControlUpgradeable {
     error ZeroAmount(string error);
     error NotOwner(string error);
 
-    function initialize(address _vault, address _ngnx) public initializer {
+    function initialize(address _vault, address _xNGN) public initializer {
         __AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         vaultContract = IVault(_vault);
-        ngnx = INGNX(_ngnx);
+        xNGN = IxNGN(_xNGN);
         live = 1;
     }
 
@@ -118,8 +118,8 @@ contract NGNXAdapter is Initializable, AccessControlUpgradeable {
         }
         // calls the cleanse vault contrarct method
         vaultContract.cleanseVault(_vaultId, amount);
-        // burns the NGNx tokens from the user
-        ngnx.burn(owner, amount);
+        // burns the xNGN tokens from the user
+        xNGN.burn(owner, amount);
 
         emit NGNxJoined(_vaultId, owner, amount);
     }
@@ -139,8 +139,8 @@ contract NGNXAdapter is Initializable, AccessControlUpgradeable {
         }
         // calls the withdrawNGNx vault contrarct method
         vaultContract.withdrawNGNX(_vaultId, amount);
-        // mints the NGNx tokens to the user
-        ngnx.mint(owner, amount);
+        // mints the xNGN tokens to the user
+        xNGN.mint(owner, amount);
 
         emit NGNxExited(_vaultId, owner, amount);
     }

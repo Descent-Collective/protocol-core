@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "hardhat/console.sol";
 
-contract NGNX is
+contract xNGN is
     Initializable,
     AccessControlUpgradeable,
     ERC20Upgradeable,
@@ -36,8 +36,8 @@ contract NGNX is
     function initialize(address[] memory trustedForwarders) public initializer {
         __AccessControl_init();
 
-        __ERC20_init("NGNX Stablecoin", "NGNX");
-        __ERC20Permit_init("NGNX Stablecoin");
+        __ERC20_init("NGN Stablecoin", "xNGN");
+        __ERC20Permit_init("NGN Stablecoin");
 
         __ERC2771Context_init_unchained(trustedForwarders);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -64,7 +64,7 @@ contract NGNX is
         uint amount
     ) external onlyRole(MINTER_ROLE) returns (bool) {
         if (live != 1) {
-            revert NotLive("NGNX/not-live");
+            revert NotLive("xNGN/not-live");
         }
         _mint(account, amount);
         return true;
@@ -78,7 +78,7 @@ contract NGNX is
     function burn(address account, uint amount) external returns (bool) {
         console.log(amount, account, msg.sender);
         if (live != 1) {
-            revert NotLive("NGNX/not-live");
+            revert NotLive("xNGN/not-live");
         }
         if (
             account != msg.sender &&
@@ -86,7 +86,7 @@ contract NGNX is
         ) {
             if (allowance(account, msg.sender) < amount) {
                 console.log(allowance(msg.sender, account));
-                revert NotLive("NGNX/not-live");
+                revert NotLive("xNGN/not-live");
             }
         }
         _burn(account, amount);

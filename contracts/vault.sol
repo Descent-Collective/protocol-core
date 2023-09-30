@@ -10,7 +10,7 @@ import "./schema/IVaultSchema.sol";
 contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     using SafeMath for uint256;
 
-    uint256 public debt; // sum of all ngnx issued
+    uint256 public debt; // sum of all xngn issued
     uint256 public live; // Active Flag
     uint vaultId; // auto incremental
 
@@ -22,7 +22,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     mapping(address => uint) public lastVault; // Owner => Last VaultId
     mapping(uint => List) public list; // VaultID => Prev & Next VaultID (double linked list)
     mapping(address => uint) public vaultCountMapping; // Owner => Amount of Vaults
-    mapping(address => uint256) public availableNGNx; // owner => available ngnx balance -- waiting to be minted
+    mapping(address => uint256) public availablexNGN; // owner => available xNGN balance -- waiting to be minted
 
     // -- ERRORS --
     error NotLive(string error);
@@ -34,11 +34,11 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     event CollateralAdded(bytes32 collateralName);
     event VaultCollateralized(
         uint256 unlockedCollateral,
-        uint256 availableNGNx,
+        uint256 availablexNGN,
         address indexed owner,
         uint vaultId
     );
-    event NGNXWithdrawan(uint256 amount, address indexed owner, uint vaultId);
+    event xNGNWithdrawan(uint256 amount, address indexed owner, uint vaultId);
     event CollateralWithdrawan(
         uint256 amount,
         address indexed owner,
@@ -183,28 +183,28 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
          */
         uint256 debtAmount = SafeMath.mul(amount, _collateral.price);
 
-        availableNGNx[owner] = SafeMath.add(availableNGNx[owner], debtAmount);
+        availablexNGN[owner] = SafeMath.add(availablexNGN[owner], debtAmount);
 
         emit VaultCollateralized(
             _vault.unlockedCollateral,
-            availableNGNx[owner],
+            availablexNGN[owner],
             owner,
             _vaultId
         );
-        return (availableNGNx[owner], _vault.unlockedCollateral);
+        return (availablexNGN[owner], _vault.unlockedCollateral);
     }
 
     /**
-     * @dev Decreases the balance of available NGNx balance a user has
+     * @dev Decreases the balance of available xNGN balance a user has
      * @param _vaultId ID of the vault tied to the user
-     * @param amount amount of ngnx to be withdrawn
+     * @param amount amount of xNGN to be withdrawn
      */
-    function withdrawNGNX(
+    function withdrawxNGN(
         uint _vaultId,
         uint256 amount
     ) external isLive returns (bool) {
         address _owner = ownerMapping[_vaultId];
-        availableNGNx[_owner] = SafeMath.sub(availableNGNx[_owner], amount);
+        availablexNGN[_owner] = SafeMath.sub(availablexNGN[_owner], amount);
         Vault storage _vault = vaultMapping[_vaultId];
         Collateral storage _collateral = collateralMapping[
             _vault.collateralName
@@ -229,7 +229,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
         _vault.vaultState = VaultStateEnum.Active;
 
-        emit NGNXWithdrawan(amount, _owner, _vaultId);
+        emit xNGNWithdrawan(amount, _owner, _vaultId);
         return true;
     }
 
@@ -257,14 +257,11 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             amount
         );
 
-        uint256 ngnxxAmount = SafeMath.mul(amount, _collateral.price);
+        uint256 xNGNAmount = SafeMath.mul(amount, _collateral.price);
 
         address _owner = ownerMapping[_vaultId];
 
-        availableNGNx[_owner] = SafeMath.sub(
-            availableNGNx[_owner],
-            ngnxxAmount
-        );
+        availablexNGN[_owner] = SafeMath.sub(availablexNGN[_owner], xNGNAmount);
 
         emit CollateralWithdrawan(amount, _owner, vaultId);
 
@@ -274,7 +271,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     /**
      * @dev recapitalize vault after debt has been paid
      * @param _vaultId ID of the vault tied to the user
-     * @param amount amount of NGNx to pay back
+     * @param amount amount of xNGN to pay back
      */
     function cleanseVault(
         uint _vaultId,
@@ -289,7 +286,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
         address _owner = ownerMapping[_vaultId];
 
-        availableNGNx[_owner] = SafeMath.add(availableNGNx[_owner], amount);
+        availablexNGN[_owner] = SafeMath.add(availablexNGN[_owner], amount);
 
         _vault.lockedCollateral = SafeMath.sub(
             _vault.lockedCollateral,
@@ -368,10 +365,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         }
     }
 
-    function getAvailableNGNXsForOwner(
+    function getavailablexNGNsForOwner(
         address owner
     ) external view returns (uint256) {
-        return availableNGNx[owner];
+        return availablexNGN[owner];
     }
 
     function _getVaultCountForOwner(
