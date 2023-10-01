@@ -30,16 +30,17 @@ module.exports = {
   },
 
   networks: {
-    localhost: {
-      //truffle
-      url: `http://127.0.0.1:8545`,
-      accounts:
-        process.env.PRIVATE_KEY_GANACHE !== undefined
-          ? [process.env.PRIVATE_KEY_GANACHE]
-          : [],
-      allowUnlimitedContractSize: true,
-      gasPrice: parseInt(`${ethers.parseUnits("132", "gwei")}`),
-      blockGasLimit: 12000000,
+    hardhat: {
+      forking: {
+        url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+        accounts:
+          process.env.PRIVATE_KEY_GANACHE !== undefined
+            ? [`0x${process.env.PRIVATE_KEY_GANACHE}`]
+            : [],
+        allowUnlimitedContractSize: true,
+        gasPrice: parseInt(`${ethers.parseUnits("132", "gwei")}`),
+        blockGasLimit: 12000000,
+      },
     },
     ethereum_mainnet: {
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,

@@ -39,16 +39,16 @@ async function deployContract() {
     badDebtGracePeriod
   );
 
-  // deploy ngnx contract
-  const NGNXToken = await ethers.getContractFactory("NGNX");
-  const ngnxContract = await upgrades.deployProxy(NGNXToken, [[adminAddress]], {
+  // deploy xNGN contract
+  const xNGNToken = await ethers.getContractFactory("xNGN");
+  const xNGNContract = await upgrades.deployProxy(xNGNToken, [[adminAddress]], {
     initializer: "initialize",
   });
-  await ngnxContract.waitForDeployment();
+  await xNGNContract.waitForDeployment();
 
   console.log(
-    "NGNX Token contract deployed to",
-    await ngnxContract.getAddress()
+    "xNGN Token contract deployed to",
+    await xNGNContract.getAddress()
   );
 
   // Deploy Adapter contracts
@@ -68,21 +68,21 @@ async function deployContract() {
     "USDC Adapter Contract Deployed to",
     await usdcAdaptercontract.getAddress()
   );
-  // Deploy ngnx Adapter contracts
-  const NGNXAdapter = await ethers.getContractFactory("NGNXAdapter");
-  const ngnxAddress = await ngnxContract.getAddress();
-  const ngnxAdapterContract = await upgrades.deployProxy(
-    NGNXAdapter,
-    [vaultContractAddress, ngnxAddress],
+  // Deploy xNGN Adapter contracts
+  const xNGNAdapter = await ethers.getContractFactory("xNGNAdapter");
+  const xNGNAddress = await xNGNContract.getAddress();
+  const xNGNAdapterContract = await upgrades.deployProxy(
+    xNGNAdapter,
+    [vaultContractAddress, xNGNAddress],
     {
       initializer: "initialize",
     }
   );
-  await ngnxAdapterContract.waitForDeployment();
+  await xNGNAdapterContract.waitForDeployment();
 
   console.log(
-    "NGNX Adapter Contract Deployed to",
-    await ngnxAdapterContract.getAddress()
+    "xNGN Adapter Contract Deployed to",
+    await xNGNAdapterContract.getAddress()
   );
 
   // collateral functions

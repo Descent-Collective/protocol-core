@@ -15,7 +15,7 @@ interface IVault is IVaultSchema {
         uint256 _vaultId
     ) external returns (uint, uint);
 
-    function withdrawNGNX(
+    function withdrawxNGN(
         uint _vaultId,
         uint256 amount
     ) external returns (bool);
@@ -38,6 +38,10 @@ interface IVault is IVaultSchema {
 
     function getVaultOwner(uint256 _vaultId) external view returns (address);
 
+    function getVaultsForOwner(
+        address owner
+    ) external view returns (uint[] memory);
+
     function getCollateralData(
         bytes32 _collateralName
     )
@@ -51,7 +55,7 @@ interface IVault is IVaultSchema {
 
     function getVaultCountForOwner(address owner) external view returns (uint);
 
-    function getAvailableNGNXsForOwner(
+    function getAvailablexNGNsForOwner(
         address owner
     ) external view returns (uint256);
 }
