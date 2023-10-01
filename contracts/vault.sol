@@ -365,6 +365,9 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         _vault.normalisedDebt = SafeMath.sub(_vault.normalisedDebt, amount);
         _vault.vaultState = VaultStateEnum.Inactive;
 
+        // reduce total system debt
+        debt = SafeMath.sub(debt, _vault.normalisedDebt);
+
         emit VaultCleansed(amount, _owner, _vaultId);
         return true;
     }
