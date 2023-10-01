@@ -4,15 +4,18 @@ pragma solidity 0.8.21;
 //  ==========  External imports    ==========
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./schema/IVaultSchema.sol";
 
 contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     using SafeMath for uint256;
 
-    uint256 public debt; // sum of all xngn issued
+    uint256 public debt; // sum of all stable tokens issued. e.g stableToken
     uint256 public live; // Active Flag
     uint vaultId; // auto incremental
+    ERC20Upgradeable stableToken; // stablecoin token
+    string stableTokenName = stableToken.name();
 
     Vault[] vault; // list of vaults
     mapping(bytes32 => Collateral) public collateralMapping; // collateral name => collateral data
@@ -22,7 +25,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     mapping(address => uint) public lastVault; // Owner => Last VaultId
     mapping(uint => List) public list; // VaultID => Prev & Next VaultID (double linked list)
     mapping(address => uint) public vaultCountMapping; // Owner => Amount of Vaults
-    mapping(address => uint256) public availablexNGN; // owner => available xNGN balance -- waiting to be minted
+    mapping(address => uint256) public availableStableToken; // owner => available stable tokens(e.g stableToken) balance -- waiting to be minted
 
     // -- ERRORS --
     error NotLive(string error);
@@ -34,12 +37,16 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     event CollateralAdded(bytes32 collateralName);
     event VaultCollateralized(
         uint256 unlockedCollateral,
-        uint256 availablexNGN,
+        uint256 availableStableToken,
         address indexed owner,
         uint vaultId
     );
-    event xNGNWithdrawan(uint256 amount, address indexed owner, uint vaultId);
-    event CollateralWithdrawan(
+    event StableTokenWithdrawn(
+        uint256 amount,
+        address indexed owner,
+        uint vaultId
+    );
+    event CollateralWithdrawn(
         uint256 amount,
         address indexed owner,
         uint vaultId
@@ -48,9 +55,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
     // - Vault type --
 
-    function initialize() public initializer {
+    function initialize(address _stableToken) public initializer {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         live = 1;
+        stableToken = ERC20Upgradeable(_stableToken);
     }
 
     // modifier
@@ -75,8 +83,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     ) internal pure returns (uint256) {
         if (fromDecimal > toDecimal) {
             return amount / 10 ** (fromDecimal - toDecimal);
-        } else {
+        } else if (fromDecimal < toDecimal) {
             return amount * 10 ** (toDecimal - fromDecimal);
+        } else {
+            return amount;
         }
     }
 
@@ -94,7 +104,8 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         uint256 price,
         uint256 debtCeiling,
         uint256 debtFloor,
-        uint256 badDebtGracePeriod
+        uint256 badDebtGracePeriod,
+        uint256 decimal
     ) external isLive onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
         Collateral storage _collateral = collateralMapping[_collateralName];
 
@@ -103,6 +114,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         _collateral.debtCeiling = debtCeiling;
         _collateral.debtFloor = debtFloor;
         _collateral.badDebtGracePeriod = badDebtGracePeriod;
+        _collateral.collateralDecimal = decimal;
 
         emit CollateralAdded(_collateralName);
         return true;
@@ -120,6 +132,8 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         else if (param == "rate") _collateral.rate = data;
         else if (param == "badDebtGracePeriod")
             _collateral.badDebtGracePeriod = data;
+        else if (param == "collateralDecimal")
+            _collateral.collateralDecimal = data;
         else revert UnrecognizedParam("CoreVault/collateral data unrecognized");
 
         return true;
@@ -192,40 +206,54 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             amount
         );
 
-        uint256 expectedAmount = scalePrecision(amount, 6, 18);
+        uint256 expectedAmount = scalePrecision(
+            amount,
+            _collateral.collateralDecimal,
+            stableToken.decimals()
+        );
         /* Collateral price will be updated frequently from the Price module(this is a function of current price / liquidation ratio) and stored in the
          ** collateral struct for every given collateral.
          */
         uint256 debtAmount = SafeMath.mul(expectedAmount, _collateral.price);
 
-        availablexNGN[owner] = SafeMath.add(availablexNGN[owner], debtAmount);
+        availableStableToken[owner] = SafeMath.add(
+            availableStableToken[owner],
+            debtAmount
+        );
 
         emit VaultCollateralized(
             _vault.unlockedCollateral,
-            availablexNGN[owner],
+            availableStableToken[owner],
             owner,
             _vaultId
         );
-        return (availablexNGN[owner], _vault.unlockedCollateral);
+        return (availableStableToken[owner], _vault.unlockedCollateral);
     }
 
     /**
-     * @dev Decreases the balance of available xNGN balance a user has
+     * @dev Decreases the balance of available stableToken balance a user has
      * @param _vaultId ID of the vault tied to the user
-     * @param amount amount of xNGN to be withdrawn
+     * @param amount amount of stableToken to be withdrawn
      */
-    function withdrawxNGN(
+    function withdrawStableToken(
         uint _vaultId,
         uint256 amount
     ) external isLive returns (bool) {
         address _owner = ownerMapping[_vaultId];
-        availablexNGN[_owner] = SafeMath.sub(availablexNGN[_owner], amount);
+        availableStableToken[_owner] = SafeMath.sub(
+            availableStableToken[_owner],
+            amount
+        );
         Vault storage _vault = vaultMapping[_vaultId];
         Collateral storage _collateral = collateralMapping[
             _vault.collateralName
         ];
 
-        uint256 expectedCollateralAmount = scalePrecision(amount, 18, 6);
+        uint256 expectedCollateralAmount = scalePrecision(
+            amount,
+            stableToken.decimals(),
+            _collateral.collateralDecimal
+        );
 
         uint256 collateralAmount = SafeMath.div(
             expectedCollateralAmount,
@@ -249,7 +277,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
         _vault.vaultState = VaultStateEnum.Active;
 
-        emit xNGNWithdrawan(amount, _owner, _vaultId);
+        emit StableTokenWithdrawn(amount, _owner, _vaultId);
         return true;
     }
 
@@ -277,13 +305,16 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             amount
         );
 
-        uint256 xNGNAmount = SafeMath.mul(amount, _collateral.price);
+        uint256 stableTokenAmount = SafeMath.mul(amount, _collateral.price);
 
         address _owner = ownerMapping[_vaultId];
 
-        availablexNGN[_owner] = SafeMath.sub(availablexNGN[_owner], xNGNAmount);
+        availableStableToken[_owner] = SafeMath.sub(
+            availableStableToken[_owner],
+            stableTokenAmount
+        );
 
-        emit CollateralWithdrawan(amount, _owner, vaultId);
+        emit CollateralWithdrawn(amount, _owner, vaultId);
 
         return true;
     }
@@ -291,7 +322,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     /**
      * @dev recapitalize vault after debt has been paid
      * @param _vaultId ID of the vault tied to the user
-     * @param amount amount of xNGN to pay back
+     * @param amount amount of stableToken to pay back
      */
     function cleanseVault(
         uint _vaultId,
@@ -302,7 +333,11 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _vault.collateralName
         ];
 
-        uint256 expectedAmount = scalePrecision(amount, 18, 6);
+        uint256 expectedAmount = scalePrecision(
+            amount,
+            stableToken.decimals(),
+            _collateral.collateralDecimal
+        );
 
         uint256 collateralAmount = SafeMath.div(
             expectedAmount,
@@ -311,7 +346,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
         address _owner = ownerMapping[_vaultId];
 
-        availablexNGN[_owner] = SafeMath.add(availablexNGN[_owner], amount);
+        availableStableToken[_owner] = SafeMath.add(
+            availableStableToken[_owner],
+            amount
+        );
 
         _vault.lockedCollateral = SafeMath.sub(
             _vault.lockedCollateral,
@@ -393,10 +431,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         }
     }
 
-    function getavailablexNGNsForOwner(
+    function getAvailableStableToken(
         address owner
     ) external view returns (uint256) {
-        return availablexNGN[owner];
+        return availableStableToken[owner];
     }
 
     function _getVaultCountForOwner(

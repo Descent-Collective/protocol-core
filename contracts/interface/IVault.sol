@@ -15,7 +15,7 @@ interface IVault is IVaultSchema {
         uint256 _vaultId
     ) external returns (uint, uint);
 
-    function withdrawxNGN(
+    function withdrawStableToken(
         uint _vaultId,
         uint256 amount
     ) external returns (bool);
@@ -55,7 +55,7 @@ interface IVault is IVaultSchema {
 
     function getVaultCountForOwner(address owner) external view returns (uint);
 
-    function getAvailablexNGNsForOwner(
+    function getAvailableStableToken(
         address owner
     ) external view returns (uint256);
 }

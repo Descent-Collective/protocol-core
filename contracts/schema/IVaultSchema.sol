@@ -11,6 +11,7 @@ interface IVaultSchema {
         uint256 debtCeiling; // Debt Ceiling
         uint256 debtFloor; // Debt Floor
         uint256 badDebtGracePeriod; // period of grace before liquidation happens
+        uint256 collateralDecimal; // decimals for collateral token
     }
 
     struct Vault {
