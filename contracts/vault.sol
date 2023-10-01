@@ -15,7 +15,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     uint256 public live; // Active Flag
     uint vaultId; // auto incremental
     ERC20Upgradeable stableToken; // stablecoin token
-    string stableTokenName = stableToken.name();
+    string stableTokenName;
 
     Vault[] vault; // list of vaults
     mapping(bytes32 => Collateral) public collateralMapping; // collateral name => collateral data
@@ -59,6 +59,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         live = 1;
         stableToken = ERC20Upgradeable(_stableToken);
+        stableTokenName = stableToken.name();
     }
 
     // modifier
@@ -361,10 +362,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             collateralAmount
         );
 
-        _vault.normalisedDebt = SafeMath.sub(
-            _vault.normalisedDebt,
-            expectedAmount
-        );
+        _vault.normalisedDebt = SafeMath.sub(_vault.normalisedDebt, amount);
         _vault.vaultState = VaultStateEnum.Inactive;
 
         emit VaultCleansed(amount, _owner, _vaultId);
@@ -395,7 +393,16 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     )
         external
         view
-        returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256)
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
     {
         Collateral memory _collateral = collateralMapping[_collateralName];
 
@@ -406,7 +413,8 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _collateral.price,
             _collateral.debtCeiling,
             _collateral.debtFloor,
-            _collateral.badDebtGracePeriod
+            _collateral.badDebtGracePeriod,
+            _collateral.collateralDecimal
         );
     }
 

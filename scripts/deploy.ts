@@ -10,10 +10,20 @@ async function deployContract() {
   const adminAddress = adminAccount.address;
   console.log(adminAddress, "address");
 
+  // deploy xNGN contract
+  const xNGNToken = await ethers.getContractFactory("xNGN");
+  const xNGNContract = await upgrades.deployProxy(xNGNToken, [[adminAddress]], {
+    initializer: "initialize",
+  });
+  await xNGNContract.waitForDeployment();
+
+  const ngnAddress = await xNGNContract.getAddress();
+  console.log("xNGN Token contract deployed to", ngnAddress);
+
   const Vault = await ethers.getContractFactory("CoreVault");
   console.log("post vault init");
 
-  const vaultContract = await upgrades.deployProxy(Vault, [], {
+  const vaultContract = await upgrades.deployProxy(Vault, [ngnAddress], {
     initializer: "initialize",
   });
   await vaultContract.waitForDeployment();
@@ -30,25 +40,15 @@ async function deployContract() {
   const debtCeiling = BigInt("10000000000000");
   const debtFloor = BigInt("1");
   const badDebtGracePeriod = BigInt("0");
+  const collateralDecimal = BigInt("6");
   await vaultContract.createCollateralType(
     collateraType,
     rate,
     price,
     debtCeiling,
     debtFloor,
-    badDebtGracePeriod
-  );
-
-  // deploy xNGN contract
-  const xNGNToken = await ethers.getContractFactory("xNGN");
-  const xNGNContract = await upgrades.deployProxy(xNGNToken, [[adminAddress]], {
-    initializer: "initialize",
-  });
-  await xNGNContract.waitForDeployment();
-
-  console.log(
-    "xNGN Token contract deployed to",
-    await xNGNContract.getAddress()
+    badDebtGracePeriod,
+    collateralDecimal
   );
 
   // Deploy Adapter contracts

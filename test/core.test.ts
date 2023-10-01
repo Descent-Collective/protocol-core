@@ -80,20 +80,22 @@ describe("Onboard Vault", async () => {
   const adminAddress = adminAccount.address;
 
   before(async () => {
-    const Vault = await ethers.getContractFactory("CoreVault");
-    console.log("post vault init");
-
-    vaultContract = await upgrades.deployProxy(Vault, [], {
-      initializer: "initialize",
-    });
-    await vaultContract.waitForDeployment();
-
     // deploy xngn contract
     const xNGNToken = await ethers.getContractFactory("xNGN");
     xNGNContract = await upgrades.deployProxy(xNGNToken, [[adminAddress]], {
       initializer: "initialize",
     });
     await xNGNContract.waitForDeployment();
+
+    const Vault = await ethers.getContractFactory("CoreVault");
+    console.log("post vault init");
+
+    const xNGNAddress = await xNGNContract.getAddress();
+
+    vaultContract = await upgrades.deployProxy(Vault, [xNGNAddress], {
+      initializer: "initialize",
+    });
+    await vaultContract.waitForDeployment();
 
     // Deploy Adapter contracts
     const vaultContractAddress = await vaultContract.getAddress();
@@ -126,6 +128,7 @@ describe("Onboard Vault", async () => {
     const debtCeiling = BigInt("10000000000000");
     const debtFloor = BigInt("1");
     const badDebtGracePeriod = BigInt("0");
+    const collateralDecimal = BigInt("6");
     await expect(
       vaultContract.createCollateralType(
         collateraType,
@@ -133,7 +136,8 @@ describe("Onboard Vault", async () => {
         price,
         debtCeiling,
         debtFloor,
-        badDebtGracePeriod
+        badDebtGracePeriod,
+        collateralDecimal
       )
     ).to.emit(vaultContract, "CollateralAdded");
   });
@@ -181,7 +185,7 @@ describe("Onboard Vault", async () => {
     const vault = await vaultContract.getVaultById(BigInt(res).toString());
     console.log(vault, "vault data");
 
-    const availablexNGN = await vaultContract.getavailablexNGNsForOwner(
+    const availablexNGN = await vaultContract.getAvailableStableToken(
       adminAddress
     );
     console.log(ethers.formatUnits(availablexNGN, 18), "available xngn");
@@ -190,7 +194,7 @@ describe("Onboard Vault", async () => {
   it("should mint xngn from vault", async () => {
     const res = await vaultContract.getVaultId();
 
-    const availablexNGN = await vaultContract.getavailablexNGNsForOwner(
+    const availablexNGN = await vaultContract.getAvailableStableToken(
       adminAddress
     );
 
@@ -198,7 +202,7 @@ describe("Onboard Vault", async () => {
     await xNGNContract.setMinterRole(await xNGNAdapterContract.getAddress());
 
     const availablexNGNBeforeWithdrawal =
-      await vaultContract.getavailablexNGNsForOwner(adminAddress);
+      await vaultContract.getAvailableStableToken(adminAddress);
 
     console.log(
       Number(ethers.formatUnits(availablexNGNBeforeWithdrawal, 18)),
@@ -213,16 +217,8 @@ describe("Onboard Vault", async () => {
       )
     ).to.emit(xNGNAdapterContract, "xNGNExited");
 
-    const userxngnbalance = await xNGNContract.balanceOf(adminAddress);
-
-    console.log(ethers.formatUnits(userxngnbalance, 18), "xngn Balance");
-
-    expect(Number(ethers.formatUnits(userxngnbalance, 18))).to.be.greaterThan(
-      0,
-      "xngn Balance is greater than 0"
-    );
     const availablexNGNAfterWithdrawal =
-      await vaultContract.getavailablexNGNsForOwner(adminAddress);
+      await vaultContract.getAvailableStableToken(adminAddress);
 
     console.log(
       Number(ethers.formatUnits(availablexNGNAfterWithdrawal, 18)),
@@ -233,6 +229,18 @@ describe("Onboard Vault", async () => {
       "xngn available balance is 0"
     );
 
+    const userxngnbalance = await xNGNContract.balanceOf(adminAddress);
+
+    console.log(
+      ethers.formatUnits(userxngnbalance, 18),
+      "xngn Balance after minting"
+    );
+
+    expect(Number(ethers.formatUnits(userxngnbalance, 18))).to.be.greaterThan(
+      0,
+      "xngn Balance is greater than 0"
+    );
+
     const vault = await vaultContract.getVaultById(BigInt(res).toString());
     console.log(vault, "vault data");
   });
@@ -241,7 +249,10 @@ describe("Onboard Vault", async () => {
 
     const userxngnbalance = await xNGNContract.balanceOf(adminAddress);
 
-    console.log(ethers.formatUnits(userxngnbalance, 18), "xngn Balance");
+    console.log(
+      ethers.formatUnits(userxngnbalance, 18),
+      "xngn Balance during pay back"
+    );
 
     const approveTx = await xNGNContract.approve(
       await xNGNAdapterContract.getAddress(),
@@ -274,11 +285,11 @@ describe("Onboard Vault", async () => {
 
     console.log(
       ethers.formatUnits(userxngnbalanceAfterPayBack, 18),
-      "xngn Balance"
+      "xngn Balance after payback"
     );
 
     const availablexNGNAfterPayBack =
-      await vaultContract.getavailablexNGNsForOwner(adminAddress);
+      await vaultContract.getAvailableStableToken(adminAddress);
 
     console.log(
       Number(ethers.formatUnits(availablexNGNAfterPayBack, 18)),
@@ -320,5 +331,7 @@ describe("Onboard Vault", async () => {
     expect(Number(balanceAfterWithdrawal)).to.be.greaterThan(
       Number(balanceBeforeWithdrawal)
     );
+    const vault = await vaultContract.getVaultById(BigInt(res).toString());
+    console.log(vault, "vault data");
   });
 });

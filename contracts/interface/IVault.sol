@@ -47,7 +47,16 @@ interface IVault is IVaultSchema {
     )
         external
         view
-        returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256);
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        );
 
     function getCollateralDataByVaultId(
         uint _vaultId
