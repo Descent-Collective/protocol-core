@@ -75,8 +75,10 @@ contract xNGN is
      * @param account address to burn tokens from
      * @param amount amount of tokens to burn
      */
-    function burn(address account, uint amount) external returns (bool) {
-        console.log(amount, account, msg.sender);
+    function burn(
+        address account,
+        uint amount
+    ) external onlyRole(MINTER_ROLE) returns (bool) {
         if (live != 1) {
             revert NotLive("xNGN/not-live");
         }
