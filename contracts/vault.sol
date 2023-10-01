@@ -67,6 +67,19 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         live = 0;
     }
 
+    // -- UTILITY --
+    function scalePrecision(
+        uint256 amount,
+        uint256 fromDecimal,
+        uint256 toDecimal
+    ) internal pure returns (uint256) {
+        if (fromDecimal > toDecimal) {
+            return amount / 10 ** (fromDecimal - toDecimal);
+        } else {
+            return amount * 10 ** (toDecimal - fromDecimal);
+        }
+    }
+
     /**
      * @dev Creates a collateral type that'll be accepted by the system
      * @param _collateralName name of the collateral. e.g. 'USDC-A'
@@ -178,10 +191,12 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _collateral.TotalCollateralValue,
             amount
         );
+
+        uint256 expectedAmount = scalePrecision(amount, 6, 18);
         /* Collateral price will be updated frequently from the Price module(this is a function of current price / liquidation ratio) and stored in the
          ** collateral struct for every given collateral.
          */
-        uint256 debtAmount = SafeMath.mul(amount, _collateral.price);
+        uint256 debtAmount = SafeMath.mul(expectedAmount, _collateral.price);
 
         availablexNGN[owner] = SafeMath.add(availablexNGN[owner], debtAmount);
 
@@ -210,7 +225,12 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _vault.collateralName
         ];
 
-        uint256 collateralAmount = SafeMath.div(amount, _collateral.price);
+        uint256 expectedCollateralAmount = scalePrecision(amount, 18, 6);
+
+        uint256 collateralAmount = SafeMath.div(
+            expectedCollateralAmount,
+            _collateral.price
+        );
 
         _vault.unlockedCollateral = SafeMath.sub(
             _vault.unlockedCollateral,
@@ -282,7 +302,12 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _vault.collateralName
         ];
 
-        uint256 collateralAmount = SafeMath.div(amount, _collateral.price);
+        uint256 expectedAmount = scalePrecision(amount, 18, 6);
+
+        uint256 collateralAmount = SafeMath.div(
+            expectedAmount,
+            _collateral.price
+        );
 
         address _owner = ownerMapping[_vaultId];
 
@@ -298,7 +323,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             collateralAmount
         );
 
-        _vault.normalisedDebt = SafeMath.sub(_vault.normalisedDebt, amount);
+        _vault.normalisedDebt = SafeMath.sub(
+            _vault.normalisedDebt,
+            expectedAmount
+        );
         _vault.vaultState = VaultStateEnum.Inactive;
 
         emit VaultCleansed(amount, _owner, _vaultId);
