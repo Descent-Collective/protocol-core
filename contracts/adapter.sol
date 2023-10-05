@@ -138,7 +138,7 @@ contract xNGNAdapter is Initializable, AccessControlUpgradeable {
             revert NotOwner("Adapter/owner-not-match");
         }
         // calls the withdrawNGNx vault contrarct method
-        vaultContract.withdrawxNGN(_vaultId, amount);
+        vaultContract.withdrawStableToken(_vaultId, amount);
         // mints the xNGN tokens to the user
         xNGN.mint(owner, amount);
 
