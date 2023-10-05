@@ -12,6 +12,7 @@ interface IVaultSchema {
         uint256 debtFloor; // Debt Floor
         uint256 badDebtGracePeriod; // period of grace before liquidation happens
         uint256 collateralDecimal; // decimals for collateral token
+        uint256 exists; // collateral type exists 1 for exists and 0 for not exists
     }
 
     struct Vault {

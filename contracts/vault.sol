@@ -116,6 +116,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         _collateral.debtFloor = debtFloor;
         _collateral.badDebtGracePeriod = badDebtGracePeriod;
         _collateral.collateralDecimal = decimal;
+        _collateral.exists = 1;
 
         emit CollateralAdded(_collateralName);
         return true;
@@ -135,6 +136,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
             _collateral.badDebtGracePeriod = data;
         else if (param == "collateralDecimal")
             _collateral.collateralDecimal = data;
+        else if (param == "exists") _collateral.exists = data;
         else revert UnrecognizedParam("CoreVault/collateral data unrecognized");
 
         return true;
@@ -151,6 +153,9 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     ) external isLive returns (uint) {
         if (owner == address(0)) {
             revert ZeroAddress("CoreVault/owner address is zero ");
+        }
+        if (collateralMapping[_collateralName].exists == 0) {
+            revert UnrecognizedParam("CoreVault/collateral name unrecognized");
         }
         vaultId += 1;
 
