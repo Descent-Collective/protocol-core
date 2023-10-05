@@ -9,15 +9,15 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interface/IVault.sol";
 import "./interface/IxNGN.sol";
 
-contract CollateralAdapter is Initializable, AccessControlUpgradeable {
+contract USDCAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
-    bytes32 public collateralType; // Collateral Type USDC-A | USDT-A
+    bytes32 public collateralType; // USDC Type USDC-A | USDT-A
     IERC20 public collateralContract; // usdc contract
     uint public live; // Active Flag
 
     // -- EVENTS --
-    event CollateralJoined(uint vaultId, address indexed owner, uint256 amount);
-    event CollateralExited(uint vaultId, address indexed owner, uint256 amount);
+    event USDCJoined(uint vaultId, address indexed owner, uint256 amount);
+    event USDCExited(uint vaultId, address indexed owner, uint256 amount);
 
     // -- ERRORS --
     error NotLive(string error);
@@ -26,13 +26,12 @@ contract CollateralAdapter is Initializable, AccessControlUpgradeable {
 
     function initialize(
         address _vault,
-        bytes32 _collateralType,
         address _collateralContract
     ) public initializer {
         __AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         vaultContract = IVault(_vault);
-        collateralType = _collateralType;
+        collateralType = "USDC-A";
         collateralContract = IERC20(_collateralContract);
         live = 1;
     }
@@ -51,7 +50,7 @@ contract CollateralAdapter is Initializable, AccessControlUpgradeable {
         // transfers collateral from user to adapter contract
         collateralContract.transferFrom(msg.sender, address(this), amount);
 
-        emit CollateralJoined(_vaultId, owner, amount);
+        emit USDCJoined(_vaultId, owner, amount);
     }
 
     function exit(
@@ -73,7 +72,7 @@ contract CollateralAdapter is Initializable, AccessControlUpgradeable {
         // transfers the collateral from adapter contract to user
         collateralContract.transfer(owner, amount);
 
-        emit CollateralExited(_vaultId, owner, amount);
+        emit USDCExited(_vaultId, owner, amount);
     }
 
     //  ==========  Modifiers  ==========

@@ -54,7 +54,7 @@ async function deployContract() {
   // Deploy Adapter contracts
   const vaultContractAddress = await vaultContract.getAddress();
   const usdcAddress = "0x07865c6E87B9F70255377e024ace6630C1Eaa37F";
-  const USDCAdapter = await ethers.getContractFactory("CollateralAdapter");
+  const USDCAdapter = await ethers.getContractFactory("USDCAdapter");
   const usdcAdaptercontract = await upgrades.deployProxy(
     USDCAdapter,
     [vaultContractAddress, collateraType, usdcAddress],

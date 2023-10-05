@@ -99,7 +99,7 @@ describe("Onboard Vault", async () => {
 
     // Deploy Adapter contracts
     const vaultContractAddress = await vaultContract.getAddress();
-    const USDCAdapter = await ethers.getContractFactory("CollateralAdapter");
+    const USDCAdapter = await ethers.getContractFactory("USDCAdapter");
     usdcAdaptercontract = await upgrades.deployProxy(
       USDCAdapter,
       [vaultContractAddress, collateraType, usdcAddress],
