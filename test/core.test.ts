@@ -102,7 +102,7 @@ describe("Onboard Vault", async () => {
     const USDCAdapter = await ethers.getContractFactory("USDCAdapter");
     usdcAdaptercontract = await upgrades.deployProxy(
       USDCAdapter,
-      [vaultContractAddress, collateraType, usdcAddress],
+      [vaultContractAddress, usdcAddress],
       {
         initializer: "initialize",
       }
@@ -181,7 +181,7 @@ describe("Onboard Vault", async () => {
         adminAddress,
         BigInt(res).toString()
       )
-    ).to.emit(usdcAdaptercontract, "CollateralJoined");
+    ).to.emit(usdcAdaptercontract, "USDCJoined");
     const vault = await vaultContract.getVaultById(BigInt(res).toString());
     console.log(vault, "vault data");
 
@@ -317,7 +317,7 @@ describe("Onboard Vault", async () => {
         adminAddress,
         BigInt(res).toString()
       )
-    ).to.emit(usdcAdaptercontract, "CollateralExited");
+    ).to.emit(usdcAdaptercontract, "USDCExited");
 
     const balanceAfterWithdrawal = await usdcTokenContract.balanceOf(
       adminAddress

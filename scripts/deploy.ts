@@ -57,7 +57,7 @@ async function deployContract() {
   const USDCAdapter = await ethers.getContractFactory("USDCAdapter");
   const usdcAdaptercontract = await upgrades.deployProxy(
     USDCAdapter,
-    [vaultContractAddress, collateraType, usdcAddress],
+    [vaultContractAddress, usdcAddress],
     {
       initializer: "initialize",
     }
