@@ -13,7 +13,7 @@ interface IVault is IVaultSchema {
         uint256 amount,
         address owner,
         uint256 _vaultId
-    ) external returns (uint, uint);
+    ) external returns (uint256, uint256);
 
     function withdrawStableToken(
         uint _vaultId,

@@ -197,7 +197,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         uint256 amount,
         address owner,
         uint256 _vaultId
-    ) external isLive returns (uint, uint) {
+    ) external isLive returns (uint256, uint256) {
         Vault storage _vault = vaultMapping[_vaultId];
         Collateral storage _collateral = collateralMapping[
             _vault.collateralName

@@ -41,16 +41,22 @@ contract USDCAdapter is Initializable, AccessControlUpgradeable {
         uint256 amount,
         address owner,
         uint256 _vaultId
-    ) external isLive {
+    ) external isLive returns (uint256, uint256) {
         if (amount <= 0) {
             revert ZeroAmount("Adapter/amount-is-zero");
         }
         // calls vault contract to open it
-        vaultContract.collateralizeVault(amount, owner, _vaultId);
+        (
+            uint256 availableStableToken,
+            uint256 unlockedCollateral
+        ) = vaultContract.collateralizeVault(amount, owner, _vaultId);
+
         // transfers collateral from user to adapter contract
         collateralContract.transferFrom(msg.sender, address(this), amount);
 
         emit USDCJoined(_vaultId, owner, amount);
+
+        return (availableStableToken, unlockedCollateral);
     }
 
     function exit(

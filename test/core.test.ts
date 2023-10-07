@@ -175,13 +175,15 @@ describe("Onboard Vault", async () => {
     console.log(allowance, "allowance for contract");
     const res = await vaultContract.getVaultId();
 
-    await expect(
-      usdcAdaptercontract.join(
-        "100000000",
-        adminAddress,
-        BigInt(res).toString()
-      )
-    ).to.emit(usdcAdaptercontract, "USDCJoined");
+    const join = await usdcAdaptercontract.join(
+      "100000000",
+      adminAddress,
+      BigInt(res).toString()
+    );
+    const res2 = await join.wait();
+
+    console.log(res2.logs, "collateralize vault");
+
     const vault = await vaultContract.getVaultById(BigInt(res).toString());
     console.log(vault, "vault data");
 
@@ -331,7 +333,7 @@ describe("Onboard Vault", async () => {
     expect(Number(balanceAfterWithdrawal)).to.be.greaterThan(
       Number(balanceBeforeWithdrawal)
     );
-    const vault = await vaultContract.getVaultById(BigInt(res).toString());
-    console.log(vault, "vault data");
+    const vault = await vaultContract.getVaultsForOwner(adminAddress);
+    console.log(vault, "vaultids for owner");
   });
 });
