@@ -13,11 +13,11 @@ contract USDCAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
     bytes32 public collateralType; // USDC Type USDC-A | USDT-A
     IERC20 public collateralContract; // usdc contract
-    uint public live; // Active Flag
+    uint256 public live; // Active Flag
 
     // -- EVENTS --
-    event USDCJoined(uint vaultId, address indexed owner, uint256 amount);
-    event USDCExited(uint vaultId, address indexed owner, uint256 amount);
+    event USDCJoined(uint256 vaultId, address indexed owner, uint256 amount);
+    event USDCExited(uint256 vaultId, address indexed owner, uint256 amount);
 
     // -- ERRORS --
     error NotLive(string error);
@@ -87,11 +87,11 @@ contract USDCAdapter is Initializable, AccessControlUpgradeable {
 contract xNGNAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
     IxNGN public xNGN; // NGNx contract
-    uint public live; // Active Flag
+    uint256 public live; // Active Flag
 
     // -- EVENTS --
-    event xNGNJoined(uint vaultId, address indexed owner, uint256 amount);
-    event xNGNExited(uint vaultId, address indexed owner, uint256 amount);
+    event xNGNJoined(uint256 vaultId, address indexed owner, uint256 amount);
+    event xNGNExited(uint256 vaultId, address indexed owner, uint256 amount);
 
     // -- ERRORS --
     error NotLive(string error);

@@ -33,10 +33,21 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     event VaultCreated(uint256 vaultId, address indexed owner);
     event CollateralAdded(bytes32 collateralName);
     event VaultCollateralized(
-        uint256 unlockedCollateral, uint256 availableStableToken, address indexed owner, uint256 vaultId
+        uint256 unlockedCollateral,
+        uint256 availableStableToken,
+        address indexed owner,
+        uint256 vaultId
     );
-    event StableTokenWithdrawn(uint256 amount, address indexed owner, uint256 vaultId);
-    event CollateralWithdrawn(uint256 amount, address indexed owner, uint256 vaultId);
+    event StableTokenWithdrawn(
+        uint256 amount,
+        address indexed owner,
+        uint256 vaultId
+    );
+    event CollateralWithdrawn(
+        uint256 amount,
+        address indexed owner,
+        uint256 vaultId
+    );
     event VaultCleansed(uint256 amount, address indexed owner, uint256 vaultId);
 
     // - Vault type --
@@ -63,7 +74,11 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     }
 
     // -- UTILITY --
-    function scalePrecision(uint256 amount, uint256 fromDecimal, uint256 toDecimal) internal pure returns (uint256) {
+    function scalePrecision(
+        uint256 amount,
+        uint256 fromDecimal,
+        uint256 toDecimal
+    ) internal pure returns (uint256) {
         if (fromDecimal > toDecimal) {
             return amount / 10 ** (fromDecimal - toDecimal);
         } else if (fromDecimal < toDecimal) {
@@ -104,12 +119,11 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         return true;
     }
 
-    function updateCollateralData(bytes32 _collateralName, bytes32 param, uint256 data)
-        external
-        isLive
-        onlyRole(DEFAULT_ADMIN_ROLE)
-        returns (bool)
-    {
+    function updateCollateralData(
+        bytes32 _collateralName,
+        bytes32 param,
+        uint256 data
+    ) external isLive onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
         Collateral storage _collateral = collateralMapping[_collateralName];
         if (param == "price") {
             _collateral.price = data;
@@ -137,7 +151,10 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
      * @param owner address that owns the vault
      * @param _collateralName name of the collateral tied to a vault
      */
-    function createVault(address owner, bytes32 _collateralName) external isLive returns (uint256) {
+    function createVault(
+        address owner,
+        bytes32 _collateralName
+    ) external isLive returns (uint256) {
         if (owner == address(0)) {
             revert ZeroAddress("CoreVault/owner address is zero ");
         }
@@ -183,18 +200,24 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
      * @param owner Owner of the vault
      * @param _vaultId ID of the vault to be collaterized
      */
-    function collateralizeVault(uint256 amount, address owner, uint256 _vaultId)
-        external
-        isLive
-        returns (uint256, uint256)
-    {
+    function collateralizeVault(
+        uint256 amount,
+        address owner,
+        uint256 _vaultId
+    ) external isLive returns (uint256, uint256) {
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[_vault.collateralName];
+        Collateral storage _collateral = collateralMapping[
+            _vault.collateralName
+        ];
 
         _vault.unlockedCollateral += amount;
         _collateral.TotalCollateralValue += amount;
 
-        uint256 expectedAmount = scalePrecision(amount, _collateral.collateralDecimal, stableToken.decimals());
+        uint256 expectedAmount = scalePrecision(
+            amount,
+            _collateral.collateralDecimal,
+            stableToken.decimals()
+        );
         /* Collateral price will be updated frequently from the Price module(this is a function of current price / liquidation ratio) and stored in the
          ** collateral struct for every given collateral.
          */
@@ -202,7 +225,12 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
         availableStableToken[owner] += debtAmount;
 
-        emit VaultCollateralized(_vault.unlockedCollateral, availableStableToken[owner], owner, _vaultId);
+        emit VaultCollateralized(
+            _vault.unlockedCollateral,
+            availableStableToken[owner],
+            owner,
+            _vaultId
+        );
         return (availableStableToken[owner], _vault.unlockedCollateral);
     }
 
@@ -211,13 +239,22 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
      * @param _vaultId ID of the vault tied to the user
      * @param amount amount of stableToken to be withdrawn
      */
-    function withdrawStableToken(uint256 _vaultId, uint256 amount) external isLive returns (bool) {
+    function withdrawStableToken(
+        uint256 _vaultId,
+        uint256 amount
+    ) external isLive returns (bool) {
         address _owner = ownerMapping[_vaultId];
         availableStableToken[_owner] -= amount;
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[_vault.collateralName];
+        Collateral storage _collateral = collateralMapping[
+            _vault.collateralName
+        ];
 
-        uint256 expectedCollateralAmount = scalePrecision(amount, stableToken.decimals(), _collateral.collateralDecimal);
+        uint256 expectedCollateralAmount = scalePrecision(
+            amount,
+            stableToken.decimals(),
+            _collateral.collateralDecimal
+        );
 
         uint256 collateralAmount = expectedCollateralAmount / _collateral.price;
 
@@ -241,9 +278,14 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
      * @param _vaultId ID of the vault tied to the user
      * @param amount amount of collateral to be withdrawn
      */
-    function withdrawUnlockedCollateral(uint256 _vaultId, uint256 amount) external isLive returns (bool) {
+    function withdrawUnlockedCollateral(
+        uint256 _vaultId,
+        uint256 amount
+    ) external isLive returns (bool) {
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[_vault.collateralName];
+        Collateral storage _collateral = collateralMapping[
+            _vault.collateralName
+        ];
 
         _vault.unlockedCollateral -= amount;
 
@@ -265,11 +307,20 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
      * @param _vaultId ID of the vault tied to the user
      * @param amount amount of stableToken to pay back
      */
-    function cleanseVault(uint256 _vaultId, uint256 amount) external isLive returns (bool) {
+    function cleanseVault(
+        uint256 _vaultId,
+        uint256 amount
+    ) external isLive returns (bool) {
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[_vault.collateralName];
+        Collateral storage _collateral = collateralMapping[
+            _vault.collateralName
+        ];
 
-        uint256 expectedAmount = scalePrecision(amount, stableToken.decimals(), _collateral.collateralDecimal);
+        uint256 expectedAmount = scalePrecision(
+            amount,
+            stableToken.decimals(),
+            _collateral.collateralDecimal
+        );
 
         uint256 collateralAmount = expectedAmount / _collateral.price;
 
@@ -297,7 +348,9 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         return vaultId;
     }
 
-    function getVaultById(uint256 _vaultId) external view returns (Vault memory) {
+    function getVaultById(
+        uint256 _vaultId
+    ) external view returns (Vault memory) {
         Vault memory _vault = vaultMapping[_vaultId];
 
         return _vault;
@@ -308,10 +361,21 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         return _owner;
     }
 
-    function getCollateralData(bytes32 _collateralName)
+    function getCollateralData(
+        bytes32 _collateralName
+    )
         external
         view
-        returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
     {
         Collateral storage _collateral = collateralMapping[_collateralName];
 
@@ -327,11 +391,15 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         );
     }
 
-    function getVaultCountForOwner(address owner) external view returns (uint256) {
+    function getVaultCountForOwner(
+        address owner
+    ) external view returns (uint256) {
         return vaultCountMapping[owner];
     }
 
-    function getVaultsForOwner(address owner) external view returns (uint256[] memory ids) {
+    function getVaultsForOwner(
+        address owner
+    ) external view returns (uint256[] memory ids) {
         uint256 count = _getVaultCountForOwner(owner);
         ids = new uint[](count);
 
@@ -346,11 +414,15 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         }
     }
 
-    function getAvailableStableToken(address owner) external view returns (uint256) {
+    function getAvailableStableToken(
+        address owner
+    ) external view returns (uint256) {
         return availableStableToken[owner];
     }
 
-    function _getVaultCountForOwner(address owner) internal view returns (uint256) {
+    function _getVaultCountForOwner(
+        address owner
+    ) internal view returns (uint256) {
         return vaultCountMapping[owner];
     }
 
