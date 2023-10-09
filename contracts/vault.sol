@@ -5,26 +5,23 @@ pragma solidity 0.8.21;
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./schema/IVaultSchema.sol";
 
 contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
-    using SafeMath for uint256;
-
     uint256 public debt; // sum of all stable tokens issued. e.g stableToken
     uint256 public live; // Active Flag
-    uint vaultId; // auto incremental
+    uint256 vaultId; // auto incremental
     ERC20Upgradeable stableToken; // stablecoin token
     string stableTokenName;
 
     Vault[] vault; // list of vaults
     mapping(bytes32 => Collateral) public collateralMapping; // collateral name => collateral data
-    mapping(uint => Vault) public vaultMapping; // vault ID => vault data
-    mapping(uint => address) public ownerMapping; // vault ID => Owner
-    mapping(address => uint) public firstVault; // Owner => First VaultId
-    mapping(address => uint) public lastVault; // Owner => Last VaultId
-    mapping(uint => List) public list; // VaultID => Prev & Next VaultID (double linked list)
-    mapping(address => uint) public vaultCountMapping; // Owner => Amount of Vaults
+    mapping(uint256 => Vault) public vaultMapping; // vault ID => vault data
+    mapping(uint256 => address) public ownerMapping; // vault ID => Owner
+    mapping(address => uint256) public firstVault; // Owner => First VaultId
+    mapping(address => uint256) public lastVault; // Owner => Last VaultId
+    mapping(uint256 => List) public list; // VaultID => Prev & Next VaultID (double linked list)
+    mapping(address => uint256) public vaultCountMapping; // Owner => Amount of Vaults
     mapping(address => uint256) public availableStableToken; // owner => available stable tokens(e.g stableToken) balance -- waiting to be minted
 
     // -- ERRORS --
@@ -33,25 +30,14 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     error UnrecognizedParam(string error);
 
     // -- EVENTS --
-    event VaultCreated(uint vaultId, address indexed owner);
+    event VaultCreated(uint256 vaultId, address indexed owner);
     event CollateralAdded(bytes32 collateralName);
     event VaultCollateralized(
-        uint256 unlockedCollateral,
-        uint256 availableStableToken,
-        address indexed owner,
-        uint vaultId
+        uint256 unlockedCollateral, uint256 availableStableToken, address indexed owner, uint256 vaultId
     );
-    event StableTokenWithdrawn(
-        uint256 amount,
-        address indexed owner,
-        uint vaultId
-    );
-    event CollateralWithdrawn(
-        uint256 amount,
-        address indexed owner,
-        uint vaultId
-    );
-    event VaultCleansed(uint256 amount, address indexed owner, uint vaultId);
+    event StableTokenWithdrawn(uint256 amount, address indexed owner, uint256 vaultId);
+    event CollateralWithdrawn(uint256 amount, address indexed owner, uint256 vaultId);
+    event VaultCleansed(uint256 amount, address indexed owner, uint256 vaultId);
 
     // - Vault type --
 
@@ -77,11 +63,7 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
     }
 
     // -- UTILITY --
-    function scalePrecision(
-        uint256 amount,
-        uint256 fromDecimal,
-        uint256 toDecimal
-    ) internal pure returns (uint256) {
+    function scalePrecision(uint256 amount, uint256 fromDecimal, uint256 toDecimal) internal pure returns (uint256) {
         if (fromDecimal > toDecimal) {
             return amount / 10 ** (fromDecimal - toDecimal);
         } else if (fromDecimal < toDecimal) {
@@ -122,22 +104,30 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         return true;
     }
 
-    function updateCollateralData(
-        bytes32 _collateralName,
-        bytes32 param,
-        uint256 data
-    ) external isLive onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
+    function updateCollateralData(bytes32 _collateralName, bytes32 param, uint256 data)
+        external
+        isLive
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        returns (bool)
+    {
         Collateral storage _collateral = collateralMapping[_collateralName];
-        if (param == "price") _collateral.price = data;
-        else if (param == "debtCeiling") _collateral.debtCeiling = data;
-        else if (param == "debtFloor") _collateral.debtFloor = data;
-        else if (param == "rate") _collateral.rate = data;
-        else if (param == "badDebtGracePeriod")
+        if (param == "price") {
+            _collateral.price = data;
+        } else if (param == "debtCeiling") {
+            _collateral.debtCeiling = data;
+        } else if (param == "debtFloor") {
+            _collateral.debtFloor = data;
+        } else if (param == "rate") {
+            _collateral.rate = data;
+        } else if (param == "badDebtGracePeriod") {
             _collateral.badDebtGracePeriod = data;
-        else if (param == "collateralDecimal")
+        } else if (param == "collateralDecimal") {
             _collateral.collateralDecimal = data;
-        else if (param == "exists") _collateral.exists = data;
-        else revert UnrecognizedParam("CoreVault/collateral data unrecognized");
+        } else if (param == "exists") {
+            _collateral.exists = data;
+        } else {
+            revert UnrecognizedParam("CoreVault/collateral data unrecognized");
+        }
 
         return true;
     }
@@ -147,44 +137,44 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
      * @param owner address that owns the vault
      * @param _collateralName name of the collateral tied to a vault
      */
-    function createVault(
-        address owner,
-        bytes32 _collateralName
-    ) external isLive returns (uint) {
+    function createVault(address owner, bytes32 _collateralName) external isLive returns (uint256) {
         if (owner == address(0)) {
             revert ZeroAddress("CoreVault/owner address is zero ");
         }
         if (collateralMapping[_collateralName].exists == 0) {
             revert UnrecognizedParam("CoreVault/collateral name unrecognized");
         }
+
         vaultId += 1;
+        uint256 _vaultId = vaultId;
 
-        Vault storage _vault = vaultMapping[vaultId];
+        Vault memory _vault = Vault({
+            lockedCollateral: 0,
+            normalisedDebt: 0,
+            unlockedCollateral: 0,
+            collateralName: _collateralName,
+            vaultState: VaultStateEnum.Idle
+        });
+        vaultMapping[_vaultId] = _vault;
 
-        _vault.lockedCollateral = 0;
-        _vault.normalisedDebt = 0;
-        _vault.unlockedCollateral = 0;
-        _vault.collateralName = _collateralName;
-        _vault.vaultState = VaultStateEnum.Idle;
-
-        ownerMapping[vaultId] = owner;
+        ownerMapping[_vaultId] = owner;
         vaultCountMapping[owner] += 1;
 
         // add new vault to double linked list and pointers
         if (firstVault[owner] == 0) {
-            firstVault[owner] = vaultId;
+            firstVault[owner] = _vaultId;
         }
         if (lastVault[owner] != 0) {
-            list[vaultId].prev = lastVault[owner];
-            list[lastVault[owner]].next = vaultId;
+            list[_vaultId].prev = lastVault[owner];
+            list[lastVault[owner]].next = _vaultId;
         }
 
-        lastVault[owner] = vaultId;
+        lastVault[owner] = _vaultId;
 
         vault.push(_vault);
 
-        emit VaultCreated(vaultId, owner);
-        return vaultId;
+        emit VaultCreated(_vaultId, owner);
+        return _vaultId;
     }
 
     /**
@@ -193,46 +183,26 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
      * @param owner Owner of the vault
      * @param _vaultId ID of the vault to be collaterized
      */
-    function collateralizeVault(
-        uint256 amount,
-        address owner,
-        uint256 _vaultId
-    ) external isLive returns (uint, uint) {
+    function collateralizeVault(uint256 amount, address owner, uint256 _vaultId)
+        external
+        isLive
+        returns (uint256, uint256)
+    {
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[
-            _vault.collateralName
-        ];
+        Collateral storage _collateral = collateralMapping[_vault.collateralName];
 
-        _vault.unlockedCollateral = SafeMath.add(
-            _vault.unlockedCollateral,
-            amount
-        );
-        _collateral.TotalCollateralValue = SafeMath.add(
-            _collateral.TotalCollateralValue,
-            amount
-        );
+        _vault.unlockedCollateral += amount;
+        _collateral.TotalCollateralValue += amount;
 
-        uint256 expectedAmount = scalePrecision(
-            amount,
-            _collateral.collateralDecimal,
-            stableToken.decimals()
-        );
+        uint256 expectedAmount = scalePrecision(amount, _collateral.collateralDecimal, stableToken.decimals());
         /* Collateral price will be updated frequently from the Price module(this is a function of current price / liquidation ratio) and stored in the
          ** collateral struct for every given collateral.
          */
-        uint256 debtAmount = SafeMath.mul(expectedAmount, _collateral.price);
+        uint256 debtAmount = expectedAmount * _collateral.price;
 
-        availableStableToken[owner] = SafeMath.add(
-            availableStableToken[owner],
-            debtAmount
-        );
+        availableStableToken[owner] += debtAmount;
 
-        emit VaultCollateralized(
-            _vault.unlockedCollateral,
-            availableStableToken[owner],
-            owner,
-            _vaultId
-        );
+        emit VaultCollateralized(_vault.unlockedCollateral, availableStableToken[owner], owner, _vaultId);
         return (availableStableToken[owner], _vault.unlockedCollateral);
     }
 
@@ -241,45 +211,24 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
      * @param _vaultId ID of the vault tied to the user
      * @param amount amount of stableToken to be withdrawn
      */
-    function withdrawStableToken(
-        uint _vaultId,
-        uint256 amount
-    ) external isLive returns (bool) {
+    function withdrawStableToken(uint256 _vaultId, uint256 amount) external isLive returns (bool) {
         address _owner = ownerMapping[_vaultId];
-        availableStableToken[_owner] = SafeMath.sub(
-            availableStableToken[_owner],
-            amount
-        );
+        availableStableToken[_owner] -= amount;
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[
-            _vault.collateralName
-        ];
+        Collateral storage _collateral = collateralMapping[_vault.collateralName];
 
-        uint256 expectedCollateralAmount = scalePrecision(
-            amount,
-            stableToken.decimals(),
-            _collateral.collateralDecimal
-        );
+        uint256 expectedCollateralAmount = scalePrecision(amount, stableToken.decimals(), _collateral.collateralDecimal);
 
-        uint256 collateralAmount = SafeMath.div(
-            expectedCollateralAmount,
-            _collateral.price
-        );
+        uint256 collateralAmount = expectedCollateralAmount / _collateral.price;
 
-        _vault.unlockedCollateral = SafeMath.sub(
-            _vault.unlockedCollateral,
-            collateralAmount
-        );
-        _vault.lockedCollateral = SafeMath.add(
-            _vault.lockedCollateral,
-            collateralAmount
-        );
+        _vault.unlockedCollateral -= collateralAmount;
+        _vault.lockedCollateral += collateralAmount;
 
-        _vault.normalisedDebt = SafeMath.add(_vault.normalisedDebt, amount);
+        _vault.normalisedDebt += amount;
         _collateral.TotalNormalisedDebt += _vault.normalisedDebt;
 
         // increase total debt
-        debt = SafeMath.add(debt, amount);
+        debt += amount;
 
         _vault.vaultState = VaultStateEnum.Active;
 
@@ -292,33 +241,19 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
      * @param _vaultId ID of the vault tied to the user
      * @param amount amount of collateral to be withdrawn
      */
-    function withdrawUnlockedCollateral(
-        uint _vaultId,
-        uint256 amount
-    ) external isLive returns (bool) {
+    function withdrawUnlockedCollateral(uint256 _vaultId, uint256 amount) external isLive returns (bool) {
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[
-            _vault.collateralName
-        ];
+        Collateral storage _collateral = collateralMapping[_vault.collateralName];
 
-        _vault.unlockedCollateral = SafeMath.sub(
-            _vault.unlockedCollateral,
-            amount
-        );
+        _vault.unlockedCollateral -= amount;
 
-        _collateral.TotalCollateralValue = SafeMath.sub(
-            _collateral.TotalCollateralValue,
-            amount
-        );
+        _collateral.TotalCollateralValue -= amount;
 
-        uint256 stableTokenAmount = SafeMath.mul(amount, _collateral.price);
+        uint256 stableTokenAmount = amount * _collateral.price;
 
         address _owner = ownerMapping[_vaultId];
 
-        availableStableToken[_owner] = SafeMath.sub(
-            availableStableToken[_owner],
-            stableTokenAmount
-        );
+        availableStableToken[_owner] -= stableTokenAmount;
 
         emit CollateralWithdrawn(amount, _owner, vaultId);
 
@@ -330,48 +265,27 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
      * @param _vaultId ID of the vault tied to the user
      * @param amount amount of stableToken to pay back
      */
-    function cleanseVault(
-        uint _vaultId,
-        uint256 amount
-    ) external isLive returns (bool) {
+    function cleanseVault(uint256 _vaultId, uint256 amount) external isLive returns (bool) {
         Vault storage _vault = vaultMapping[_vaultId];
-        Collateral memory _collateral = collateralMapping[
-            _vault.collateralName
-        ];
+        Collateral storage _collateral = collateralMapping[_vault.collateralName];
 
-        uint256 expectedAmount = scalePrecision(
-            amount,
-            stableToken.decimals(),
-            _collateral.collateralDecimal
-        );
+        uint256 expectedAmount = scalePrecision(amount, stableToken.decimals(), _collateral.collateralDecimal);
 
-        uint256 collateralAmount = SafeMath.div(
-            expectedAmount,
-            _collateral.price
-        );
+        uint256 collateralAmount = expectedAmount / _collateral.price;
 
         address _owner = ownerMapping[_vaultId];
 
-        availableStableToken[_owner] = SafeMath.add(
-            availableStableToken[_owner],
-            amount
-        );
+        availableStableToken[_owner] += amount;
 
-        _vault.lockedCollateral = SafeMath.sub(
-            _vault.lockedCollateral,
-            collateralAmount
-        );
+        _vault.lockedCollateral -= collateralAmount;
 
-        _vault.unlockedCollateral = SafeMath.add(
-            _vault.unlockedCollateral,
-            collateralAmount
-        );
+        _vault.unlockedCollateral += collateralAmount;
 
-        _vault.normalisedDebt = SafeMath.sub(_vault.normalisedDebt, amount);
+        _vault.normalisedDebt -= amount;
         _vault.vaultState = VaultStateEnum.Inactive;
 
         // reduce total system debt
-        debt = SafeMath.sub(debt, _vault.normalisedDebt);
+        debt = debt - _vault.normalisedDebt;
 
         emit VaultCleansed(amount, _owner, _vaultId);
         return true;
@@ -379,13 +293,11 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
 
     // --GETTER METHODS --------------------------------
 
-    function getVaultId() external view returns (uint) {
+    function getVaultId() external view returns (uint256) {
         return vaultId;
     }
 
-    function getVaultById(
-        uint256 _vaultId
-    ) external view returns (Vault memory) {
+    function getVaultById(uint256 _vaultId) external view returns (Vault memory) {
         Vault memory _vault = vaultMapping[_vaultId];
 
         return _vault;
@@ -396,23 +308,12 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         return _owner;
     }
 
-    function getCollateralData(
-        bytes32 _collateralName
-    )
+    function getCollateralData(bytes32 _collateralName)
         external
         view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
+        returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)
     {
-        Collateral memory _collateral = collateralMapping[_collateralName];
+        Collateral storage _collateral = collateralMapping[_collateralName];
 
         return (
             _collateral.TotalNormalisedDebt,
@@ -426,19 +327,17 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         );
     }
 
-    function getVaultCountForOwner(address owner) external view returns (uint) {
+    function getVaultCountForOwner(address owner) external view returns (uint256) {
         return vaultCountMapping[owner];
     }
 
-    function getVaultsForOwner(
-        address owner
-    ) external view returns (uint[] memory ids) {
-        uint count = _getVaultCountForOwner(owner);
+    function getVaultsForOwner(address owner) external view returns (uint256[] memory ids) {
+        uint256 count = _getVaultCountForOwner(owner);
         ids = new uint[](count);
 
-        uint i = 0;
+        uint256 i = 0;
 
-        uint id = firstVault[owner];
+        uint256 id = firstVault[owner];
 
         while (id > 0) {
             ids[i] = id;
@@ -447,19 +346,15 @@ contract CoreVault is Initializable, AccessControlUpgradeable, IVaultSchema {
         }
     }
 
-    function getAvailableStableToken(
-        address owner
-    ) external view returns (uint256) {
+    function getAvailableStableToken(address owner) external view returns (uint256) {
         return availableStableToken[owner];
     }
 
-    function _getVaultCountForOwner(
-        address owner
-    ) internal view returns (uint) {
+    function _getVaultCountForOwner(address owner) internal view returns (uint256) {
         return vaultCountMapping[owner];
     }
 
-    function _getList(uint id) internal view returns (uint, uint) {
+    function _getList(uint256 id) internal view returns (uint256, uint256) {
         List memory _list = list[id];
         return (_list.prev, _list.next);
     }
