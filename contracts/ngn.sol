@@ -7,10 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 import "./helpers/ERC2771ContextUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-
-import "hardhat/console.sol";
 
 contract xNGN is
     Initializable,
@@ -24,7 +21,7 @@ contract xNGN is
 
     // --- ERC20 Data ---
     string public constant version = "1";
-    uint public live; // Active Flag
+    uint256 public live; // Active Flag
 
     // -- EVENTS --
     event Cage();
@@ -61,7 +58,7 @@ contract xNGN is
      */
     function mint(
         address account,
-        uint amount
+        uint256 amount
     ) external onlyRole(MINTER_ROLE) returns (bool) {
         if (live != 1) {
             revert NotLive("xNGN/not-live");
@@ -77,17 +74,16 @@ contract xNGN is
      */
     function burn(
         address account,
-        uint amount
+        uint256 amount
     ) external onlyRole(MINTER_ROLE) returns (bool) {
         if (live != 1) {
             revert NotLive("xNGN/not-live");
         }
         if (
             account != msg.sender &&
-            allowance(account, msg.sender) != type(uint).max
+            allowance(account, msg.sender) != type(uint256).max
         ) {
             if (allowance(account, msg.sender) < amount) {
-                console.log(allowance(msg.sender, account));
                 revert NotLive("xNGN/not-live");
             }
         }

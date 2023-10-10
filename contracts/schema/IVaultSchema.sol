@@ -24,8 +24,8 @@ interface IVaultSchema {
     }
 
     struct List {
-        uint prev;
-        uint next;
+        uint256 prev;
+        uint256 next;
     }
 
     enum VaultStateEnum {

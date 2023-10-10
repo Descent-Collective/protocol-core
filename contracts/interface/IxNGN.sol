@@ -2,9 +2,9 @@
 pragma solidity 0.8.21;
 
 interface IxNGN {
-    function mint(address account, uint amount) external returns (bool);
+    function mint(address account, uint256 amount) external returns (bool);
 
-    function burn(address account, uint amount) external returns (bool);
+    function burn(address account, uint256 amount) external returns (bool);
 
     function permitToken(
         address owner,

@@ -5,6 +5,7 @@ import USDCAbi from "./abis/usdc.json";
 
 describe("Onboard Vault", async () => {
   let adminAccount;
+  let adminAddress: string;
   let vaultContract: any;
   let xNGNContract: any;
   let usdcAdaptercontract: any;
@@ -14,6 +15,7 @@ describe("Onboard Vault", async () => {
   let usdcTokenContractWithSigner: any;
   let unlockedAddress = "0x51eDF02152EBfb338e03E30d65C15fBf06cc9ECC";
   let usdcAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+  const collateraType = ethers.encodeBytes32String("USDC-A");
 
   async function impersonateAccount() {
     const signer = await hre.ethers.provider.getSigner(unlockedAddress);
@@ -24,7 +26,7 @@ describe("Onboard Vault", async () => {
       params: [unlockedAddress],
     });
 
-    usdcTokenContract = await new ethers.Contract(usdcAddress, USDCAbi, signer);
+    usdcTokenContract = new ethers.Contract(usdcAddress, USDCAbi, signer);
     usdcTokenContractWithSigner = usdcTokenContract.connect(signer);
 
     console.log(
@@ -74,12 +76,10 @@ describe("Onboard Vault", async () => {
     );
   }
 
-  const collateraType = ethers.encodeBytes32String("USDC-A");
-
-  [adminAccount] = await ethers.getSigners();
-  const adminAddress = adminAccount.address;
-
   before(async () => {
+    [adminAccount] = await ethers.getSigners();
+    adminAddress = adminAccount.address;
+
     // deploy xngn contract
     const xNGNToken = await ethers.getContractFactory("xNGN");
     xNGNContract = await upgrades.deployProxy(xNGNToken, [[adminAddress]], {

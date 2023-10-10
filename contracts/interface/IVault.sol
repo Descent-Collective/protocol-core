@@ -7,7 +7,7 @@ interface IVault is IVaultSchema {
     function createVault(
         address owner,
         bytes32 _collateralName
-    ) external returns (uint);
+    ) external returns (uint256);
 
     function collateralizeVault(
         uint256 amount,
@@ -16,21 +16,21 @@ interface IVault is IVaultSchema {
     ) external returns (uint256, uint256);
 
     function withdrawStableToken(
-        uint _vaultId,
+        uint256 _vaultId,
         uint256 amount
     ) external returns (bool);
 
     function withdrawUnlockedCollateral(
-        uint _vaultId,
+        uint256 _vaultId,
         uint256 amount
     ) external returns (bool);
 
     function cleanseVault(
-        uint _vaultId,
+        uint256 _vaultId,
         uint256 amount
     ) external returns (bool);
 
-    function getVaultId() external view returns (uint);
+    function getVaultId() external view returns (uint256);
 
     function getVaultById(
         uint256 _vaultId
@@ -40,7 +40,7 @@ interface IVault is IVaultSchema {
 
     function getVaultsForOwner(
         address owner
-    ) external view returns (uint[] memory);
+    ) external view returns (uint256[] memory);
 
     function getCollateralData(
         bytes32 _collateralName
@@ -59,10 +59,12 @@ interface IVault is IVaultSchema {
         );
 
     function getCollateralDataByVaultId(
-        uint _vaultId
+        uint256 _vaultId
     ) external view returns (Collateral memory);
 
-    function getVaultCountForOwner(address owner) external view returns (uint);
+    function getVaultCountForOwner(
+        address owner
+    ) external view returns (uint256);
 
     function getAvailableStableToken(
         address owner
