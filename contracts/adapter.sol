@@ -13,11 +13,11 @@ contract USDCAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
     bytes32 public collateralType; // USDC Type USDC-A | USDT-A
     IERC20 public collateralContract; // usdc contract
-    uint public live; // Active Flag
+    uint256 public live; // Active Flag
 
     // -- EVENTS --
-    event USDCJoined(uint vaultId, address indexed owner, uint256 amount);
-    event USDCExited(uint vaultId, address indexed owner, uint256 amount);
+    event USDCJoined(uint256 vaultId, address indexed owner, uint256 amount);
+    event USDCExited(uint256 vaultId, address indexed owner, uint256 amount);
 
     // -- ERRORS --
     error NotLive(string error);
@@ -42,7 +42,7 @@ contract USDCAdapter is Initializable, AccessControlUpgradeable {
         address owner,
         uint256 _vaultId
     ) external isLive {
-        if (amount <= 0) {
+        if (amount == 0) {
             revert ZeroAmount("Adapter/amount-is-zero");
         }
         // calls vault contract to open it
@@ -58,7 +58,7 @@ contract USDCAdapter is Initializable, AccessControlUpgradeable {
         address owner,
         uint256 _vaultId
     ) external isLive {
-        if (amount <= 0) {
+        if (amount == 0) {
             revert ZeroAmount("Adapter/amount-is-zero");
         }
         address vaultOwner = vaultContract.getVaultOwner(_vaultId);
@@ -87,11 +87,11 @@ contract USDCAdapter is Initializable, AccessControlUpgradeable {
 contract xNGNAdapter is Initializable, AccessControlUpgradeable {
     IVault public vaultContract; // Vault Engine
     IxNGN public xNGN; // NGNx contract
-    uint public live; // Active Flag
+    uint256 public live; // Active Flag
 
     // -- EVENTS --
-    event xNGNJoined(uint vaultId, address indexed owner, uint256 amount);
-    event xNGNExited(uint vaultId, address indexed owner, uint256 amount);
+    event xNGNJoined(uint256 vaultId, address indexed owner, uint256 amount);
+    event xNGNExited(uint256 vaultId, address indexed owner, uint256 amount);
 
     // -- ERRORS --
     error NotLive(string error);
@@ -112,7 +112,7 @@ contract xNGNAdapter is Initializable, AccessControlUpgradeable {
         address owner,
         uint256 _vaultId
     ) external isLive {
-        if (amount <= 0) {
+        if (amount == 0) {
             revert ZeroAmount("Adapter/amount-is-zero");
         }
         // calls the cleanse vault contrarct method
@@ -128,7 +128,7 @@ contract xNGNAdapter is Initializable, AccessControlUpgradeable {
         address owner,
         uint256 _vaultId
     ) external isLive {
-        if (amount <= 0) {
+        if (amount == 0) {
             revert ZeroAmount("Adapter/amount-is-zero");
         }
         address vaultOwner = vaultContract.getVaultOwner(_vaultId);
