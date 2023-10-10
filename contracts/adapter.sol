@@ -42,7 +42,7 @@ contract USDCAdapter is Initializable, AccessControlUpgradeable {
         address owner,
         uint256 _vaultId
     ) external isLive {
-        if (amount <= 0) {
+        if (amount == 0) {
             revert ZeroAmount("Adapter/amount-is-zero");
         }
         // calls vault contract to open it
@@ -58,7 +58,7 @@ contract USDCAdapter is Initializable, AccessControlUpgradeable {
         address owner,
         uint256 _vaultId
     ) external isLive {
-        if (amount <= 0) {
+        if (amount == 0) {
             revert ZeroAmount("Adapter/amount-is-zero");
         }
         address vaultOwner = vaultContract.getVaultOwner(_vaultId);
@@ -112,7 +112,7 @@ contract xNGNAdapter is Initializable, AccessControlUpgradeable {
         address owner,
         uint256 _vaultId
     ) external isLive {
-        if (amount <= 0) {
+        if (amount == 0) {
             revert ZeroAmount("Adapter/amount-is-zero");
         }
         // calls the cleanse vault contrarct method
@@ -128,7 +128,7 @@ contract xNGNAdapter is Initializable, AccessControlUpgradeable {
         address owner,
         uint256 _vaultId
     ) external isLive {
-        if (amount <= 0) {
+        if (amount == 0) {
             revert ZeroAmount("Adapter/amount-is-zero");
         }
         address vaultOwner = vaultContract.getVaultOwner(_vaultId);
