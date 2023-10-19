@@ -30,6 +30,12 @@ interface IVault is IVaultSchema {
         uint256 amount
     ) external returns (bool);
 
+    function updateCollateralData(
+        bytes32 _collateralName,
+        bytes32 param,
+        uint256 data
+    ) external returns (bool);
+
     function getVaultId() external view returns (uint256);
 
     function getVaultById(
