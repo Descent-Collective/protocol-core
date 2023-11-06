@@ -1,0 +1,461 @@
+{
+  "abi": [
+    {
+      "inputs": [],
+      "name": "Paused",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "collateral",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        }
+      ],
+      "name": "Read",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "oracle",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "collateral",
+          "type": "address"
+        }
+      ],
+      "name": "setPriceOracleContract",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "collateral",
+          "type": "address"
+        }
+      ],
+      "name": "updatePrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "setPriceOracleContract(address,address)": "5ab68dd8",
+    "updatePrice(address)": "96e85ced"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.21+commit.d9974bed\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"Paused\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"Read\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oracle\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"}],\"name\":\"setPriceOracleContract\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"}],\"name\":\"updatePrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/interfaces/IFeed.sol\":\"IFeed\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@openzeppelin/=lib/openzeppelin-contracts/\",\":@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/\"]},\"sources\":{\"src/interfaces/IFeed.sol\":{\"keccak256\":\"0x6c90270e45dd8193c0b13478e6f3ad0e2520ad0e04df7ce0627520c9a3ae3148\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://479c1cad85c4257b6b7e5ca4de205d548300eb31134ad36536cd1ab2dec44e8d\",\"dweb:/ipfs/QmNyjf56CNboYnDHZcm6621jfddtqaDRGjJMYAK3WYdGHn\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.21+commit.d9974bed"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [],
+          "type": "error",
+          "name": "Paused"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "collateral",
+              "type": "address",
+              "indexed": false
+            },
+            {
+              "internalType": "uint256",
+              "name": "price",
+              "type": "uint256",
+              "indexed": false
+            }
+          ],
+          "type": "event",
+          "name": "Read",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "oracle",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "collateral",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "setPriceOracleContract"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "collateral",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "updatePrice"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@openzeppelin/=lib/openzeppelin-contracts/",
+        "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/",
+        "forge-std/=lib/forge-std/src/",
+        "openzeppelin-contracts/=lib/openzeppelin-contracts/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "src/interfaces/IFeed.sol": "IFeed"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "src/interfaces/IFeed.sol": {
+        "keccak256": "0x6c90270e45dd8193c0b13478e6f3ad0e2520ad0e04df7ce0627520c9a3ae3148",
+        "urls": [
+          "bzz-raw://479c1cad85c4257b6b7e5ca4de205d548300eb31134ad36536cd1ab2dec44e8d",
+          "dweb:/ipfs/QmNyjf56CNboYnDHZcm6621jfddtqaDRGjJMYAK3WYdGHn"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "src/interfaces/IFeed.sol",
+    "id": 48129,
+    "exportedSymbols": {
+      "IFeed": [
+        48128
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "32:256:44",
+    "nodes": [
+      {
+        "id": 48107,
+        "nodeType": "PragmaDirective",
+        "src": "32:23:44",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".21"
+        ]
+      },
+      {
+        "id": 48128,
+        "nodeType": "ContractDefinition",
+        "src": "57:230:44",
+        "nodes": [
+          {
+            "id": 48109,
+            "nodeType": "ErrorDefinition",
+            "src": "79:15:44",
+            "nodes": [],
+            "errorSelector": "9e87fac8",
+            "name": "Paused",
+            "nameLocation": "85:6:44",
+            "parameters": {
+              "id": 48108,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "91:2:44"
+            }
+          },
+          {
+            "id": 48115,
+            "nodeType": "EventDefinition",
+            "src": "100:46:44",
+            "nodes": [],
+            "anonymous": false,
+            "eventSelector": "eee6047fc5e3ea81b2b940b6b7c0140055ee3f19ba649d78e25718bdf67eae40",
+            "name": "Read",
+            "nameLocation": "106:4:44",
+            "parameters": {
+              "id": 48114,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 48111,
+                  "indexed": false,
+                  "mutability": "mutable",
+                  "name": "collateral",
+                  "nameLocation": "119:10:44",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 48115,
+                  "src": "111:18:44",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 48110,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "111:7:44",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 48113,
+                  "indexed": false,
+                  "mutability": "mutable",
+                  "name": "price",
+                  "nameLocation": "139:5:44",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 48115,
+                  "src": "131:13:44",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 48112,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "131:7:44",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "110:35:44"
+            }
+          },
+          {
+            "id": 48120,
+            "nodeType": "FunctionDefinition",
+            "src": "152:50:44",
+            "nodes": [],
+            "functionSelector": "96e85ced",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "updatePrice",
+            "nameLocation": "161:11:44",
+            "parameters": {
+              "id": 48118,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 48117,
+                  "mutability": "mutable",
+                  "name": "collateral",
+                  "nameLocation": "181:10:44",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 48120,
+                  "src": "173:18:44",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 48116,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "173:7:44",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "172:20:44"
+            },
+            "returnParameters": {
+              "id": 48119,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "201:0:44"
+            },
+            "scope": 48128,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 48127,
+            "nodeType": "FunctionDefinition",
+            "src": "208:77:44",
+            "nodes": [],
+            "functionSelector": "5ab68dd8",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "setPriceOracleContract",
+            "nameLocation": "217:22:44",
+            "parameters": {
+              "id": 48125,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 48122,
+                  "mutability": "mutable",
+                  "name": "oracle",
+                  "nameLocation": "248:6:44",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 48127,
+                  "src": "240:14:44",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 48121,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "240:7:44",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 48124,
+                  "mutability": "mutable",
+                  "name": "collateral",
+                  "nameLocation": "264:10:44",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 48127,
+                  "src": "256:18:44",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 48123,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "256:7:44",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "239:36:44"
+            },
+            "returnParameters": {
+              "id": 48126,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "284:0:44"
+            },
+            "scope": 48128,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IFeed",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          48128
+        ],
+        "name": "IFeed",
+        "nameLocation": "67:5:44",
+        "scope": 48129,
+        "usedErrors": [
+          48109
+        ],
+        "usedEvents": [
+          48115
+        ]
+      }
+    ],
+    "license": "MIT"
+  },
+  "id": 44
+}

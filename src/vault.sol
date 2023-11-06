@@ -2,370 +2,312 @@
 pragma solidity 0.8.21;
 
 //  ==========  External imports    ==========
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "./interfaces/IVault.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IVault} from "./interfaces/IVault.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Currency} from "./currency.sol";
 
-contract CoreVault is AccessControl, IVault {
-    uint256 constant STABLE_TOKEN_DECIMALS = 18;
+contract Vault is AccessControl, IVault {
+    bytes32 private constant FEED_CONTRACT_ROLE = keccak256("FEED_CONTRACT_ROLE");
+    uint256 private constant FALSE = 1;
+    uint256 private constant TRUE = 2;
+    uint256 private constant PRECISION_DEGREE = 18;
+    uint256 private constant PRECISION = 1 * (10 ** PRECISION_DEGREE);
+    uint256 private constant MIN_HEALTH_FACTOR = PRECISION;
+    uint256 private constant ADDITIONAL_FEED_PRECISION = 1e12;
 
-    uint256 public debt; // sum of all stable tokens issued. e.g stableToken
-    uint256 public live; // Active Flag
-    uint256 public vaultId; // auto incremental
-    string public stableTokenName;
+    Currency public immutable CURRENCY_TOKEN; // stableTokenAddress
 
-    address public stableTokenAdapter;
+    uint256 public debt; // sum of all currency minted
+    uint256 public status; // Active status
 
-    Vault[] vault; // list of vaults
-    mapping(bytes32 => Collateral) public collateralMapping; // collateral name => collateral data
-    mapping(uint256 => Vault) public vaultMapping; // vault ID => vault data
-    mapping(uint256 => address) public ownerOfVault; // vault ID => Owner
-    mapping(address => uint256) public firstVault; // Owner => First VaultId
-    mapping(address => uint256) public lastVault; // Owner => Last VaultId
-    mapping(uint256 => List) public list; // VaultID => Prev & Next VaultID (double linked list)
-    mapping(address => uint256) public vaultCountMapping; // Owner => Amount of Vaults
-    mapping(address => uint256) public availableXNGN; // owner => available xNGN tokens balance -- waiting to be minted
-    mapping(address => bool) public collateralAdapters;
+    mapping(ERC20 => Collateral) public collateralMapping; // collateral address => collateral data
+    mapping(ERC20 => mapping(address => Vault)) public vaultMapping; // vault ID => vault data
 
-    // -- ERRORS --
-    error NotLive(string error);
-    error ZeroAddress(string error);
-    error UnrecognizedParam(string error);
-
-    // -- EVENTS --
-    event VaultCreated(uint256 vaultId, address indexed owner);
-    event CollateralAdded(bytes32 collateralName);
-    event VaultCollateralized(
-        uint256 unlockedCollateral, uint256 availableXNGN, address indexed owner, uint256 vaultId
-    );
-    event StableTokenWithdrawn(uint256 amount, address indexed owner, uint256 vaultId);
-    event CollateralWithdrawn(uint256 amount, address indexed owner, uint256 vaultId);
-    event VaultCleansed(uint256 amount, address indexed owner, uint256 vaultId);
-
-    constructor(address _stableToken) {
+    constructor(Currency _currencyToken) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        live = 1;
-        stableTokenName = ERC20(_stableToken).name();
+        status = TRUE;
+        CURRENCY_TOKEN = _currencyToken;
     }
 
-    function setStablecoinAdapter(address _stableTokenAdapter) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        stableTokenAdapter = _stableTokenAdapter;
-    }
-
-    function setCollateralAdapters(address[] calldata _collateralAdapters, bool[] calldata _flags) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_collateralAdapters.length == _flags.length, "length mismatch");
-        for (uint256 i; i < _collateralAdapters.length; ++i) {
-            collateralAdapters[_collateralAdapters[i]] = _flags[i];
-        }
-    }
-
-    // modifier
-    modifier isLive() {
-        if (live != 1) {
-            revert NotLive("CoreVault/not-live");
-        }
+    modifier whenNotPaused() {
+        if (status == FALSE) revert Paused();
         _;
     }
 
-    modifier isStableAdapter(address addr) {
-        require(addr == stableTokenAdapter, "not token adapter");
-        _;
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        status = TRUE;
     }
 
-    modifier isCollateralAdapter(address addr) {
-        require(collateralAdapters[addr], "not approved collateral adapter");
-        _;
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        status = FALSE;
     }
 
-    // -- ADMIN --
-
-    function cage() external onlyRole(DEFAULT_ADMIN_ROLE) {
-        live = 0;
-    }
-
-    // -- UTILITY --
-    function scalePrecision(uint256 amount, uint256 fromDecimal, uint256 toDecimal) internal pure returns (uint256) {
-        if (fromDecimal > toDecimal) {
-            return amount / 10 ** (fromDecimal - toDecimal);
-        } else if (fromDecimal < toDecimal) {
-            return amount * 10 ** (toDecimal - fromDecimal);
-        } else {
-            return amount;
-        }
+    function updateFeedContract(address _feedContract) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(FEED_CONTRACT_ROLE, _feedContract);
     }
 
     /**
      * @dev Creates a collateral type that'll be accepted by the system
-     * @param _collateralName name of the collateral. e.g. 'USDC-A'
-     * @param rate stablecoin debt multiplier (accumulated stability fees).
-     * @param price collateral price with safety margin, i.e. the maximum stablecoin allowed per unit of collateral.
-     * @param debtCeiling the debt ceiling for a specific collateral type.
-     * @param debtFloor the minimum possible debt of a Vault.
      */
     function createCollateralType(
-        bytes32 _collateralName,
-        uint256 rate,
-        uint256 price,
-        uint256 debtCeiling,
-        uint256 debtFloor,
-        uint256 decimal
-    ) external isLive onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
-        Collateral storage _collateral = collateralMapping[_collateralName];
+        ERC20 _collateralToken,
+        uint256 _rate,
+        uint256 _liquidationThreshold,
+        uint256 _liquidationBonus,
+        uint256 _debtCeiling,
+        uint256 _collateralFloorPerPosition
+    ) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        Collateral storage _collateral = collateralMapping[_collateralToken];
+        if (_collateral.exists) revert CollateralAlreadyExists();
 
-        _collateral.rate = rate;
-        _collateral.price = price;
-        _collateral.debtCeiling = debtCeiling;
-        _collateral.debtFloor = debtFloor;
-        _collateral.collateralDecimal = decimal;
-        _collateral.exists = 1;
+        _collateral.rate = _rate;
+        _collateral.liquidationThreshold = _liquidationThreshold;
+        _collateral.liquidationBonus = _liquidationBonus;
+        _collateral.debtCeiling = _debtCeiling;
+        _collateral.collateralFloorPerPosition = _collateralFloorPerPosition;
+        _collateral.additionalCollateralPercision = PRECISION_DEGREE - _collateralToken.decimals();
+        _collateral.exists = true;
 
-        emit CollateralAdded(_collateralName);
-        return true;
+        emit CollateralAdded(address(_collateralToken));
     }
 
-    function updateCollateralData(bytes32 _collateralName, bytes32 param, uint256 data)
+    function updateCollateralData(ERC20 _collateralToken, bytes32 _param, uint256 _data)
         external
-        isLive
+        whenNotPaused
         onlyRole(DEFAULT_ADMIN_ROLE)
-        returns (bool)
     {
-        Collateral storage _collateral = collateralMapping[_collateralName];
-        if (param == "price") {
-            _collateral.price = data;
-        } else if (param == "debtCeiling") {
-            _collateral.debtCeiling = data;
-        } else if (param == "debtFloor") {
-            _collateral.debtFloor = data;
-        } else if (param == "rate") {
-            _collateral.rate = data;
-        } else if (param == "collateralDecimal") {
-            _collateral.collateralDecimal = data;
-        } else if (param == "exists") {
-            _collateral.exists = data;
-        } else {
-            revert UnrecognizedParam("CoreVault/collateral data unrecognized");
-        }
+        Collateral storage _collateral = collateralMapping[_collateralToken];
 
-        return true;
+        if (_param == "debtCeiling") {
+            _collateral.debtCeiling = _data;
+        } else if (_param == "collateralFloorPerPosition") {
+            _collateral.collateralFloorPerPosition = _data;
+        } else if (_param == "rate") {
+            _collateral.rate = _data;
+        } else if (_param == "liquidationBonus") {
+            _collateral.liquidationBonus = _data;
+        } else if (_param == "liquidationThreshold") {
+            _collateral.liquidationThreshold = _data;
+        } else {
+            revert UnrecognizedParam();
+        }
     }
 
-    /**
-     * @dev Creates/Initializing a  vault
-     * @param owner address that owns the vault
-     * @param _collateralName name of the collateral tied to a vault
-     */
-    function createVault(address owner, bytes32 _collateralName) external isLive returns (uint256) {
-        if (owner == address(0)) {
-            revert ZeroAddress("CoreVault/owner address is zero ");
-        }
-        if (collateralMapping[_collateralName].exists == 0) {
-            revert UnrecognizedParam("CoreVault/collateral name unrecognized");
-        }
-
-        vaultId += 1;
-        uint256 _vaultId = vaultId;
-
-        Vault memory _vault = Vault({
-            lockedCollateral: 0,
-            normalisedDebt: 0,
-            unlockedCollateral: 0,
-            collateralName: _collateralName,
-            vaultState: VaultStateEnum.Idle
-        });
-        vaultMapping[_vaultId] = _vault;
-
-        ownerOfVault[_vaultId] = owner;
-        vaultCountMapping[owner] += 1;
-
-        // add new vault to double linked list and pointers
-        if (firstVault[owner] == 0) {
-            firstVault[owner] = _vaultId;
-        }
-        if (lastVault[owner] != 0) {
-            list[_vaultId].prev = lastVault[owner];
-            list[lastVault[owner]].next = _vaultId;
-        }
-
-        lastVault[owner] = _vaultId;
-
-        vault.push(_vault);
-
-        emit VaultCreated(_vaultId, owner);
-        return _vaultId;
+    function updatePrice(address _collateralAddress, uint256 _price)
+        external
+        whenNotPaused
+        onlyRole(FEED_CONTRACT_ROLE)
+    {
+        collateralMapping[ERC20(_collateralAddress)].price = _price;
     }
 
     /**
      * @dev Collaterizes a vault
-     * @param amount amount of collateral deposited
-     * @param _vaultId ID of the vault to be collaterized
      */
-    function collateralizeVault(uint256 amount, uint256 _vaultId, address caller)
-        external
-        isLive
-        isCollateralAdapter(msg.sender)
-        returns (uint256, uint256)
-    {
-        address _owner = ownerOfVault[_vaultId];
-        require(caller == _owner, "not owner of vault");
+    function depositCollateral(ERC20 _collateralToken, uint256 _amount) external whenNotPaused {
+        address _owner = msg.sender;
 
-        Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[_vault.collateralName];
+        emit VaultCollateralized(_owner, _amount);
 
-        _vault.unlockedCollateral += amount;
-        _collateral.TotalCollateralValue += amount;
-
-        uint256 expectedAmount = scalePrecision(amount, _collateral.collateralDecimal, STABLE_TOKEN_DECIMALS);
-        /* Collateral price will be updated frequently from the Price module(this is a function of current price / liquidation ratio) and stored in the
-         ** collateral struct for every given collateral.
-         */
-        uint256 xNGNAmount = expectedAmount * _collateral.price;
-
-        uint256 _availableXNGN = availableXNGN[_owner] + xNGNAmount;
-        availableXNGN[_owner] = _availableXNGN;
-
-        emit VaultCollateralized(_vault.unlockedCollateral, _availableXNGN, _owner, _vaultId);
-        return (_availableXNGN, _vault.unlockedCollateral);
-    }
-
-    /**
-     * @dev Decreases the balance of available stableToken balance a user has
-     * @param _vaultId ID of the vault tied to the user
-     * @param amount amount of stableToken to be withdrawn
-     */
-    function withdrawXNGN(uint256 _vaultId, uint256 amount, address caller) external isLive isStableAdapter(msg.sender) returns (bool) {
-        address _owner = ownerOfVault[_vaultId];
-        require(caller == _owner, "not owner of vault");
-
-        Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[_vault.collateralName];
-
-        uint256 expectedCollateralAmount = scalePrecision(amount, STABLE_TOKEN_DECIMALS, _collateral.collateralDecimal);
-
-        uint256 collateralAmount = expectedCollateralAmount / _collateral.price;
-
-        availableXNGN[_owner] -= amount;
-
-        _vault.unlockedCollateral -= collateralAmount;
-        _vault.lockedCollateral += collateralAmount;
-
-        _vault.normalisedDebt += amount;
-        _collateral.TotalNormalisedDebt += _vault.normalisedDebt;
-
-        // increase total debt
-        debt += amount;
-
-        if (_vault.vaultState != VaultStateEnum.Active) {
-            _vault.vaultState = VaultStateEnum.Active;
-        }
-
-        emit StableTokenWithdrawn(amount, _owner, _vaultId);
-        return true;
+        _depositCollateral(_collateralToken, _owner, _amount);
     }
 
     /**
      * @dev Decreases the balance of unlocked collateral in the vault
-     * @param _vaultId ID of the vault tied to the user
-     * @param amount amount of collateral to be withdrawn
      */
-    function withdrawUnlockedCollateral(uint256 _vaultId, uint256 amount, address caller) external isLive isCollateralAdapter(msg.sender) returns (bool) {
-        address _owner = ownerOfVault[_vaultId];
-        require(caller == _owner, "not owner of vault");
+    function withdrawCollateral(ERC20 _collateralToken, address _to, uint256 _amount) external whenNotPaused {
+        address _owner = msg.sender;
 
-        Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[_vault.collateralName];
+        emit CollateralWithdrawn(_owner, _amount);
 
-        _vault.unlockedCollateral -= amount;
+        _withdrawCollateral(_collateralToken, _owner, _to, _amount);
 
-        _collateral.TotalCollateralValue -= amount;
-
-        uint256 xNGNAmount = amount * _collateral.price;
-
-        availableXNGN[_owner] -= xNGNAmount;
-
-        emit CollateralWithdrawn(amount, _owner, vaultId);
-
-        return true;
+        _revertIfHealthFactorIsBroken(vaultMapping[_collateralToken][_owner], collateralMapping[_collateralToken]);
     }
 
     /**
-     * @dev recapitalize vault after debt has been paid
-     * @param _vaultId ID of the vault tied to the user
-     * @param amount amount of stableToken to pay back
+     * @dev Decreases the balance of available stableToken balance a user has
      */
-    function cleanseVault(uint256 _vaultId, uint256 amount, address caller) external isLive isStableAdapter(msg.sender) returns (bool) {
-        address _owner = ownerOfVault[_vaultId];
-        require(caller == _owner, "not owner of vault");
+    function payCurrency(ERC20 _collateralToken, uint256 _amount) external whenNotPaused {
+        address _owner = msg.sender;
 
-        Vault storage _vault = vaultMapping[_vaultId];
-        Collateral storage _collateral = collateralMapping[_vault.collateralName];
+        Vault storage _vault = vaultMapping[_collateralToken][_owner];
+        Collateral storage _collateral = collateralMapping[_collateralToken];
 
-        uint256 expectedAmount = scalePrecision(amount, STABLE_TOKEN_DECIMALS, _collateral.collateralDecimal);
+        _accrueFees(_vault, _collateral);
 
-        uint256 collateralAmount = expectedAmount / _collateral.price;
-
-        availableXNGN[_owner] += amount;
-
-        _vault.lockedCollateral -= collateralAmount;
-
-        _vault.unlockedCollateral += collateralAmount;
-
-        _vault.normalisedDebt -= amount;
-        _vault.vaultState = VaultStateEnum.Inactive;
-
-        // reduce total system debt
-        debt = debt - _vault.normalisedDebt;
-
-        emit VaultCleansed(amount, _owner, _vaultId);
-        return true;
+        emit StableTokenWithdrawn(_owner, _amount);
+        _burnCurrency(_vault, _collateral, _owner, _amount);
     }
 
-    // --GETTER METHODS --------------------------------
+    /**
+     * @dev Decreases the balance of available stableToken balance a user has
+     */
+    function borrowCurrency(ERC20 _collateralToken, address _to, uint256 _amount) external whenNotPaused {
+        address _owner = msg.sender;
 
-    function getVaultId() external view returns (uint256) {
-        return vaultId;
+        Vault storage _vault = vaultMapping[_collateralToken][_owner];
+        Collateral storage _collateral = collateralMapping[_collateralToken];
+
+        // short circuit conditional to optimize all interactions after the first one.
+        if (_vault.lastUpdateTime != 0) _accrueFees(_vault, _collateral);
+        else _vault.lastUpdateTime = block.timestamp;
+
+        emit StableTokenWithdrawn(_owner, _amount);
+        _mintCurrency(_vault, _collateral, _to, _amount);
+
+        if (_collateral.collateralFloorPerPosition > _vault.depositedCollateral) revert TotalUserCollateralBelowFloor();
+        _revertIfHealthFactorIsBroken(_vault, _collateral);
     }
 
-    function getVaultById(uint256 _vaultId) external view returns (Vault memory) {
-        Vault memory _vault = vaultMapping[_vaultId];
-
-        return _vault;
-    }
-
-    function getCollateralData(bytes32 _collateralName)
+    function liquidate(ERC20 _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
         external
-        view
-        returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256)
+        whenNotPaused
     {
-        Collateral storage _collateral = collateralMapping[_collateralName];
+        // get health factor
+        // require it's below health factor
+        // liquidate and take discount
+        // burn currency from caller
 
-        return (
-            _collateral.TotalNormalisedDebt,
-            _collateral.TotalCollateralValue,
-            _collateral.rate,
-            _collateral.price,
-            _collateral.debtCeiling,
-            _collateral.debtFloor,
-            _collateral.collateralDecimal
-        );
+        Vault storage _vault = vaultMapping[_collateralToken][_owner];
+        Collateral storage _collateral = collateralMapping[_collateralToken];
+
+        _accrueFees(_vault, _collateral);
+
+        if (_checkHealthFactor(_vault, _collateral) >= MIN_HEALTH_FACTOR) revert PositionIsSafe();
+
+        uint256 _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
+        uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / PRECISION;
+
+        _withdrawCollateral(_collateralToken, _owner, _to, _collateralAmountCovered + _bonus);
+        _burnCurrency(_vault, _collateral, msg.sender, _currencyAmountToPay);
+
+        _revertIfHealthFactorIsBroken(_vault, _collateral);
     }
 
-    function getVaultsForOwner(address owner) external view returns (uint256[] memory ids) {
-        uint256 count = vaultCountMapping[owner];
-        ids = new uint[](count);
+    function checkHealthFactor(ERC20 _collateralToken, address _owner) external view returns (uint256) {
+        return _checkHealthFactor(vaultMapping[_collateralToken][_owner], collateralMapping[_collateralToken]);
+    }
 
-        uint256 i = 0;
+    function getCurrencyValueOfCollateral(ERC20 _collateralToken, address _owner) external view returns (uint256) {
+        return
+            _getCurrencyValueOfCollateral(vaultMapping[_collateralToken][_owner], collateralMapping[_collateralToken]);
+    }
 
-        uint256 id = firstVault[owner];
+    function getVaultInfo(ERC20 _collateralToken, address _owner) external view returns (uint256, uint256) {
+        Vault memory _vault = vaultMapping[_collateralToken][_owner];
+        Collateral memory _collateral = collateralMapping[_collateralToken];
 
-        while (id > 0) {
-            ids[i] = id;
-            (, id) = _getList(id);
-            i++;
+        uint256 _borrowedAmount = _vault.borrowedAmount;
+
+        if (_collateral.rate != 0) {
+            uint256 _accruedFees =
+                ((block.timestamp - _vault.lastUpdateTime) * ((_collateral.rate * _vault.borrowedAmount) / PRECISION));
+            _borrowedAmount += _accruedFees;
         }
+
+        return (_vault.depositedCollateral, _borrowedAmount);
     }
 
-    function _getList(uint256 id) internal view returns (uint256, uint256) {
-        List memory _list = list[id];
-        return (_list.prev, _list.next);
+    // ------------------------------------------------ INTERNAL FUNCTIONS ------------------------------------------------
+
+    function _depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount) internal {
+        vaultMapping[_collateralToken][_owner].depositedCollateral += _amount;
+        collateralMapping[_collateralToken].totalDepositedCollateral += _amount;
+
+        SafeERC20.safeTransferFrom(_collateralToken, _owner, address(this), _amount);
+    }
+
+    function _withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount) internal {
+        vaultMapping[_collateralToken][_owner].depositedCollateral -= _amount;
+        collateralMapping[_collateralToken].totalDepositedCollateral -= _amount;
+
+        SafeERC20.safeTransfer(_collateralToken, _to, _amount);
+    }
+
+    function _mintCurrency(Vault storage _vault, Collateral storage _collateral, address _to, uint256 _amount)
+        internal
+    {
+        _vault.borrowedAmount += _amount;
+        _collateral.totalBorrowedAmount += _amount;
+        debt += _amount;
+
+        CURRENCY_TOKEN.mint(_to, _amount);
+    }
+
+    function _burnCurrency(Vault storage _vault, Collateral storage _collateral, address _from, uint256 _amount)
+        internal
+    {
+        _vault.borrowedAmount -= _amount;
+        _collateral.totalBorrowedAmount -= _amount;
+        debt -= _amount;
+
+        CURRENCY_TOKEN.burn(_from, _amount);
+    }
+
+    function _accrueFees(Vault storage _vault, Collateral storage _collateral) internal {
+        if (_collateral.rate == 0) return;
+
+        uint256 _accruedFees =
+            ((block.timestamp - _vault.lastUpdateTime) * ((_collateral.rate * _vault.borrowedAmount) / PRECISION));
+        _vault.lastUpdateTime = block.timestamp;
+        _vault.borrowedAmount += _accruedFees;
+        _collateral.totalBorrowedAmount += _accruedFees;
+        debt += _accruedFees;
+    }
+
+    function _checkHealthFactor(Vault storage _vault, Collateral storage _collateral) internal view returns (uint256) {
+        // get collateral value in currency
+        // get total currency minted
+        // if total currency minted == 0, return max uint
+        // else, adjust collateral to liquidity threshold (multiply by liquidity threshold fraction)
+        // divide by total currency minted to get a value.
+
+        // prevent a new user from minting any amount
+        if (_vault.depositedCollateral == 0) revert ZeroCollateral();
+        if (debt == 0) return type(uint256).max;
+
+        uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_vault, _collateral);
+        uint256 _adjustedCollateral = (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
+
+        return (_adjustedCollateral * PRECISION) / _vault.borrowedAmount;
+    }
+
+    function _getCurrencyValueOfCollateral(Vault storage _vault, Collateral storage _collateral)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 _currencyValueOfCollateral = (
+            _scaleCollateralToExpectedPrecision(_collateral, _vault.depositedCollateral) * _collateral.price
+                * ADDITIONAL_FEED_PRECISION
+        ) / PRECISION;
+        return _currencyValueOfCollateral;
+    }
+
+    function _getCollateralAmountFromCurrencyValue(Collateral storage _collateral, uint256 _amount)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 _collateralAmountOfCurrencyValue = (
+            (_scaleCollateralToExpectedPrecision(_collateral, _amount)) * PRECISION
+        ) / (_collateral.price * ADDITIONAL_FEED_PRECISION);
+
+        return _collateralAmountOfCurrencyValue;
+    }
+
+    function _scaleCollateralToExpectedPrecision(Collateral storage _collateral, uint256 amount)
+        internal
+        view
+        returns (uint256)
+    {
+        return amount * (10 ** _collateral.additionalCollateralPercision);
+    }
+
+    function _revertIfHealthFactorIsBroken(Vault storage _vault, Collateral storage _collateral) internal view {
+        if (_checkHealthFactor(_vault, _collateral) < MIN_HEALTH_FACTOR) revert BadHealthFactor();
     }
 }

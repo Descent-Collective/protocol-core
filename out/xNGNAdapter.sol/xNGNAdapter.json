@@ -1,0 +1,33 @@
+{
+  "abi": [],
+  "bytecode": {
+    "object": "0x",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "linkReferences": {}
+  },
+  "ast": {
+    "absolutePath": "src/adapters/xNGNAdapter.sol",
+    "id": 4413,
+    "exportedSymbols": {},
+    "nodeType": "SourceUnit",
+    "src": "32:2309:24",
+    "nodes": [
+      {
+        "id": 4412,
+        "nodeType": "PragmaDirective",
+        "src": "32:23:24",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".21"
+        ]
+      }
+    ],
+    "license": "MIT"
+  },
+  "id": 24
+}
