@@ -130,7 +130,29 @@ contract Vault is AccessControl, IVault {
     /**
      * @dev Decreases the balance of available stableToken balance a user has
      */
-    function payCurrency(ERC20 _collateralToken, uint256 _amount) external whenNotPaused {
+    function mintCurrency(ERC20 _collateralToken, address _to, uint256 _amount) external whenNotPaused {
+        address _owner = msg.sender;
+
+        Vault storage _vault = vaultMapping[_collateralToken][_owner];
+        Collateral storage _collateral = collateralMapping[_collateralToken];
+
+        // to prevent positions too little in value to incentivize liquidation, assert a floor for collateral possible to borrow against
+        if (_collateral.collateralFloorPerPosition > _vault.depositedCollateral) revert TotalUserCollateralBelowFloor();
+
+        // short circuit conditional to optimize all interactions after the first one.
+        if (_vault.lastUpdateTime != 0) _accrueFees(_vault, _collateral);
+        else _vault.lastUpdateTime = block.timestamp;
+
+        emit StableTokenWithdrawn(_owner, _amount);
+        _mintCurrency(_vault, _collateral, _to, _amount);
+
+        _revertIfHealthFactorIsBroken(_vault, _collateral);
+    }
+
+    /**
+     * @dev Decreases the balance of available stableToken balance a user has
+     */
+    function burnCurrency(ERC20 _collateralToken, uint256 _amount) external whenNotPaused {
         address _owner = msg.sender;
 
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
@@ -140,26 +162,6 @@ contract Vault is AccessControl, IVault {
 
         emit StableTokenWithdrawn(_owner, _amount);
         _burnCurrency(_vault, _collateral, _owner, _amount);
-    }
-
-    /**
-     * @dev Decreases the balance of available stableToken balance a user has
-     */
-    function borrowCurrency(ERC20 _collateralToken, address _to, uint256 _amount) external whenNotPaused {
-        address _owner = msg.sender;
-
-        Vault storage _vault = vaultMapping[_collateralToken][_owner];
-        Collateral storage _collateral = collateralMapping[_collateralToken];
-
-        // short circuit conditional to optimize all interactions after the first one.
-        if (_vault.lastUpdateTime != 0) _accrueFees(_vault, _collateral);
-        else _vault.lastUpdateTime = block.timestamp;
-
-        emit StableTokenWithdrawn(_owner, _amount);
-        _mintCurrency(_vault, _collateral, _to, _amount);
-
-        if (_collateral.collateralFloorPerPosition > _vault.depositedCollateral) revert TotalUserCollateralBelowFloor();
-        _revertIfHealthFactorIsBroken(_vault, _collateral);
     }
 
     function liquidate(ERC20 _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
@@ -176,12 +178,18 @@ contract Vault is AccessControl, IVault {
 
         _accrueFees(_vault, _collateral);
 
-        if (_checkHealthFactor(_vault, _collateral) >= MIN_HEALTH_FACTOR) revert PositionIsSafe();
+        _revertIfHealthFactorIsSafe(_vault, _collateral);
 
         uint256 _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
         uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / PRECISION;
 
-        _withdrawCollateral(_collateralToken, _owner, _to, _collateralAmountCovered + _bonus);
+        // To make liquidations always possible, if < liquidationBonus % is what is possble, give the highest possible positive amount of bonus
+        uint256 _total = _collateralAmountCovered + _bonus;
+        if (_total > _vault.depositedCollateral) {
+            _total = _vault.depositedCollateral;
+        }
+
+        _withdrawCollateral(_collateralToken, _owner, _to, _total);
         _burnCurrency(_vault, _collateral, msg.sender, _currencyAmountToPay);
 
         _revertIfHealthFactorIsBroken(_vault, _collateral);
@@ -202,6 +210,7 @@ contract Vault is AccessControl, IVault {
 
         uint256 _borrowedAmount = _vault.borrowedAmount;
 
+        // account for accrued fees
         if (_collateral.rate != 0) {
             uint256 _accruedFees =
                 ((block.timestamp - _vault.lastUpdateTime) * ((_collateral.rate * _vault.borrowedAmount) / PRECISION));
@@ -265,9 +274,8 @@ contract Vault is AccessControl, IVault {
         // else, adjust collateral to liquidity threshold (multiply by liquidity threshold fraction)
         // divide by total currency minted to get a value.
 
-        // prevent a new user from minting any amount
-        if (_vault.depositedCollateral == 0) revert ZeroCollateral();
-        if (debt == 0) return type(uint256).max;
+        // prevent division by 0 revert below
+        if (_vault.borrowedAmount == 0) return type(uint256).max;
 
         uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_vault, _collateral);
         uint256 _adjustedCollateral = (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
@@ -309,5 +317,9 @@ contract Vault is AccessControl, IVault {
 
     function _revertIfHealthFactorIsBroken(Vault storage _vault, Collateral storage _collateral) internal view {
         if (_checkHealthFactor(_vault, _collateral) < MIN_HEALTH_FACTOR) revert BadHealthFactor();
+    }
+
+    function _revertIfHealthFactorIsSafe(Vault storage _vault, Collateral storage _collateral) internal view {
+        if (_checkHealthFactor(_vault, _collateral) >= MIN_HEALTH_FACTOR) revert PositionIsSafe();
     }
 }

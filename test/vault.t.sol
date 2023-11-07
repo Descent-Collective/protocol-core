@@ -30,8 +30,6 @@ contract VaultTest is Test {
     }
 
     function setUp() external {
-        labelAddresses();
-
         vm.startPrank(owner);
 
         xNGN = new Currency("xNGN", "xNGN");
@@ -51,6 +49,8 @@ contract VaultTest is Test {
         ERC20Token(address(usdc)).mint(user2, 100_000e18);
 
         vm.stopPrank();
+
+        labelAddresses();
     }
 
     function test_vault() external {
@@ -66,7 +66,7 @@ contract VaultTest is Test {
         console2.log(depositedCollateral, borrowedAmount);
 
         // borrow xNGN
-        vault.borrowCurrency(usdc, user1, 500_000e18);
+        vault.mintCurrency(usdc, user1, 500_000e18);
 
         (depositedCollateral, borrowedAmount) = vault.getVaultInfo(usdc, user1);
         console2.log(depositedCollateral, borrowedAmount);
@@ -76,13 +76,20 @@ contract VaultTest is Test {
         (depositedCollateral, borrowedAmount) = vault.getVaultInfo(usdc, user1);
         console2.log(depositedCollateral, borrowedAmount);
 
-        // vm.stopPrank();
-        // updatePrice(999e6);
-        // vm.startPrank(user1);
-
         console2.log(vault.checkHealthFactor(usdc, user1));
 
-        vault.liquidate(usdc, user1, user2, 500_000e18);
+        vm.stopPrank();
+        vm.startPrank(user2);
+
+        usdc.approve(address(vault), type(uint256).max);
+        vault.depositCollateral(usdc, 2_000e18);
+        vault.mintCurrency(usdc, user2, 1_000_000e18);
+
+        vm.stopPrank();
+        updatePrice(555e6);
+        vm.startPrank(user2);
+
+        vault.liquidate(usdc, user1, user2, 500_000e18 + 4999999986792000000000);
 
         (depositedCollateral, borrowedAmount) = vault.getVaultInfo(usdc, user1);
         console2.log(depositedCollateral, borrowedAmount);
