@@ -195,27 +195,61 @@ contract Vault is AccessControl, IVault {
         _revertIfHealthFactorIsBroken(_vault, _collateral);
     }
 
+    // ------------------------------------------------ GETTERS ------------------------------------------------
+
     function checkHealthFactor(ERC20 _collateralToken, address _owner) external view returns (uint256) {
         return _checkHealthFactor(vaultMapping[_collateralToken][_owner], collateralMapping[_collateralToken]);
     }
 
-    function getCurrencyValueOfCollateral(ERC20 _collateralToken, address _owner) external view returns (uint256) {
-        return
-            _getCurrencyValueOfCollateral(vaultMapping[_collateralToken][_owner], collateralMapping[_collateralToken]);
+    function getMaxBorrowable(ERC20 _collateralToken, address _owner) external view returns (int256) {
+        Vault storage _vault = vaultMapping[_collateralToken][_owner];
+        Collateral storage _collateral = collateralMapping[_collateralToken];
+
+        // if no collateral it should return 0
+        if (_vault.depositedCollateral == 0) return 0;
+
+        // get value of collateral
+        uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_vault, _collateral);
+
+        // adjust this to consider liquidation ratio
+        uint256 _adjustedCollateralValueInCurrency =
+            (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
+
+        uint256 _borrowedAmount = _vault.borrowedAmount;
+        _borrowedAmount += _calculateAccruedFees(_vault, _collateral);
+
+        // return the result minus already taken collateral.
+        // this can be negative if health factor is below 1e18.
+        // caller should know that if the result is negative then borrowing / removing collateral will fail
+        return int256(_adjustedCollateralValueInCurrency) - int256(_borrowedAmount);
+    }
+
+    function getMaxWithdrawable(ERC20 _collateralToken, address _owner) external view returns (int256) {
+        Vault storage _vault = vaultMapping[_collateralToken][_owner];
+        Collateral storage _collateral = collateralMapping[_collateralToken];
+
+        uint256 _borrowedAmount = _vault.borrowedAmount;
+        // account for accrued fees
+        _borrowedAmount += _calculateAccruedFees(_vault, _collateral);
+
+        // get cyrrency equivalent of borrowed currency
+        uint256 _collateralAmountFromCurrencyValue = _getCollateralAmountFromCurrencyValue(_collateral, _borrowedAmount);
+
+        // adjust for liquidation ratio
+        uint256 _adjustedCollateralAmountFromCurrencyValue =
+            (_collateralAmountFromCurrencyValue * PRECISION) / _collateral.liquidationThreshold;
+
+        // return diff in depoisted and expected collaeral bal
+        return int256(_vault.depositedCollateral) - int256(_adjustedCollateralAmountFromCurrencyValue);
     }
 
     function getVaultInfo(ERC20 _collateralToken, address _owner) external view returns (uint256, uint256) {
-        Vault memory _vault = vaultMapping[_collateralToken][_owner];
-        Collateral memory _collateral = collateralMapping[_collateralToken];
+        Vault storage _vault = vaultMapping[_collateralToken][_owner];
+        Collateral storage _collateral = collateralMapping[_collateralToken];
 
         uint256 _borrowedAmount = _vault.borrowedAmount;
-
         // account for accrued fees
-        if (_collateral.rate != 0) {
-            uint256 _accruedFees =
-                ((block.timestamp - _vault.lastUpdateTime) * ((_collateral.rate * _vault.borrowedAmount) / PRECISION));
-            _borrowedAmount += _accruedFees;
-        }
+        _borrowedAmount += _calculateAccruedFees(_vault, _collateral);
 
         return (_vault.depositedCollateral, _borrowedAmount);
     }
@@ -257,10 +291,10 @@ contract Vault is AccessControl, IVault {
     }
 
     function _accrueFees(Vault storage _vault, Collateral storage _collateral) internal {
-        if (_collateral.rate == 0) return;
+        uint256 _accruedFees = _calculateAccruedFees(_vault, _collateral);
 
-        uint256 _accruedFees =
-            ((block.timestamp - _vault.lastUpdateTime) * ((_collateral.rate * _vault.borrowedAmount) / PRECISION));
+        if (_accruedFees == 0) return;
+
         _vault.lastUpdateTime = block.timestamp;
         _vault.borrowedAmount += _accruedFees;
         _collateral.totalBorrowedAmount += _accruedFees;
@@ -278,9 +312,11 @@ contract Vault is AccessControl, IVault {
         if (_vault.borrowedAmount == 0) return type(uint256).max;
 
         uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_vault, _collateral);
-        uint256 _adjustedCollateral = (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
 
-        return (_adjustedCollateral * PRECISION) / _vault.borrowedAmount;
+        uint256 _adjustedCollateralValueInCurrency =
+            (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
+
+        return (_adjustedCollateralValueInCurrency * PRECISION) / _vault.borrowedAmount;
     }
 
     function _getCurrencyValueOfCollateral(Vault storage _vault, Collateral storage _collateral)
@@ -301,10 +337,23 @@ contract Vault is AccessControl, IVault {
         returns (uint256)
     {
         uint256 _collateralAmountOfCurrencyValue = (
-            (_scaleCollateralToExpectedPrecision(_collateral, _amount)) * PRECISION
+            _scaleCollateralToExpectedPrecision(_collateral, _amount) * PRECISION
         ) / (_collateral.price * ADDITIONAL_FEED_PRECISION);
 
         return _collateralAmountOfCurrencyValue;
+    }
+
+    function _calculateAccruedFees(Vault storage _vault, Collateral storage _collateral)
+        internal
+        view
+        returns (uint256)
+    {
+        if (_collateral.rate == 0) return 0;
+
+        uint256 _accruedFees =
+            ((block.timestamp - _vault.lastUpdateTime) * ((_collateral.rate * _vault.borrowedAmount) / PRECISION));
+
+        return _accruedFees;
     }
 
     function _scaleCollateralToExpectedPrecision(Collateral storage _collateral, uint256 amount)

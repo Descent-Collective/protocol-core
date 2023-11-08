@@ -85,16 +85,30 @@ contract VaultTest is Test {
         vault.depositCollateral(usdc, 2_000e18);
         vault.mintCurrency(usdc, user2, 1_000_000e18);
 
+        // vm.stopPrank();
+        // updatePrice(999.999999e6);
+        // vm.startPrank(user2);
+
+        // vault.liquidate(usdc, user1, user2, 500_000e18);
+
+        // (depositedCollateral, borrowedAmount) = vault.getVaultInfo(usdc, user1);
+        // console2.log(depositedCollateral, borrowedAmount);
+
+        // console2.log(vault.checkHealthFactor(usdc, user1));
+
+        console2.log(vault.getMaxWithdrawable(usdc, user1));
+        console2.log(vault.getMaxBorrowable(usdc, user1));
+
         vm.stopPrank();
-        updatePrice(555e6);
-        vm.startPrank(user2);
+        vm.startPrank(user1);
 
-        vault.liquidate(usdc, user1, user2, 500_000e18 + 4999999986792000000000);
+        vault.depositCollateral(usdc, 9999999973584000000);
 
-        (depositedCollateral, borrowedAmount) = vault.getVaultInfo(usdc, user1);
-        console2.log(depositedCollateral, borrowedAmount);
+        console2.log(vault.getMaxWithdrawable(usdc, user1));
+        console2.log(vault.getMaxBorrowable(usdc, user1));
 
-        console2.log(vault.checkHealthFactor(usdc, user1));
+        console2.log(vault.getMaxWithdrawable(usdc, user2));
+        console2.log(vault.getMaxBorrowable(usdc, user2));
 
         vm.stopPrank();
     }
