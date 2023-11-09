@@ -25,7 +25,7 @@ contract Vault is AccessControl, IVault {
     uint256 public status; // Active status
 
     mapping(ERC20 => Collateral) public collateralMapping; // collateral address => collateral data
-    mapping(ERC20 => mapping(address => Vault)) public vaultMapping; // vault ID => vault data
+    mapping(ERC20 => mapping(address => Vault)) public vaultMapping; // collateral address => user address => vault data
 
     constructor(Currency _currencyToken, address _bufferContract) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
