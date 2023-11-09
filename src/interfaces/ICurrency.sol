@@ -1,18 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-interface IxNGN {
+interface ICurrency {
     function mint(address account, uint256 amount) external returns (bool);
 
     function burn(address account, uint256 amount) external returns (bool);
-
-    function permitToken(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 expiry,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external;
 }
