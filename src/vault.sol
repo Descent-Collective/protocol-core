@@ -19,16 +19,19 @@ contract Vault is AccessControl, IVault {
 
     Currency public immutable CURRENCY_TOKEN; // stableTokenAddress
 
+    address public bufferContract; // buffer contract
     uint256 public debt; // sum of all currency minted
+    uint256 public fees; // sum of all fees
     uint256 public status; // Active status
 
     mapping(ERC20 => Collateral) public collateralMapping; // collateral address => collateral data
     mapping(ERC20 => mapping(address => Vault)) public vaultMapping; // vault ID => vault data
 
-    constructor(Currency _currencyToken) {
+    constructor(Currency _currencyToken, address _bufferContract) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         status = TRUE;
         CURRENCY_TOKEN = _currencyToken;
+        bufferContract = _bufferContract;
     }
 
     modifier whenNotPaused() {
@@ -215,7 +218,7 @@ contract Vault is AccessControl, IVault {
         uint256 _adjustedCollateralValueInCurrency =
             (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
 
-        uint256 _borrowedAmount = _vault.borrowedAmount;
+        uint256 _borrowedAmount = _vault.borrowedAmount + _vault.accruedFees;
         _borrowedAmount += _calculateAccruedFees(_vault, _collateral);
 
         // return the result minus already taken collateral.
@@ -228,7 +231,7 @@ contract Vault is AccessControl, IVault {
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
         Collateral storage _collateral = collateralMapping[_collateralToken];
 
-        uint256 _borrowedAmount = _vault.borrowedAmount;
+        uint256 _borrowedAmount = _vault.borrowedAmount + _vault.accruedFees;
         // account for accrued fees
         _borrowedAmount += _calculateAccruedFees(_vault, _collateral);
 
@@ -243,15 +246,15 @@ contract Vault is AccessControl, IVault {
         return int256(_vault.depositedCollateral) - int256(_adjustedCollateralAmountFromCurrencyValue);
     }
 
-    function getVaultInfo(ERC20 _collateralToken, address _owner) external view returns (uint256, uint256) {
+    function getVaultInfo(ERC20 _collateralToken, address _owner) external view returns (uint256, uint256, uint256) {
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
         Collateral storage _collateral = collateralMapping[_collateralToken];
 
-        uint256 _borrowedAmount = _vault.borrowedAmount;
+        uint256 _accruedFees = _vault.accruedFees;
         // account for accrued fees
-        _borrowedAmount += _calculateAccruedFees(_vault, _collateral);
+        _accruedFees += _calculateAccruedFees(_vault, _collateral);
 
-        return (_vault.depositedCollateral, _borrowedAmount);
+        return (_vault.depositedCollateral, _vault.borrowedAmount, _accruedFees);
     }
 
     // ------------------------------------------------ INTERNAL FUNCTIONS ------------------------------------------------
@@ -283,22 +286,46 @@ contract Vault is AccessControl, IVault {
     function _burnCurrency(Vault storage _vault, Collateral storage _collateral, address _from, uint256 _amount)
         internal
     {
-        _vault.borrowedAmount -= _amount;
-        _collateral.totalBorrowedAmount -= _amount;
-        debt -= _amount;
+        /**
+         * if _amount > _vault.borrowedAmount, subtract _amount from _vault.borrowedAmount and _vault.accruedFees else subtract from only _vault.borrowedAmount
+         */
 
-        CURRENCY_TOKEN.burn(_from, _amount);
+        if (_amount <= _vault.borrowedAmount) {
+            _vault.borrowedAmount -= _amount;
+            _collateral.totalBorrowedAmount -= _amount;
+            debt -= _amount;
+            CURRENCY_TOKEN.burn(_from, _amount);
+        } else {
+            uint256 _cacheBorrowedAmount = _vault.borrowedAmount;
+            _vault.borrowedAmount = 0;
+            _collateral.totalBorrowedAmount =
+                (_amount <= _collateral.totalBorrowedAmount) ? _collateral.totalBorrowedAmount - _amount : 0;
+            debt = (_amount <= debt) ? debt - _amount : 0;
+            CURRENCY_TOKEN.burn(_from, _cacheBorrowedAmount);
+
+            _payAccruedFees(_vault, _collateral, _from, _amount - _cacheBorrowedAmount);
+        }
+    }
+
+    function _payAccruedFees(Vault storage _vault, Collateral storage _collateral, address _from, uint256 _amount)
+        internal
+    {
+        _vault.accruedFees -= _amount;
+        _collateral.totalAccruedFees -= _amount;
+        fees -= _amount;
+
+        CURRENCY_TOKEN.transferFrom(_from, bufferContract, _amount);
     }
 
     function _accrueFees(Vault storage _vault, Collateral storage _collateral) internal {
         uint256 _accruedFees = _calculateAccruedFees(_vault, _collateral);
+        _vault.lastUpdateTime = block.timestamp;
 
         if (_accruedFees == 0) return;
 
-        _vault.lastUpdateTime = block.timestamp;
-        _vault.borrowedAmount += _accruedFees;
-        _collateral.totalBorrowedAmount += _accruedFees;
-        debt += _accruedFees;
+        _vault.accruedFees += _accruedFees;
+        _collateral.totalAccruedFees += _accruedFees;
+        fees += _accruedFees;
     }
 
     function _checkHealthFactor(Vault storage _vault, Collateral storage _collateral) internal view returns (uint256) {
@@ -309,14 +336,15 @@ contract Vault is AccessControl, IVault {
         // divide by total currency minted to get a value.
 
         // prevent division by 0 revert below
-        if (_vault.borrowedAmount == 0) return type(uint256).max;
+        uint256 _totalUserDebt = _vault.borrowedAmount + _vault.accruedFees;
+        if (_totalUserDebt == 0) return type(uint256).max;
 
         uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_vault, _collateral);
 
         uint256 _adjustedCollateralValueInCurrency =
             (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
 
-        return (_adjustedCollateralValueInCurrency * PRECISION) / _vault.borrowedAmount;
+        return (_adjustedCollateralValueInCurrency * PRECISION) / _totalUserDebt;
     }
 
     function _getCurrencyValueOfCollateral(Vault storage _vault, Collateral storage _collateral)
@@ -348,6 +376,7 @@ contract Vault is AccessControl, IVault {
         view
         returns (uint256)
     {
+        // TODO: Make resistant to change, non update attack ... vague
         if (_collateral.rate == 0) return 0;
 
         uint256 _accruedFees =

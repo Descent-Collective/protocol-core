@@ -11,6 +11,7 @@ contract VaultTest is Test {
     Currency xNGN;
     ERC20 usdc;
     Feed feed;
+    address bufferContract = vm.addr(uint256(keccak256("BUFFER_CONTRACT"))); // to be a contract
     address owner = vm.addr(uint256(keccak256("OWNER")));
     address user1 = vm.addr(uint256(keccak256("User1")));
     address user2 = vm.addr(uint256(keccak256("User2")));
@@ -23,6 +24,7 @@ contract VaultTest is Test {
         vm.label(user1, "User1");
         vm.label(user2, "User2");
         vm.label(user3, "User3");
+        vm.label(bufferContract, "BufferContract");
         vm.label(address(vault), "Vault");
         vm.label(address(xNGN), "xNGN");
         vm.label(address(feed), "Feed");
@@ -36,7 +38,7 @@ contract VaultTest is Test {
 
         usdc = ERC20(address(new ERC20Token("Circle USD", "USDC")));
 
-        vault = new Vault(xNGN);
+        vault = new Vault(xNGN, bufferContract);
 
         feed = new Feed(vault);
 
@@ -53,6 +55,7 @@ contract VaultTest is Test {
         labelAddresses();
     }
 
+    // basic random test
     function test_vault() external {
         vm.startPrank(user1);
 
@@ -62,19 +65,19 @@ contract VaultTest is Test {
         // deposit collateral
         vault.depositCollateral(usdc, 1_000e18);
 
-        (uint256 depositedCollateral, uint256 borrowedAmount) = vault.getVaultInfo(usdc, user1);
-        console2.log(depositedCollateral, borrowedAmount);
+        (uint256 depositedCollateral, uint256 borrowedAmount, uint256 accruedFees) = vault.getVaultInfo(usdc, user1);
+        console2.log(depositedCollateral, borrowedAmount, accruedFees);
 
         // borrow xNGN
         vault.mintCurrency(usdc, user1, 500_000e18);
 
-        (depositedCollateral, borrowedAmount) = vault.getVaultInfo(usdc, user1);
-        console2.log(depositedCollateral, borrowedAmount);
+        (depositedCollateral, borrowedAmount, accruedFees) = vault.getVaultInfo(usdc, user1);
+        console2.log(depositedCollateral, borrowedAmount, accruedFees);
 
         skip(365 days);
 
-        (depositedCollateral, borrowedAmount) = vault.getVaultInfo(usdc, user1);
-        console2.log(depositedCollateral, borrowedAmount);
+        (depositedCollateral, borrowedAmount, accruedFees) = vault.getVaultInfo(usdc, user1);
+        console2.log(depositedCollateral, borrowedAmount, accruedFees);
 
         console2.log(vault.checkHealthFactor(usdc, user1));
 
@@ -89,10 +92,11 @@ contract VaultTest is Test {
         // updatePrice(999.999999e6);
         // vm.startPrank(user2);
 
-        // vault.liquidate(usdc, user1, user2, 500_000e18);
+        xNGN.approve(address(vault), type(uint256).max);
+        vault.liquidate(usdc, user1, user2, 500_000e18 + 4999999986792000000000);
 
-        // (depositedCollateral, borrowedAmount) = vault.getVaultInfo(usdc, user1);
-        // console2.log(depositedCollateral, borrowedAmount);
+        (depositedCollateral, borrowedAmount, accruedFees) = vault.getVaultInfo(usdc, user1);
+        console2.log(depositedCollateral, borrowedAmount, accruedFees);
 
         // console2.log(vault.checkHealthFactor(usdc, user1));
 
