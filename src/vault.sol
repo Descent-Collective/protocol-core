@@ -76,12 +76,18 @@ contract Vault is AccessControl, IVault {
         emit CollateralAdded(address(_collateralToken));
     }
 
+    /**
+     *
+     * @dev updates collateral data of an existing collateral type
+     */
     function updateCollateralData(ERC20 _collateralToken, bytes32 _param, uint256 _data)
         external
         whenNotPaused
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         Collateral storage _collateral = collateralMapping[_collateralToken];
+
+        if (!_collateral.exists) revert CollateralDoesNotExist();
 
         if (_param == "debtCeiling") {
             _collateral.debtCeiling = _data;
@@ -98,6 +104,9 @@ contract Vault is AccessControl, IVault {
         }
     }
 
+    /**
+     * @dev feed contract calls this to update the price with oracle value
+     */
     function updatePrice(address _collateralAddress, uint256 _price)
         external
         whenNotPaused
@@ -107,7 +116,7 @@ contract Vault is AccessControl, IVault {
     }
 
     /**
-     * @dev Collaterizes a vault
+     * @dev deposits collateral into a vault
      */
     function depositCollateral(ERC20 _collateralToken, uint256 _amount) external whenNotPaused {
         address _owner = msg.sender;
@@ -118,7 +127,8 @@ contract Vault is AccessControl, IVault {
     }
 
     /**
-     * @dev Decreases the balance of unlocked collateral in the vault
+     * @dev withdraws collateral from a vault
+     * @dev revert if withdrawing will make vault health factor below min health factor
      */
     function withdrawCollateral(ERC20 _collateralToken, address _to, uint256 _amount) external whenNotPaused {
         address _owner = msg.sender;
@@ -131,7 +141,8 @@ contract Vault is AccessControl, IVault {
     }
 
     /**
-     * @dev Decreases the balance of available stableToken balance a user has
+     * @dev borrows currency
+     * @dev revert if withdrawing will make vault health factor below min health factor
      */
     function mintCurrency(ERC20 _collateralToken, address _to, uint256 _amount) external whenNotPaused {
         address _owner = msg.sender;
@@ -153,7 +164,7 @@ contract Vault is AccessControl, IVault {
     }
 
     /**
-     * @dev Decreases the balance of available stableToken balance a user has
+     * @dev pays back borrowed currency
      */
     function burnCurrency(ERC20 _collateralToken, uint256 _amount) external whenNotPaused {
         address _owner = msg.sender;
@@ -167,6 +178,11 @@ contract Vault is AccessControl, IVault {
         _burnCurrency(_vault, _collateral, _owner, _amount);
     }
 
+    /**
+     * @dev liquidates a position
+     * @dev reverts if health factor of vault is not below min health factor
+     * @dev revert if withdrawing will make vault health factor below min health factor
+     */
     function liquidate(ERC20 _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
         external
         whenNotPaused
@@ -200,10 +216,17 @@ contract Vault is AccessControl, IVault {
 
     // ------------------------------------------------ GETTERS ------------------------------------------------
 
+    /**
+     * @dev returns health factor of a vault
+     */
     function checkHealthFactor(ERC20 _collateralToken, address _owner) external view returns (uint256) {
         return _checkHealthFactor(vaultMapping[_collateralToken][_owner], collateralMapping[_collateralToken]);
     }
 
+    /**
+     * @dev returns the max amount of currency a vault owner can mint for that vault without the tx reverting due to the vault's health factor falling below the min health factor
+     * @dev if it's a negative number then the vault is below the min health factor already and paying back the additive inverse of the result will pay back both borrowed amount and interest accrued
+     */
     function getMaxBorrowable(ERC20 _collateralToken, address _owner) external view returns (int256) {
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
         Collateral storage _collateral = collateralMapping[_collateralToken];
@@ -227,6 +250,11 @@ contract Vault is AccessControl, IVault {
         return int256(_adjustedCollateralValueInCurrency) - int256(_borrowedAmount);
     }
 
+    /**
+     * @dev returns the max amount of collateral a vault owner can withdraw from a vault without the tx reverting due to the vault's health factor falling below the min health factor
+     * @dev if it's a negative number then the vault is below the min health factor already and depositing the additive inverse will put the position at the min health factor saving it from liquidation.
+     * @dev the recommended way to do this is to burn/pay back the additive inverse of the result of `getMaxBorrowable()` that way interest would not accrue after payment.
+     */
     function getMaxWithdrawable(ERC20 _collateralToken, address _owner) external view returns (int256) {
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
         Collateral storage _collateral = collateralMapping[_collateralToken];
@@ -246,6 +274,10 @@ contract Vault is AccessControl, IVault {
         return int256(_vault.depositedCollateral) - int256(_adjustedCollateralAmountFromCurrencyValue);
     }
 
+    /**
+     * @dev returns a vault's relevant info i.e the depositedCollateral, borrowedAmount, and updated accruedFees
+     * @dev recommended to read the accrued fees from here as it'll be updated before being returned.
+     */
     function getVaultInfo(ERC20 _collateralToken, address _owner) external view returns (uint256, uint256, uint256) {
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
         Collateral storage _collateral = collateralMapping[_collateralToken];

@@ -17,7 +17,7 @@ contract VaultTest is Test {
     address user2 = vm.addr(uint256(keccak256("User2")));
     address user3 = vm.addr(uint256(keccak256("User3")));
     uint256 constant onePercentPerAnnum = 1;
-    uint256 onePercentPerSecondInterestRate = (((1e18 * onePercentPerAnnum) / 100) / 365 days);
+    uint256 onePercentPerSecondInterestRate = ((1e18 * onePercentPerAnnum) / 100) / 365 days;
 
     function labelAddresses() private {
         vm.label(owner, "Owner");
