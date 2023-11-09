@@ -39,6 +39,16 @@ contract Vault is AccessControl, IVault {
         _;
     }
 
+    modifier collateralExists(ERC20 _collateralToken) {
+        if (!collateralMapping[_collateralToken].exists) revert CollateralDoesNotExist();
+        _;
+    }
+
+    modifier moreThanZero(uint256 _amount) {
+        if (_amount == 0) revert ShouldBeMoreThanZero();
+        _;
+    }
+
     function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         status = TRUE;
     }
@@ -84,10 +94,9 @@ contract Vault is AccessControl, IVault {
         external
         whenNotPaused
         onlyRole(DEFAULT_ADMIN_ROLE)
+        collateralExists(_collateralToken)
     {
         Collateral storage _collateral = collateralMapping[_collateralToken];
-
-        if (!_collateral.exists) revert CollateralDoesNotExist();
 
         if (_param == "debtCeiling") {
             _collateral.debtCeiling = _data;
@@ -111,6 +120,8 @@ contract Vault is AccessControl, IVault {
         external
         whenNotPaused
         onlyRole(FEED_CONTRACT_ROLE)
+        collateralExists(ERC20(_collateralAddress))
+        moreThanZero(_price)
     {
         collateralMapping[ERC20(_collateralAddress)].price = _price;
     }
@@ -118,7 +129,12 @@ contract Vault is AccessControl, IVault {
     /**
      * @dev deposits collateral into a vault
      */
-    function depositCollateral(ERC20 _collateralToken, uint256 _amount) external whenNotPaused {
+    function depositCollateral(ERC20 _collateralToken, uint256 _amount)
+        external
+        whenNotPaused
+        collateralExists(_collateralToken)
+        moreThanZero(_amount)
+    {
         address _owner = msg.sender;
 
         emit VaultCollateralized(_owner, _amount);
@@ -130,7 +146,12 @@ contract Vault is AccessControl, IVault {
      * @dev withdraws collateral from a vault
      * @dev revert if withdrawing will make vault health factor below min health factor
      */
-    function withdrawCollateral(ERC20 _collateralToken, address _to, uint256 _amount) external whenNotPaused {
+    function withdrawCollateral(ERC20 _collateralToken, address _to, uint256 _amount)
+        external
+        whenNotPaused
+        collateralExists(_collateralToken)
+        moreThanZero(_amount)
+    {
         address _owner = msg.sender;
 
         emit CollateralWithdrawn(_owner, _amount);
@@ -144,7 +165,12 @@ contract Vault is AccessControl, IVault {
      * @dev borrows currency
      * @dev revert if withdrawing will make vault health factor below min health factor
      */
-    function mintCurrency(ERC20 _collateralToken, address _to, uint256 _amount) external whenNotPaused {
+    function mintCurrency(ERC20 _collateralToken, address _to, uint256 _amount)
+        external
+        whenNotPaused
+        collateralExists(_collateralToken)
+        moreThanZero(_amount)
+    {
         address _owner = msg.sender;
 
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
@@ -166,7 +192,12 @@ contract Vault is AccessControl, IVault {
     /**
      * @dev pays back borrowed currency
      */
-    function burnCurrency(ERC20 _collateralToken, uint256 _amount) external whenNotPaused {
+    function burnCurrency(ERC20 _collateralToken, uint256 _amount)
+        external
+        whenNotPaused
+        collateralExists(_collateralToken)
+        moreThanZero(_amount)
+    {
         address _owner = msg.sender;
 
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
@@ -186,6 +217,8 @@ contract Vault is AccessControl, IVault {
     function liquidate(ERC20 _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
         external
         whenNotPaused
+        collateralExists(_collateralToken)
+        moreThanZero(_currencyAmountToPay)
     {
         // get health factor
         // require it's below health factor

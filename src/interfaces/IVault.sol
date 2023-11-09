@@ -12,6 +12,7 @@ interface IVault {
     error TotalUserCollateralBelowFloor();
     error CollateralAlreadyExists();
     error CollateralDoesNotExist();
+    error ShouldBeMoreThanZero();
 
     // ------------------------------------------------ EVENTS ------------------------------------------------
     event CollateralAdded(address collateralAddress);
