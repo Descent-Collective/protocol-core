@@ -1,6 +1,10 @@
 # Compiler files
 cache/
 out/
+artifacts/
+coverage/
+node_modules/
+coverage.json
 
 # Ignores development broadcast logs
 !/broadcast
