@@ -5,7 +5,7 @@ artifacts/
 coverage/
 node_modules/
 coverage.json
-
+typechain-types/
 # Ignores development broadcast logs
 !/broadcast
 /broadcast/*/31337/
