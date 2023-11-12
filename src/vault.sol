@@ -232,7 +232,17 @@ contract Vault is AccessControl, IVault {
 
         _revertIfHealthFactorIsSafe(_vault, _collateral);
 
-        uint256 _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
+        uint256 _collateralAmountCovered;
+        if (_currencyAmountToPay == type(uint256).max) {
+            // This is here to prevent frontrunning of full liquidation
+            // malicious owners can monitor mempool and frontrun any attempt to liquidate their position by liquidating it
+            // themselves but partially, (by 1 wei of collateral is enough) which causes underflow when the liquidator's tx is to be executed
+            // With this, liquidators can parse in type(uint256).max to liquidate regardless of the current collateral.
+            _collateralAmountCovered = _vault.depositedCollateral;
+        } else {
+            _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
+        }
+
         uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / PRECISION;
 
         // To make liquidations always possible, if < liquidationBonus % is what is possble, give the highest possible positive amount of bonus
@@ -253,7 +263,19 @@ contract Vault is AccessControl, IVault {
      * @dev returns health factor of a vault
      */
     function checkHealthFactor(ERC20 _collateralToken, address _owner) external view returns (uint256) {
-        return _checkHealthFactor(vaultMapping[_collateralToken][_owner], collateralMapping[_collateralToken]);
+        Vault storage _vault = vaultMapping[_collateralToken][_owner];
+        Collateral storage _collateral = collateralMapping[_collateralToken];
+
+        // prevent division by 0 revert below
+        uint256 _totalUserDebt = _vault.borrowedAmount + _calculateAccruedFees(_vault, _collateral);
+        if (_totalUserDebt == 0) return type(uint256).max;
+
+        uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_vault, _collateral);
+
+        uint256 _adjustedCollateralValueInCurrency =
+            (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
+
+        return (_adjustedCollateralValueInCurrency * PRECISION) / _totalUserDebt;
     }
 
     /**
