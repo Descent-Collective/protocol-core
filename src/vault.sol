@@ -10,6 +10,7 @@ import {Currency} from "./currency.sol";
 
 contract Vault is AccessControl, IVault {
     bytes32 private constant FEED_CONTRACT_ROLE = keccak256("FEED_CONTRACT_ROLE");
+    bytes32 private constant STABILITY_MODULE_ROLE = keccak256("STABILITY_MODULE_ROLE");
     uint256 private constant FALSE = 1;
     uint256 private constant TRUE = 2;
     uint256 private constant PRECISION_DEGREE = 18;
@@ -20,18 +21,24 @@ contract Vault is AccessControl, IVault {
     Currency public immutable CURRENCY_TOKEN; // stableTokenAddress
 
     address public bufferContract; // buffer contract
+    RateInfo public baseRateInfo; // base rate info
     uint256 public debt; // sum of all currency minted
-    uint256 public fees; // sum of all fees
+    uint256 public accruedFees; // sum of all fees
+    uint256 public paidFees; // sum of all unwithdrawn paid fees
     uint256 public status; // Active status
 
     mapping(ERC20 => Collateral) public collateralMapping; // collateral address => collateral data
     mapping(ERC20 => mapping(address => Vault)) public vaultMapping; // collateral address => user address => vault data
+    mapping(address => mapping(address => bool)) public rely; // borrower -> addresss -> is allowed to take actions on borrowers vaults on their behalf
 
-    constructor(Currency _currencyToken, address _bufferContract) {
+    constructor(Currency _currencyToken, address _bufferContract, uint256 _baseRate) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         status = TRUE;
         CURRENCY_TOKEN = _currencyToken;
         bufferContract = _bufferContract;
+
+        baseRateInfo.lastUpdateTime = block.timestamp;
+        baseRateInfo.rate = _baseRate;
     }
 
     modifier whenNotPaused() {
@@ -49,6 +56,11 @@ contract Vault is AccessControl, IVault {
         _;
     }
 
+    modifier onlyOwnerOrReliedUpon(address _owner) {
+        if (_owner != msg.sender && !rely[_owner][msg.sender]) revert NotOwnerOrReliedUpon();
+        _;
+    }
+
     function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         status = TRUE;
     }
@@ -59,6 +71,10 @@ contract Vault is AccessControl, IVault {
 
     function updateFeedContract(address _feedContract) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(FEED_CONTRACT_ROLE, _feedContract);
+    }
+
+    function updateStabilityModule(address _stabilityModule) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(STABILITY_MODULE_ROLE, _stabilityModule);
     }
 
     /**
@@ -75,7 +91,8 @@ contract Vault is AccessControl, IVault {
         Collateral storage _collateral = collateralMapping[_collateralToken];
         if (_collateral.exists) revert CollateralAlreadyExists();
 
-        _collateral.rate = _rate;
+        _collateral.rateInfo.rate = _rate;
+        _collateral.rateInfo.lastUpdateTime = block.timestamp;
         _collateral.liquidationThreshold = _liquidationThreshold;
         _collateral.liquidationBonus = _liquidationBonus;
         _collateral.debtCeiling = _debtCeiling;
@@ -102,8 +119,6 @@ contract Vault is AccessControl, IVault {
             _collateral.debtCeiling = _data;
         } else if (_param == "collateralFloorPerPosition") {
             _collateral.collateralFloorPerPosition = _data;
-        } else if (_param == "rate") {
-            _collateral.rate = _data;
         } else if (_param == "liquidationBonus") {
             _collateral.liquidationBonus = _data;
         } else if (_param == "liquidationThreshold") {
@@ -126,17 +141,39 @@ contract Vault is AccessControl, IVault {
         collateralMapping[ERC20(_collateralAddress)].price = _price;
     }
 
+    function updateBaseRate(uint256 _baseRate) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        baseRateInfo.accumulatedRate += (block.timestamp - baseRateInfo.lastUpdateTime) * baseRateInfo.rate;
+        baseRateInfo.lastUpdateTime = block.timestamp;
+
+        baseRateInfo.rate = _baseRate;
+    }
+
+    function updateCollateralRate(ERC20 _collateralToken, uint256 _rate) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        Collateral storage _collateral = collateralMapping[_collateralToken];
+        _collateral.rateInfo.accumulatedRate +=
+            (block.timestamp - _collateral.rateInfo.lastUpdateTime) * _collateral.rateInfo.rate;
+        _collateral.rateInfo.lastUpdateTime = block.timestamp;
+
+        _collateral.rateInfo.rate = _rate;
+    }
+
+    function withdrawFees(ERC20 _collateralToken, uint256 _amount) external onlyRole(STABILITY_MODULE_ROLE) {
+        collateralMapping[_collateralToken].paidFees -= _amount;
+        paidFees -= _amount;
+
+        CURRENCY_TOKEN.transfer(msg.sender, _amount);
+    }
+
     /**
      * @dev deposits collateral into a vault
      */
-    function depositCollateral(ERC20 _collateralToken, uint256 _amount)
+    function depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount)
         external
         whenNotPaused
         collateralExists(_collateralToken)
+        onlyOwnerOrReliedUpon(_owner)
         moreThanZero(_amount)
     {
-        address _owner = msg.sender;
-
         emit VaultCollateralized(_owner, _amount);
 
         _depositCollateral(_collateralToken, _owner, _amount);
@@ -146,14 +183,13 @@ contract Vault is AccessControl, IVault {
      * @dev withdraws collateral from a vault
      * @dev revert if withdrawing will make vault health factor below min health factor
      */
-    function withdrawCollateral(ERC20 _collateralToken, address _to, uint256 _amount)
+    function withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount)
         external
         whenNotPaused
         collateralExists(_collateralToken)
+        onlyOwnerOrReliedUpon(_owner)
         moreThanZero(_amount)
     {
-        address _owner = msg.sender;
-
         emit CollateralWithdrawn(_owner, _amount);
 
         _withdrawCollateral(_collateralToken, _owner, _to, _amount);
@@ -165,14 +201,13 @@ contract Vault is AccessControl, IVault {
      * @dev borrows currency
      * @dev revert if withdrawing will make vault health factor below min health factor
      */
-    function mintCurrency(ERC20 _collateralToken, address _to, uint256 _amount)
+    function mintCurrency(ERC20 _collateralToken, address _owner, address _to, uint256 _amount)
         external
         whenNotPaused
         collateralExists(_collateralToken)
+        onlyOwnerOrReliedUpon(_owner)
         moreThanZero(_amount)
     {
-        address _owner = msg.sender;
-
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
         Collateral storage _collateral = collateralMapping[_collateralToken];
 
@@ -180,8 +215,8 @@ contract Vault is AccessControl, IVault {
         if (_collateral.collateralFloorPerPosition > _vault.depositedCollateral) revert TotalUserCollateralBelowFloor();
 
         // short circuit conditional to optimize all interactions after the first one.
-        if (_vault.lastUpdateTime != 0) _accrueFees(_vault, _collateral);
-        else _vault.lastUpdateTime = block.timestamp;
+        if (_vault.lastTotalAccumulatedRate != 0) _accrueFees(_vault, _collateral);
+        else _vault.lastTotalAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
 
         emit StableTokenWithdrawn(_owner, _amount);
         _mintCurrency(_vault, _collateral, _to, _amount);
@@ -192,14 +227,13 @@ contract Vault is AccessControl, IVault {
     /**
      * @dev pays back borrowed currency
      */
-    function burnCurrency(ERC20 _collateralToken, uint256 _amount)
+    function burnCurrency(ERC20 _collateralToken, address _owner, uint256 _amount)
         external
         whenNotPaused
         collateralExists(_collateralToken)
+        onlyOwnerOrReliedUpon(_owner)
         moreThanZero(_amount)
     {
-        address _owner = msg.sender;
-
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
         Collateral storage _collateral = collateralMapping[_collateralToken];
 
@@ -230,7 +264,8 @@ contract Vault is AccessControl, IVault {
 
         _accrueFees(_vault, _collateral);
 
-        _revertIfHealthFactorIsSafe(_vault, _collateral);
+        uint256 _preHealthFactor = _checkHealthFactor(_vault, _collateral);
+        if (_preHealthFactor >= MIN_HEALTH_FACTOR) revert PositionIsSafe();
 
         uint256 _collateralAmountCovered;
         if (_currencyAmountToPay == type(uint256).max) {
@@ -254,7 +289,8 @@ contract Vault is AccessControl, IVault {
         _withdrawCollateral(_collateralToken, _owner, _to, _total);
         _burnCurrency(_vault, _collateral, msg.sender, _currencyAmountToPay);
 
-        _revertIfHealthFactorIsBroken(_vault, _collateral);
+        // health factor must never reduce during a liquidation.
+        if (_preHealthFactor > _checkHealthFactor(_vault, _collateral)) revert HealthFactorNotImproved();
     }
 
     // ------------------------------------------------ GETTERS ------------------------------------------------
@@ -267,7 +303,8 @@ contract Vault is AccessControl, IVault {
         Collateral storage _collateral = collateralMapping[_collateralToken];
 
         // prevent division by 0 revert below
-        uint256 _totalUserDebt = _vault.borrowedAmount + _calculateAccruedFees(_vault, _collateral);
+        (uint256 _currentAccruedFees,) = _calculateAccruedFees(_vault, _collateral);
+        uint256 _totalUserDebt = _vault.borrowedAmount + _currentAccruedFees;
         if (_totalUserDebt == 0) return type(uint256).max;
 
         uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_vault, _collateral);
@@ -296,8 +333,9 @@ contract Vault is AccessControl, IVault {
         uint256 _adjustedCollateralValueInCurrency =
             (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
 
-        uint256 _borrowedAmount = _vault.borrowedAmount + _vault.accruedFees;
-        _borrowedAmount += _calculateAccruedFees(_vault, _collateral);
+        // account for accrued fees
+        (uint256 _currentAccruedFees,) = _calculateAccruedFees(_vault, _collateral);
+        uint256 _borrowedAmount = _vault.borrowedAmount + _vault.accruedFees + _currentAccruedFees;
 
         // return the result minus already taken collateral.
         // this can be negative if health factor is below 1e18.
@@ -314,9 +352,9 @@ contract Vault is AccessControl, IVault {
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
         Collateral storage _collateral = collateralMapping[_collateralToken];
 
-        uint256 _borrowedAmount = _vault.borrowedAmount + _vault.accruedFees;
         // account for accrued fees
-        _borrowedAmount += _calculateAccruedFees(_vault, _collateral);
+        (uint256 _currentAccruedFees,) = _calculateAccruedFees(_vault, _collateral);
+        uint256 _borrowedAmount = _vault.borrowedAmount + _vault.accruedFees + _currentAccruedFees;
 
         // get cyrrency equivalent of borrowed currency
         uint256 _collateralAmountFromCurrencyValue = _getCollateralAmountFromCurrencyValue(_collateral, _borrowedAmount);
@@ -337,9 +375,9 @@ contract Vault is AccessControl, IVault {
         Vault storage _vault = vaultMapping[_collateralToken][_owner];
         Collateral storage _collateral = collateralMapping[_collateralToken];
 
-        uint256 _accruedFees = _vault.accruedFees;
         // account for accrued fees
-        _accruedFees += _calculateAccruedFees(_vault, _collateral);
+        (uint256 _currentAccruedFees,) = _calculateAccruedFees(_vault, _collateral);
+        uint256 _accruedFees = _vault.accruedFees + _currentAccruedFees;
 
         return (_vault.depositedCollateral, _vault.borrowedAmount, _accruedFees);
     }
@@ -398,21 +436,24 @@ contract Vault is AccessControl, IVault {
         internal
     {
         _vault.accruedFees -= _amount;
-        _collateral.totalAccruedFees -= _amount;
-        fees -= _amount;
+        _collateral.accruedFees -= _amount;
+        accruedFees -= _amount;
 
-        CURRENCY_TOKEN.transferFrom(_from, bufferContract, _amount);
+        _collateral.paidFees += _amount;
+        paidFees += _amount;
+
+        CURRENCY_TOKEN.transferFrom(_from, address(this), _amount);
     }
 
     function _accrueFees(Vault storage _vault, Collateral storage _collateral) internal {
-        uint256 _accruedFees = _calculateAccruedFees(_vault, _collateral);
-        _vault.lastUpdateTime = block.timestamp;
+        (uint256 _accruedFees, uint256 _currentTotalAccumulatedRate) = _calculateAccruedFees(_vault, _collateral);
+        _vault.lastTotalAccumulatedRate = _currentTotalAccumulatedRate;
 
         if (_accruedFees == 0) return;
 
         _vault.accruedFees += _accruedFees;
-        _collateral.totalAccruedFees += _accruedFees;
-        fees += _accruedFees;
+        _collateral.accruedFees += _accruedFees;
+        accruedFees += _accruedFees;
     }
 
     function _checkHealthFactor(Vault storage _vault, Collateral storage _collateral) internal view returns (uint256) {
@@ -461,15 +502,27 @@ contract Vault is AccessControl, IVault {
     function _calculateAccruedFees(Vault storage _vault, Collateral storage _collateral)
         internal
         view
-        returns (uint256)
+        returns (uint256, uint256)
     {
-        // TODO: Make resistant to change, non update attack ... vague
-        if (_collateral.rate == 0) return 0;
+        uint256 _totalCurrentAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
 
         uint256 _accruedFees =
-            ((block.timestamp - _vault.lastUpdateTime) * ((_collateral.rate * _vault.borrowedAmount) / PRECISION));
+            ((_totalCurrentAccumulatedRate - _vault.lastTotalAccumulatedRate) * _vault.borrowedAmount) / PRECISION;
 
-        return _accruedFees;
+        return (_accruedFees, _totalCurrentAccumulatedRate);
+    }
+
+    function _calculateCurrentTotalAccumulatedRate(Collateral storage _collateral) internal view returns (uint256) {
+        // calculates pending collateral rate and adds it to the last stored collateral rate
+        uint256 _collateralCurrentAccumulatedRate = _collateral.rateInfo.accumulatedRate
+            + (_collateral.rateInfo.rate * (block.timestamp - _collateral.rateInfo.lastUpdateTime));
+
+        // calculates pending base rate and adds it to the last stored base rate
+        uint256 _baseCurrentAccumulatedRate =
+            baseRateInfo.accumulatedRate + (baseRateInfo.rate * (block.timestamp - baseRateInfo.lastUpdateTime));
+
+        // adds together to get total rate since inception
+        return _collateralCurrentAccumulatedRate + _baseCurrentAccumulatedRate;
     }
 
     function _scaleCollateralToExpectedPrecision(Collateral storage _collateral, uint256 amount)
@@ -482,9 +535,5 @@ contract Vault is AccessControl, IVault {
 
     function _revertIfHealthFactorIsBroken(Vault storage _vault, Collateral storage _collateral) internal view {
         if (_checkHealthFactor(_vault, _collateral) < MIN_HEALTH_FACTOR) revert BadHealthFactor();
-    }
-
-    function _revertIfHealthFactorIsSafe(Vault storage _vault, Collateral storage _collateral) internal view {
-        if (_checkHealthFactor(_vault, _collateral) >= MIN_HEALTH_FACTOR) revert PositionIsSafe();
     }
 }

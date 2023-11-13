@@ -1,0 +1,14 @@
+withdrawCollateralTest.t.sol
+└── when withdrawCollateral is called
+    ├── when vault is paused
+    │   └── it should revert with custom error Paused()
+    ├── when collateral does not exist
+    │   └── it should revert with custom error CollateralDoesNotExist()
+    ├── when the amount parsed in is 0
+    │   └── it should revert with custom error ShouldBeMoreThanZero()
+    ├── when caller is not owner and not relied upon by owner
+    │   └── it should revert with custom error NotOwnerOrReliedUpon()
+    ├── when the amount is greater than the borrowers deposited collateral
+    │   └── it should revert with underflow error
+    └── when the wwithdrawal makes the vault's health factor below the min health factor
+        └── it should revert with custom error BadHealthFactor()
