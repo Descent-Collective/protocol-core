@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Vault, Currency, ERC20} from "../src/vault.sol";
+import {VaultGetters} from "./mocks/vaultGetters.sol";
 import {Feed} from "../src/feed.sol";
 import {ERC20Token} from "./mocks/ERC20Token.sol";
 
@@ -11,6 +12,7 @@ contract BaseTest is Test {
     Currency xNGN;
     ERC20 usdc;
     Feed feed;
+    VaultGetters vaultGetters;
     address bufferContract = vm.addr(uint256(keccak256("BUFFER_CONTRACT"))); // to be a contract
     address owner = vm.addr(uint256(keccak256("OWNER")));
     address user1 = vm.addr(uint256(keccak256("User1")));
@@ -34,6 +36,8 @@ contract BaseTest is Test {
 
     function setUp() external {
         vm.startPrank(owner);
+
+        vaultGetters = new VaultGetters();
 
         xNGN = new Currency("xNGN", "xNGN");
 
@@ -68,13 +72,14 @@ contract BaseTest is Test {
         // deposit collateral
         vault.depositCollateral(usdc, user1, 1_000e18);
 
-        (uint256 depositedCollateral, uint256 borrowedAmount, uint256 accruedFees) = vault.getVaultInfo(usdc, user1);
+        (uint256 depositedCollateral, uint256 borrowedAmount, uint256 accruedFees) =
+            vaultGetters.getVaultInfo(vault, usdc, user1);
         console2.log(depositedCollateral, borrowedAmount, accruedFees);
 
         // borrow xNGN
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
 
-        (depositedCollateral, borrowedAmount, accruedFees) = vault.getVaultInfo(usdc, user1);
+        (depositedCollateral, borrowedAmount, accruedFees) = vaultGetters.getVaultInfo(vault, usdc, user1);
         console2.log(depositedCollateral, borrowedAmount, accruedFees);
 
         skip(365 days);
@@ -87,17 +92,17 @@ contract BaseTest is Test {
         // vm.stopPrank();
         // vm.startPrank(user1);
 
-        (depositedCollateral, borrowedAmount, accruedFees) = vault.getVaultInfo(usdc, user1);
+        (depositedCollateral, borrowedAmount, accruedFees) = vaultGetters.getVaultInfo(vault, usdc, user1);
         console2.log(depositedCollateral, borrowedAmount, accruedFees);
 
-        console2.log(vault.checkHealthFactor(usdc, user1));
+        console2.log(vaultGetters.checkHealthFactor(vault, usdc, user1));
 
         vm.stopPrank();
         vm.startPrank(user2);
 
         usdc.approve(address(vault), type(uint256).max);
-        vault.depositCollateral(usdc, user2, 2_000e18);
-        vault.mintCurrency(usdc, user2, user2, 1_000_000e18);
+        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.mintCurrency(usdc, user2, user2, 500_000e18);
 
         // vm.stopPrank();
         // updatePrice(999.999999e6);
@@ -105,26 +110,26 @@ contract BaseTest is Test {
 
         xNGN.approve(address(vault), type(uint256).max);
         vault.liquidate(usdc, user1, user2, 1000);
-        console2.log(vault.checkHealthFactor(usdc, user1));
+        console2.log(vaultGetters.checkHealthFactor(vault, usdc, user1));
 
-        (depositedCollateral, borrowedAmount, accruedFees) = vault.getVaultInfo(usdc, user1);
+        (depositedCollateral, borrowedAmount, accruedFees) = vaultGetters.getVaultInfo(vault, usdc, user1);
         console2.log(depositedCollateral, borrowedAmount, accruedFees);
 
-        // console2.log(vault.checkHealthFactor(usdc, user1));
+        // console2.log(vaultGetters.checkHealthFactor(vault, usdc, user1));
 
-        // console2.log(vault.getMaxWithdrawable(usdc, user1));
-        // console2.log(vault.getMaxBorrowable(usdc, user1));
+        // console2.log(vaultGetters.getMaxWithdrawable(vault, usdc, user1));
+        // console2.log(vaultGetters.getMaxBorrowable(vault, usdc, user1));
 
         // vm.stopPrank();
         // vm.startPrank(user1);
 
-        // vault.depositCollateral(usdc, 9999999973584000000);
+        // vaultGetters.depositCollateral(vault, usdc, 9999999973584000000);
 
-        // console2.log(vault.getMaxWithdrawable(usdc, user1));
-        // console2.log(vault.getMaxBorrowable(usdc, user1));
+        // console2.log(vaultGetters.getMaxWithdrawable(vault, usdc, user1));
+        // console2.log(vaultGetters.getMaxBorrowable(vault, usdc, user1));
 
-        // console2.log(vault.getMaxWithdrawable(usdc, user2));
-        // console2.log(vault.getMaxBorrowable(usdc, user2));
+        // console2.log(vaultGetters.getMaxWithdrawable(vault, usdc, user2));
+        // console2.log(vaultGetters.getMaxBorrowable(vault, usdc, user2));
 
         vm.stopPrank();
     }

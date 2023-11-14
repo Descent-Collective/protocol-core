@@ -3,7 +3,6 @@ pragma solidity 0.8.21;
 
 interface IVault {
     // ------------------------------------------------ CUSTOM ERROR ------------------------------------------------
-    error Paused();
     error ZeroAddress();
     error UnrecognizedParam();
     error BadHealthFactor();
@@ -29,7 +28,7 @@ interface IVault {
         uint256 lastUpdateTime; // lastUpdateTime of accumulated rate
     }
 
-    struct Collateral {
+    struct CollateralInfo {
         uint256 totalDepositedCollateral; // total deposited collateral
         uint256 totalBorrowedAmount; // total borrowed amount
         uint256 liquidationThreshold; // denotes how many times more collateral value is expected relative to the PRECISION (i.e 1e18). E.g liquidationThreshold of 0.5e18 means 2x/200% more collateral since 100 / 50 is 2. 150% will be 0.66e18
@@ -44,7 +43,7 @@ interface IVault {
         bool exists; // if collateral type exists
     }
 
-    struct Vault {
+    struct VaultInfo {
         uint256 depositedCollateral; // users Collateral in the system
         uint256 borrowedAmount; // borrowed amount (without fees)
         uint256 accruedFees; // fees accrued as at `lastUpdateTime`
