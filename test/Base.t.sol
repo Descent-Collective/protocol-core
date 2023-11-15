@@ -6,8 +6,9 @@ import {Vault, Currency, ERC20} from "../src/vault.sol";
 import {VaultGetters} from "./mocks/vaultGetters.sol";
 import {Feed} from "../src/feed.sol";
 import {ERC20Token} from "./mocks/ERC20Token.sol";
+import {ErrorsAndEvents} from "./mocks/ErrorsAndEvents.sol";
 
-contract BaseTest is Test {
+contract BaseTest is Test, ErrorsAndEvents {
     Vault vault;
     Currency xNGN;
     ERC20 usdc;
@@ -34,7 +35,7 @@ contract BaseTest is Test {
         vm.label(address(usdc), "USDC");
     }
 
-    function setUp() external {
+    function setUp() public virtual {
         vm.startPrank(owner);
 
         vaultGetters = new VaultGetters();
@@ -60,83 +61,5 @@ contract BaseTest is Test {
         vm.stopPrank();
 
         labelAddresses();
-    }
-
-    // basic random test
-    function test_vault() external {
-        vm.startPrank(user1);
-
-        // approve
-        usdc.approve(address(vault), type(uint256).max);
-
-        // deposit collateral
-        vault.depositCollateral(usdc, user1, 1_000e18);
-
-        (uint256 depositedCollateral, uint256 borrowedAmount, uint256 accruedFees) =
-            vaultGetters.getVaultInfo(vault, usdc, user1);
-        console2.log(depositedCollateral, borrowedAmount, accruedFees);
-
-        // borrow xNGN
-        vault.mintCurrency(usdc, user1, user1, 500_000e18);
-
-        (depositedCollateral, borrowedAmount, accruedFees) = vaultGetters.getVaultInfo(vault, usdc, user1);
-        console2.log(depositedCollateral, borrowedAmount, accruedFees);
-
-        skip(365 days);
-
-        // vm.stopPrank();
-        // vm.startPrank(owner);
-        // vault.updateBaseRate(((0.5e18 * onePercentPerAnnum) / 100) / 365 days);
-
-        // skip(365 days);
-        // vm.stopPrank();
-        // vm.startPrank(user1);
-
-        (depositedCollateral, borrowedAmount, accruedFees) = vaultGetters.getVaultInfo(vault, usdc, user1);
-        console2.log(depositedCollateral, borrowedAmount, accruedFees);
-
-        console2.log(vaultGetters.checkHealthFactor(vault, usdc, user1));
-
-        vm.stopPrank();
-        vm.startPrank(user2);
-
-        usdc.approve(address(vault), type(uint256).max);
-        vault.depositCollateral(usdc, user2, 1_000e18);
-        vault.mintCurrency(usdc, user2, user2, 500_000e18);
-
-        // vm.stopPrank();
-        // updatePrice(999.999999e6);
-        // vm.startPrank(user2);
-
-        xNGN.approve(address(vault), type(uint256).max);
-        vault.liquidate(usdc, user1, user2, 1000);
-        console2.log(vaultGetters.checkHealthFactor(vault, usdc, user1));
-
-        (depositedCollateral, borrowedAmount, accruedFees) = vaultGetters.getVaultInfo(vault, usdc, user1);
-        console2.log(depositedCollateral, borrowedAmount, accruedFees);
-
-        // console2.log(vaultGetters.checkHealthFactor(vault, usdc, user1));
-
-        // console2.log(vaultGetters.getMaxWithdrawable(vault, usdc, user1));
-        // console2.log(vaultGetters.getMaxBorrowable(vault, usdc, user1));
-
-        // vm.stopPrank();
-        // vm.startPrank(user1);
-
-        // vaultGetters.depositCollateral(vault, usdc, 9999999973584000000);
-
-        // console2.log(vaultGetters.getMaxWithdrawable(vault, usdc, user1));
-        // console2.log(vaultGetters.getMaxBorrowable(vault, usdc, user1));
-
-        // console2.log(vaultGetters.getMaxWithdrawable(vault, usdc, user2));
-        // console2.log(vaultGetters.getMaxBorrowable(vault, usdc, user2));
-
-        vm.stopPrank();
-    }
-
-    function updatePrice(uint256 to) private {
-        vm.startPrank(owner);
-        feed.mockUpdatePrice(address(usdc), to);
-        vm.stopPrank();
     }
 }

@@ -51,11 +51,6 @@ contract Vault is AccessControl, Pausable, IVault {
         _;
     }
 
-    modifier moreThanZero(uint256 _amount) {
-        if (_amount == 0) revert ShouldBeMoreThanZero();
-        _;
-    }
-
     modifier onlyOwnerOrReliedUpon(address _owner) {
         if (_owner != msg.sender && !relyMapping[_owner][msg.sender]) revert NotOwnerOrReliedUpon();
         _;
@@ -67,6 +62,25 @@ contract Vault is AccessControl, Pausable, IVault {
 
     function updateStabilityModule(address _stabilityModule) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(STABILITY_MODULE_ROLE, _stabilityModule);
+    }
+
+    /**
+     * Used to recover tokens and eth without affecting collateral reserves
+     */
+    function recoverToken(address _tokenAddress, address _to) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (_tokenAddress == address(CURRENCY_TOKEN)) {
+            CURRENCY_TOKEN.transfer(_to, CURRENCY_TOKEN.balanceOf(address(this)));
+        } else if (_tokenAddress == address(0)) {
+            (bool success,) = _to.call{value: address(this).balance}("");
+            if (!success) revert EthTransferFailed();
+        } else {
+            ERC20 _tokenContract = ERC20(_tokenAddress);
+            SafeERC20.safeTransfer(
+                _tokenContract,
+                _to,
+                _tokenContract.balanceOf(address(this)) - collateralMapping[_tokenContract].totalDepositedCollateral
+            );
+        }
     }
 
     /**
@@ -92,7 +106,7 @@ contract Vault is AccessControl, Pausable, IVault {
         _collateral.additionalCollateralPercision = PRECISION_DEGREE - _collateralToken.decimals();
         _collateral.exists = true;
 
-        emit CollateralAdded(address(_collateralToken));
+        emit CollateralTypeAdded(address(_collateralToken));
     }
 
     /**
@@ -128,7 +142,6 @@ contract Vault is AccessControl, Pausable, IVault {
         whenNotPaused
         onlyRole(FEED_CONTRACT_ROLE)
         collateralExists(ERC20(_collateralAddress))
-        moreThanZero(_price)
     {
         collateralMapping[ERC20(_collateralAddress)].price = _price;
     }
@@ -171,9 +184,8 @@ contract Vault is AccessControl, Pausable, IVault {
         whenNotPaused
         collateralExists(_collateralToken)
         onlyOwnerOrReliedUpon(_owner)
-        moreThanZero(_amount)
     {
-        emit VaultCollateralized(_owner, _amount);
+        emit CollateralDeposited(_owner, _amount);
 
         _depositCollateral(_collateralToken, _owner, _amount);
     }
@@ -187,13 +199,17 @@ contract Vault is AccessControl, Pausable, IVault {
         whenNotPaused
         collateralExists(_collateralToken)
         onlyOwnerOrReliedUpon(_owner)
-        moreThanZero(_amount)
     {
-        emit CollateralWithdrawn(_owner, _amount);
+        VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
+        CollateralInfo storage _collateral = collateralMapping[_collateralToken];
+
+        _accrueFees(_vault, _collateral);
+
+        emit CollateralWithdrawn(_owner, _to, _amount);
 
         _withdrawCollateral(_collateralToken, _owner, _to, _amount);
 
-        _revertIfHealthFactorIsBroken(vaultMapping[_collateralToken][_owner], collateralMapping[_collateralToken]);
+        _revertIfHealthFactorIsBroken(_vault, _collateral);
     }
 
     /**
@@ -205,7 +221,6 @@ contract Vault is AccessControl, Pausable, IVault {
         whenNotPaused
         collateralExists(_collateralToken)
         onlyOwnerOrReliedUpon(_owner)
-        moreThanZero(_amount)
     {
         VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
@@ -214,10 +229,10 @@ contract Vault is AccessControl, Pausable, IVault {
         if (_collateral.collateralFloorPerPosition > _vault.depositedCollateral) revert TotalUserCollateralBelowFloor();
 
         // short circuit conditional to optimize all interactions after the first one.
-        if (_vault.lastTotalAccumulatedRate != 0) _accrueFees(_vault, _collateral);
+        if (_vault.borrowedAmount != 0) _accrueFees(_vault, _collateral);
         else _vault.lastTotalAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
 
-        emit StableTokenWithdrawn(_owner, _amount);
+        emit CurrencyMinted(_owner, _amount);
         _mintCurrency(_vault, _collateral, _to, _amount);
 
         _revertIfHealthFactorIsBroken(_vault, _collateral);
@@ -231,14 +246,13 @@ contract Vault is AccessControl, Pausable, IVault {
         whenNotPaused
         collateralExists(_collateralToken)
         onlyOwnerOrReliedUpon(_owner)
-        moreThanZero(_amount)
     {
         VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
 
         _accrueFees(_vault, _collateral);
 
-        emit StableTokenWithdrawn(_owner, _amount);
+        emit CurrencyBurned(_owner, _amount);
         _burnCurrency(_vault, _collateral, _owner, _amount);
     }
 
@@ -251,7 +265,6 @@ contract Vault is AccessControl, Pausable, IVault {
         external
         whenNotPaused
         collateralExists(_collateralToken)
-        moreThanZero(_currencyAmountToPay)
     {
         // get health factor
         // require it's below health factor
@@ -275,15 +288,20 @@ contract Vault is AccessControl, Pausable, IVault {
             _collateralAmountCovered = _vault.depositedCollateral;
         } else {
             _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
+
+            // revert if collateral not enough to pay liquidator with bonus
+            if (_collateralAmountCovered > _vault.depositedCollateral) revert NotEnoughCollateralToPay();
         }
 
         uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / PRECISION;
 
-        // To make liquidations always possible, if < liquidationBonus % is what is possble, give the highest possible positive amount of bonus
+        // To make liquidations always possible, if _vault.depositedCollateral not enough to pay bonus, give out highest possible bonus
         uint256 _total = _collateralAmountCovered + _bonus;
         if (_total > _vault.depositedCollateral) {
             _total = _vault.depositedCollateral;
         }
+
+        emit Liquidated(_owner, msg.sender, _currencyAmountToPay, _total);
 
         _withdrawCollateral(_collateralToken, _owner, _to, _total);
         _burnCurrency(_vault, _collateral, msg.sender, _currencyAmountToPay);
@@ -356,6 +374,7 @@ contract Vault is AccessControl, Pausable, IVault {
         _collateral.paidFees += _amount;
         paidFees += _amount;
 
+        emit FeesPaid(_from, _amount);
         CURRENCY_TOKEN.transferFrom(_from, address(this), _amount);
     }
 
@@ -387,10 +406,10 @@ contract Vault is AccessControl, Pausable, IVault {
 
         uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_vault, _collateral);
 
-        uint256 _adjustedCollateralValueInCurrency =
-            (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
+        uint256 _adjustedCollateralValueInCurrency = _collateralValueInCurrency * _collateral.liquidationThreshold;
 
-        return (_adjustedCollateralValueInCurrency * PRECISION) / _totalUserDebt;
+        // _adjustedCollateralValueInCurrency is already in the form of 1e36 so dividing by a number in form of 1e18 brings it back.
+        return _adjustedCollateralValueInCurrency / _totalUserDebt;
     }
 
     function _getCurrencyValueOfCollateral(VaultInfo storage _vault, CollateralInfo storage _collateral)
@@ -424,6 +443,7 @@ contract Vault is AccessControl, Pausable, IVault {
     {
         uint256 _totalCurrentAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
 
+        // any need to be extra harsh and use divUp to maximize fees?
         uint256 _accruedFees =
             ((_totalCurrentAccumulatedRate - _vault.lastTotalAccumulatedRate) * _vault.borrowedAmount) / PRECISION;
 
@@ -462,3 +482,17 @@ contract Vault is AccessControl, Pausable, IVault {
         if (_checkHealthFactor(_vault, _collateral) < MIN_HEALTH_FACTOR) revert BadHealthFactor();
     }
 }
+
+/**
+ * depositCollateralTest.t.sol
+ * └── when depositCollateral is called
+ *     ├── when vault is paused
+ *     │   └── it should revert with custom error Paused()
+ *     ├── when collateral does not exist
+ *     │   └── it should revert with custom error CollateralDoesNotExist()
+ *     ├── when caller is not owner and not relied upon by owner
+ *     │   └── it should revert with custom error NotOwnerOrReliedUpon()
+ *     └── it should emit CollateralDeposited() event
+ *     └── it should update the _owner's deposited collateral and collateral's total deposit
+ *     └── it should send the collateral token to the vault from the _owner
+ */
