@@ -14,11 +14,12 @@ contract BaseTest is Test, ErrorsAndEvents {
     ERC20 usdc;
     Feed feed;
     VaultGetters vaultGetters;
-    address bufferContract = vm.addr(uint256(keccak256("BUFFER_CONTRACT"))); // to be a contract
     address owner = vm.addr(uint256(keccak256("OWNER")));
     address user1 = vm.addr(uint256(keccak256("User1")));
     address user2 = vm.addr(uint256(keccak256("User2")));
     address user3 = vm.addr(uint256(keccak256("User3")));
+    address user4 = vm.addr(uint256(keccak256("User4")));
+    address user5 = vm.addr(uint256(keccak256("User5")));
     uint256 constant onePercentPerAnnum = 1;
     uint256 onePercentPerSecondInterestRate = ((1e18 * onePercentPerAnnum) / 100) / 365 days;
     uint256 oneAndHalfPercentPerSecondInterestRate = ((1.5e18 * onePercentPerAnnum) / 100) / 365 days;
@@ -28,7 +29,6 @@ contract BaseTest is Test, ErrorsAndEvents {
         vm.label(user1, "User1");
         vm.label(user2, "User2");
         vm.label(user3, "User3");
-        vm.label(bufferContract, "BufferContract");
         vm.label(address(vault), "Vault");
         vm.label(address(xNGN), "xNGN");
         vm.label(address(feed), "Feed");
@@ -44,7 +44,7 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         usdc = ERC20(address(new ERC20Token("Circle USD", "USDC")));
 
-        vault = new Vault(xNGN, bufferContract, onePercentPerSecondInterestRate);
+        vault = new Vault(xNGN, onePercentPerSecondInterestRate);
 
         feed = new Feed(vault);
 
@@ -61,5 +61,19 @@ contract BaseTest is Test, ErrorsAndEvents {
         vm.stopPrank();
 
         labelAddresses();
+    }
+
+    modifier useUser1() {
+        vm.startPrank(user1);
+        _;
+    }
+
+    modifier useReliedOnForUser1(address relyOn) {
+        vm.startPrank(user1);
+        vault.rely(relyOn);
+        vm.stopPrank();
+
+        vm.startPrank(relyOn);
+        _;
     }
 }

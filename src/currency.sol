@@ -4,6 +4,7 @@ pragma solidity 0.8.21;
 //  ==========  External imports    ==========
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20Permit, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Currency is AccessControl, ERC20Permit {
     // Create a new role identifier for the minter role
@@ -42,22 +43,16 @@ contract Currency is AccessControl, ERC20Permit {
     }
 
     /**
-     * @dev withdraw native tokens. For cases where people mistakenly send ether to this address
+     * @dev withdraw token. For cases where people mistakenly send other tokens to this address
+     * @param token address of the token to withdraw
+     * @param to account to withdraw tokens to
      */
-    function withdraw() public onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 etherBalance = address(this).balance;
-        (bool success,) = payable(msg.sender).call{value: etherBalance}("");
-        require(success, "withdraw failed");
-    }
-
-    /**
-     * @dev withdraw erc20 tokens. For cases where people mistakenly send other tokens to this address
-     * @param tokenAddress address of the token to withdraw
-     * @param account account to withdraw tokens to
-     */
-    function withdrawToken(address tokenAddress, address account) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        ERC20Permit token = ERC20Permit(tokenAddress);
-        uint256 tokenBalance = token.balanceOf(address(this));
-        token.transfer(account, tokenBalance);
+    function recoverToken(ERC20 token, address to) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (address(token) != address(0)) {
+            SafeERC20.safeTransfer(token, to, token.balanceOf(address(this)));
+        } else {
+            (bool success,) = payable(to).call{value: address(this).balance}("");
+            require(success, "withdraw failed");
+        }
     }
 }

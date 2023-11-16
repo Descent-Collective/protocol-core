@@ -1,9 +1,11 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20} from "../../../Base.t.sol";
+import {BaseTest, ERC20} from "../../../base.t.sol";
 
-contract DepositCollateralTesttsol is BaseTest {
+contract DepositCollateralTest is BaseTest {
     function setUp() public override {
+        // execute BaseTest's setup function
         super.setUp();
 
         // use user1 as default for all tests
@@ -11,10 +13,12 @@ contract DepositCollateralTesttsol is BaseTest {
 
         // approve vault to spend all tokens
         usdc.approve(address(vault), type(uint256).max);
+
+        vm.stopPrank();
     }
 
-    function test_WhenVaultIsPaused() external {
-        // pause vault
+    function test_WhenVaultIsPaused() external useUser1 {
+        // use owner to pause vault
         vm.stopPrank();
         vm.prank(owner);
         vault.pause();
@@ -26,7 +30,11 @@ contract DepositCollateralTesttsol is BaseTest {
         vault.depositCollateral(usdc, user1, 1_000e18);
     }
 
-    function test_WhenCollateralDoesNotExist() external {
+    modifier whenVaultIsNotPaused() {
+        _;
+    }
+
+    function test_WhenCollateralDoesNotExist() external whenVaultIsNotPaused useUser1 {
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);
 
@@ -34,8 +42,12 @@ contract DepositCollateralTesttsol is BaseTest {
         vault.depositCollateral(ERC20(vm.addr(11111)), user1, 1_000e18);
     }
 
-    function test_WhenCallerIsNotOwnerAndNotReliedUponByOwner() external {
-        vm.stopPrank();
+    modifier whenCollateralExist() {
+        _;
+    }
+
+    function test_WhenCallerIsNotOwnerAndNotReliedUponByOwner() external whenVaultIsNotPaused whenCollateralExist {
+        // use unrelied upon user2
         vm.prank(user2);
 
         // it should revert with custom error NotOwnerOrReliedUpon()
@@ -45,22 +57,26 @@ contract DepositCollateralTesttsol is BaseTest {
         vault.depositCollateral(usdc, user1, 1_000e18);
     }
 
-    function test_WhenCallerIsOwner() external {
-        runWithdrawCollateralTestWithChecks();
+    function test_WhenCallerIsReliedUponByOwner()
+        external
+        whenVaultIsNotPaused
+        whenCollateralExist
+        useReliedOnForUser1(user2)
+    {
+        // it should emit CollateralDeposited() event
+        // it should update the _owner's deposited collateral and collateral's total deposit
+        // it should send the collateral token to the vault from the _owner
+        whenCallerIsOwnerOrReliedUponByOwner();
     }
 
-    function test_WhenCallerIsNotOwnerButReliedUponByOwner() external {
-        // user 1 rely on user 2
-        vault.rely(user2);
-
-        // use user2 for interactions on behalf of user1
-        vm.stopPrank();
-        vm.startPrank(user2);
-
-        runWithdrawCollateralTestWithChecks();
+    function test_WhenCallerIsOwner() external whenVaultIsNotPaused whenCollateralExist useUser1 {
+        // it should emit CollateralDeposited() event
+        // it should update the _owner's deposited collateral and collateral's total deposit
+        // it should send the collateral token to the vault from the _owner
+        whenCallerIsOwnerOrReliedUponByOwner();
     }
 
-    function runWithdrawCollateralTestWithChecks() private {
+    function whenCallerIsOwnerOrReliedUponByOwner() private {
         // cache pre balances
         uint256 userOldBalance = usdc.balanceOf(user1);
         uint256 vaultOldBalance = usdc.balanceOf(address(vault));
