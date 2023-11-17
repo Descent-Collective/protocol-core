@@ -3,7 +3,7 @@
   "baseRate": "317097919",
   "collaterals": {
     "USDC": {
-      "collateralAddress": "0xF175520C52418dfE19C8098071a252da48Cd1C19",
+      "collateralAddress": "",
       "collateralRate": "475646879",
       "liquidationThreshold": "750000000000000000",
       "liquidationBonus": "100000000000000000",
