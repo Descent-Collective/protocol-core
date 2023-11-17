@@ -12,6 +12,12 @@ To run tests, run:
 forge test -vvv --gas-report
 ```
 
+To run slither, run:
+
+```zsh
+slither .
+```
+
 To start a local node, run:
 
 ```zsh
