@@ -6,6 +6,8 @@ import {Currency} from "../src/currency.sol";
 import {Feed} from "../src/feed.sol";
 
 import {BaseScript, stdJson, console2} from "./base.s.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Token} from "../test/mocks/ERC20Token.sol";
 
 contract DeployScript is BaseScript {
     using stdJson for string;
@@ -16,7 +18,22 @@ contract DeployScript is BaseScript {
         vault = new Vault(xNGN,  baseRate);
         feed = new Feed(vault);
 
-        (uint256 rate,,) = vault.baseRateInfo();
-        console2.log("Currenct base rate:", rate);
+        ERC20 usdc = getOrCreateUsdc();
+        vault.createCollateralType({
+            _collateralToken: usdc,
+            _rate: 475646879, // 1.5% per annum (in per second format)
+            _liquidationThreshold: 0.75e18, // 75% liquidation ratio
+            _liquidationBonus: 0.1e18, // 10% liquidation bonus
+            _debtCeiling: type(uint256).max, // no max cap
+            _collateralFloorPerPosition: 0 // no min collateral
+        });
+    }
+
+    function getOrCreateUsdc() private returns (ERC20 usdc) {
+        if (currenctChain == Chains.Localnet) {
+            usdc = ERC20(address(new ERC20Token("Circle USD", "USDC")));
+        } else {
+            usdc = ERC20(getDeployJson().readAddress(".usdc"));
+        }
     }
 }
