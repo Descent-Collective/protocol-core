@@ -108,6 +108,7 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
+     *
      * @dev updates collateral data of an existing collateral type
      */
     function updateCollateralData(ERC20 _collateralToken, bytes32 _param, uint256 _data)
@@ -289,6 +290,9 @@ contract Vault is AccessControl, Pausable, IVault {
             _collateralAmountCovered = _vault.depositedCollateral;
         } else {
             _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
+
+            // revert if collateral not enough to pay liquidator with min bonus of 0
+            if (_collateralAmountCovered > _vault.depositedCollateral) revert NotEnoughCollateralToPay();
         }
 
         uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / PRECISION;
@@ -480,3 +484,17 @@ contract Vault is AccessControl, Pausable, IVault {
         if (_checkHealthFactor(_vault, _collateral) < MIN_HEALTH_FACTOR) revert BadHealthFactor();
     }
 }
+
+/**
+ * depositCollateralTest.t.sol
+ * └── when depositCollateral is called
+ *     ├── when vault is paused
+ *     │   └── it should revert with custom error Paused()
+ *     ├── when collateral does not exist
+ *     │   └── it should revert with custom error CollateralDoesNotExist()
+ *     ├── when caller is not owner and not relied upon by owner
+ *     │   └── it should revert with custom error NotOwnerOrReliedUpon()
+ *     └── it should emit CollateralDeposited() event
+ *     └── it should update the _owner's deposited collateral and collateral's total deposit
+ *     └── it should send the collateral token to the vault from the _owner
+ */

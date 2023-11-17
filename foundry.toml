@@ -4,7 +4,7 @@ src = "src"
 test = "test"
 out = "out"
 libs = ["lib"]
-fs_permissions = [{ access = "read", path = "./deployConfigs/localnet.json" }, { access = "read", path = "./testnet.base.json" }]
+fs_permissions = [{ access = "read", path = "./deployParameters.json" }]
 bytecode_hash = "none"
 cbor_metadata = false
 evm_version = "paris"
