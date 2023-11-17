@@ -1,4 +1,9 @@
 {
   "baseRate": 317097919,
-  "usdc": ""
+},
+"collaterals": {
+  "USDC": {
+    "colllateral_rate": "",
+    "collateral_address": ""
+  }
 }
