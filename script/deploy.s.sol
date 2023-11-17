@@ -13,19 +13,19 @@ contract DeployScript is BaseScript {
     using stdJson for string;
 
     function run() external broadcast returns (Currency xNGN, Vault vault, Feed feed) {
-        uint256 baseRate = getDeployJson().readUint(".baseRate");
+        string memory deployConfigJson = getDeployConfigJson();
+        uint256 baseRate = deployConfigJson.readUint(".baseRate");
         xNGN = new Currency("xNGN", "xNGN");
         vault = new Vault(xNGN,  baseRate);
         feed = new Feed(vault);
 
-        ERC20 usdc = getOrCreateUsdc();
         vault.createCollateralType({
-            _collateralToken: usdc,
-            _rate: 475646879, // 1.5% per annum (in per second format)
-            _liquidationThreshold: 0.75e18, // 75% liquidation ratio
-            _liquidationBonus: 0.1e18, // 10% liquidation bonus
-            _debtCeiling: type(uint256).max, // no max cap
-            _collateralFloorPerPosition: 0 // no min collateral
+            _collateralToken: getOrCreateUsdc(),
+            _rate: deployConfigJson.readUint(".collaterals.USDC.collateralRate"),
+            _liquidationThreshold: deployConfigJson.readUint(".collaterals.USDC.liquidationThreshold"),
+            _liquidationBonus: deployConfigJson.readUint(".collaterals.USDC.liquidationBonus"),
+            _debtCeiling: deployConfigJson.readUint(".collaterals.USDC.debtCeiling"),
+            _collateralFloorPerPosition: deployConfigJson.readUint(".collaterals.USDC.collateralFloorPerPosition")
         });
     }
 
@@ -33,7 +33,7 @@ contract DeployScript is BaseScript {
         if (currenctChain == Chains.Localnet) {
             usdc = ERC20(address(new ERC20Token("Circle USD", "USDC")));
         } else {
-            usdc = ERC20(getDeployJson().readAddress(".usdc"));
+            usdc = ERC20(getDeployConfigJson().readAddress(".collaterals.USDC/collateralAddress"));
         }
     }
 }
