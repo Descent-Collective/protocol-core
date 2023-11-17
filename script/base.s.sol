@@ -32,6 +32,21 @@ abstract contract BaseScript is Script {
             mnemonic = vm.envOr({name: "MNEMONIC", defaultValue: TEST_MNEMONIC});
             (broadcaster,) = deriveRememberKey({mnemonic: mnemonic, index: 0});
         }
+
+        if (block.chainid == 31337) {
+            currenctChain = Chains.Localnet;
+        } else if (block.chainid == 84531) {
+            currenctChain = Chains.BaseTestnet;
+        } else {
+            revert("Unsupported chain for deployment");
+        }
+    }
+
+    Chains currenctChain;
+
+    enum Chains {
+        Localnet,
+        BaseTestnet
     }
 
     modifier broadcast() {
@@ -41,6 +56,10 @@ abstract contract BaseScript is Script {
     }
 
     function getDeployJson() internal view returns (string memory json) {
-        json = vm.readFile(string.concat(vm.projectRoot(), "/deployParameters.json"));
+        if (currenctChain == Chains.BaseTestnet) {
+            json = vm.readFile(string.concat(vm.projectRoot(), "/deployConfigs/testnet.base.json"));
+        } else {
+            json = vm.readFile(string.concat(vm.projectRoot(), "/deployConfigs/localnet.json"));
+        }
     }
 }
