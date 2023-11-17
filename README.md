@@ -1,5 +1,14 @@
 ## Protocol Core
 
+### Deployment address
+
+#### Base Georli
+| Contract Name  | Addresses |
+| ------------- | ------------- |
+| Vault Contract | 0xeAb261C2021Af0e3AC9D716C6b7BaDAd73caCfff  |
+| Currency Contract (xNGN) | 0x774843f6Baa4AAE62F026a8aF3c1C6FF3e55Ca39  |
+| Feed Contract  | 0x44b6Cb68F7636E7859CfC83af73bfCFB11184c95  |
+
 To install libraries needed, run:
 
 ```zsh

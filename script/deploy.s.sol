@@ -16,7 +16,7 @@ contract DeployScript is BaseScript {
         string memory deployConfigJson = getDeployConfigJson();
         uint256 baseRate = deployConfigJson.readUint(".baseRate");
         xNGN = new Currency("xNGN", "xNGN");
-        vault = new Vault(xNGN,  baseRate);
+        vault = new Vault(xNGN, baseRate);
         feed = new Feed(vault);
 
         vault.createCollateralType({
@@ -33,7 +33,7 @@ contract DeployScript is BaseScript {
         if (currenctChain == Chains.Localnet) {
             usdc = ERC20(address(new ERC20Token("Circle USD", "USDC")));
         } else {
-            usdc = ERC20(getDeployConfigJson().readAddress(".collaterals.USDC/collateralAddress"));
+            usdc = ERC20(getDeployConfigJson().readAddress(".collaterals.USDC.collateralAddress"));
         }
     }
 }
