@@ -1,4 +1,5 @@
 {
+  "name": "Local chain deployment config",
   "baseRate": "317097919",
   "collaterals": {
     "USDC": {

@@ -1,5 +1,5 @@
 {
-  "name": "Base Testnet Deployment Config"
+  "name": "Base Testnet Deployment Config",
   "baseRate": "317097919",
   "collaterals": {
     "USDC": {
