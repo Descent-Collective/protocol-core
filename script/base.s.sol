@@ -55,7 +55,7 @@ abstract contract BaseScript is Script {
         vm.stopBroadcast();
     }
 
-    function getDeployJson() internal view returns (string memory json) {
+    function getDeployConfigJson() internal view returns (string memory json) {
         if (currenctChain == Chains.BaseTestnet) {
             json = vm.readFile(string.concat(vm.projectRoot(), "/deployConfigs/testnet.base.json"));
         } else {
