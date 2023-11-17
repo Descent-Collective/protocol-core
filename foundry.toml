@@ -1,10 +1,14 @@
 [profile.default]
+solc = "0.8.21"
 src = "src"
+test = "test"
 out = "out"
 libs = ["lib"]
-remappings = [
-    "@openzeppelin/=lib/openzeppelin-contracts/",
-    "forge-std/=lib/forge-std/src/",
-]
+fs_permissions = [{ access = "read", path = "./deployParameters.json" }]
+bytecode_hash = "none"
+cbor_metadata = false
+evm_version = "paris"
+optimizer = true
+optimizer_runs = 1_000_000
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
