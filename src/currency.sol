@@ -5,10 +5,13 @@ pragma solidity 0.8.21;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20Permit, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ICurrency} from "./interfaces/ICurrency.sol";
 
-contract Currency is AccessControl, ERC20Permit {
+contract Currency is AccessControl, ERC20Permit, ICurrency {
     // Create a new role identifier for the minter role
     bytes32 constant MINTER_BURNER_ROLE = keccak256("MINTER_BURNER_ROLE");
+    address public constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3; // permit2 contract
+    bool public permit2Enabled;
 
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) ERC20Permit(_symbol) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -40,6 +43,17 @@ contract Currency is AccessControl, ERC20Permit {
     function burn(address account, uint256 amount) external onlyRole(MINTER_BURNER_ROLE) returns (bool) {
         _burn(account, amount);
         return true;
+    }
+
+    function updatePermit2Allowance(bool enabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit Permit2AllowanceUpdated(enabled);
+        permit2Enabled = enabled;
+    }
+
+    /// @dev The permit2 contract has full approval by default. If the approval is revoked, it can still be manually approved.
+    function allowance(address owner, address spender) public view override returns (uint256) {
+        if (spender == PERMIT2 && permit2Enabled) return type(uint256).max;
+        return super.allowance(owner, spender);
     }
 
     /**

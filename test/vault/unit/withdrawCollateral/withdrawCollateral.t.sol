@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20} from "../../../base.t.sol";
+import {BaseTest, ERC20, IVault} from "../../../base.t.sol";
 
 contract WithdrawCollateralTest is BaseTest {
     function setUp() public override {
@@ -9,9 +9,6 @@ contract WithdrawCollateralTest is BaseTest {
 
         // use user1 as default for all tests
         vm.startPrank(user1);
-
-        // approve vault to spend all tokens
-        usdc.approve(address(vault), type(uint256).max);
 
         // deposit amount to be used when testing
         vault.depositCollateral(usdc, user1, 1_000e18);
@@ -150,8 +147,9 @@ contract WithdrawCollateralTest is BaseTest {
         uint256 vaultOldBalance = usdc.balanceOf(address(vault));
 
         // cache pre storage vars and old accrued fees
-        (uint256 oldTotalDepositedCollateral,,,,,,,,,,,) = vault.collateralMapping(usdc);
-        (uint256 oldDepositedCollateral,, uint256 oldAccruedFees,) = vault.vaultMapping(usdc, user1);
+        IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
+        IVault.CollateralInfo memory initialCollateralInfo = getCollateralMapping(usdc);
+        uint256 initialAccruedFees = vault.accruedFees();
 
         // take a loan of xNGN to be able to calculate fees acrrual
         uint256 amountMinted = 100_000e18;
@@ -171,20 +169,23 @@ contract WithdrawCollateralTest is BaseTest {
         // call withdrawCollateral to deposit 1,000 usdc into user1's vault
         vault.withdrawCollateral(usdc, user1, recipient, amount);
 
-        // it should update the user1's deposited collateral and collateral's total deposit
-        (uint256 totalDepositedCollateral,,,,,,,,,,,) = vault.collateralMapping(usdc);
-        (uint256 depositedCollateral,, uint256 accruedFees,) = vault.vaultMapping(usdc, user1);
+        // // it should update the user1's deposited collateral and collateral's total deposit
+        IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
+        IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
+
+        // get expected accrued fees
+        uint256 accruedFees = (
+            (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * amountMinted
+        ) / PRECISION;
 
         // it should update accrued fees for the user's position
-        assertEq(
-            accruedFees - oldAccruedFees,
-            (amountMinted * (timeElapsed * (oneAndHalfPercentPerSecondInterestRate + onePercentPerSecondInterestRate)))
-                / 1e18
-        );
+        assertEq(initialUserVaultInfo.accruedFees + accruedFees, afterUserVaultInfo.accruedFees);
+        assertEq(initialCollateralInfo.accruedFees + accruedFees, afterCollateralInfo.accruedFees);
+        assertEq(initialAccruedFees + accruedFees, vault.accruedFees());
 
         // it should update the storage vars correctly
-        assertEq(totalDepositedCollateral, oldTotalDepositedCollateral - amount);
-        assertEq(depositedCollateral, oldDepositedCollateral - amount);
+        assertEq(afterCollateralInfo.totalDepositedCollateral, initialCollateralInfo.totalDepositedCollateral - amount);
+        assertEq(afterUserVaultInfo.depositedCollateral, initialUserVaultInfo.depositedCollateral - amount);
 
         // it should send the collateral token to the vault from the user1
         assertEq(vaultOldBalance - usdc.balanceOf(address(vault)), amount);

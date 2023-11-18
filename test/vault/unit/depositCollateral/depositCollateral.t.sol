@@ -4,19 +4,6 @@ pragma solidity 0.8.21;
 import {BaseTest, ERC20} from "../../../base.t.sol";
 
 contract DepositCollateralTest is BaseTest {
-    function setUp() public override {
-        // execute BaseTest's setup function
-        super.setUp();
-
-        // use user1 as default for all tests
-        vm.startPrank(user1);
-
-        // approve vault to spend all tokens
-        usdc.approve(address(vault), type(uint256).max);
-
-        vm.stopPrank();
-    }
-
     function test_WhenVaultIsPaused() external useUser1 {
         // use owner to pause vault
         vm.stopPrank();

@@ -167,10 +167,17 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev deposits collateral into a vault
+     * @dev rely on an address for actions to your vault
      */
     function rely(address _reliedUpon) external whenNotPaused {
         relyMapping[msg.sender][_reliedUpon] = true;
+    }
+
+    /**
+     * @dev deny an address for actions to your vault
+     */
+    function deny(address _reliedUpon) external whenNotPaused {
+        relyMapping[msg.sender][_reliedUpon] = false;
     }
 
     /**
@@ -349,10 +356,10 @@ contract Vault is AccessControl, Pausable, IVault {
             CURRENCY_TOKEN.burn(_from, _amount);
         } else {
             uint256 _cacheBorrowedAmount = _vault.borrowedAmount;
+
             _vault.borrowedAmount = 0;
-            _collateral.totalBorrowedAmount =
-                (_amount <= _collateral.totalBorrowedAmount) ? _collateral.totalBorrowedAmount - _amount : 0;
-            debt = (_amount <= debt) ? debt - _amount : 0;
+            _collateral.totalBorrowedAmount -= _cacheBorrowedAmount;
+            debt -= _cacheBorrowedAmount;
 
             _payAccruedFees(_vault, _collateral, _from, _amount - _cacheBorrowedAmount);
             CURRENCY_TOKEN.burn(_from, _cacheBorrowedAmount);

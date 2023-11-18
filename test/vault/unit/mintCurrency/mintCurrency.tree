@@ -16,10 +16,11 @@ mintCurrencyTest.t.sol
                 └── when owners collateral balance is above or equal to the collateral floor
                     ├── when the owners borrowed amount is 0
                     │   └── it should update the owners lastTotalAccumulatedRate
+                    │   ├── it should emit CurrencyMinted() event with with expected indexed and unindexed parameters
+                    │   ├── it should update user's borrowed amount, collateral's borrowed amount and global debt
+                    │   └── it should mint right amount of currency to the to address
                     └── when owners borrowed amount is above 0
                         ├── it should update the owners accrued fees
                         ├── it should emit CurrencyMinted() event with with expected indexed and unindexed parameters
                         ├── it should update user's borrowed amount, collateral's borrowed amount and global debt
                         └── it should mint right amount of currency to the to address
-
-                
