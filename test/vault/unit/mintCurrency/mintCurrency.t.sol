@@ -215,7 +215,6 @@ contract MintCurrencyTest is BaseTest {
 
             // it should update accrued fees for the user's position
             assertEq(initialUserVaultInfo.accruedFees + accruedFees, afterUserVaultInfo.accruedFees);
-            assertEq(initialCollateralInfo.accruedFees + accruedFees, afterCollateralInfo.accruedFees);
             assertEq(initialAccruedFees + accruedFees, vault.accruedFees());
         }
 

@@ -318,10 +318,14 @@ contract Vault is AccessControl, Pausable, IVault {
     // ------------------------------------------------ INTERNAL FUNCTIONS ------------------------------------------------
 
     function _depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount) internal {
-        vaultMapping[_collateralToken][_owner].depositedCollateral += _amount;
-        collateralMapping[_collateralToken].totalDepositedCollateral += _amount;
-
+        // supporting fee on transfer tokens at the expense of NEVER SUPPORTING TOKENS WITH CALLBACKS
+        // a solution for supporting it can be adding a mutex but that prevents batching.
+        uint256 preBalance = _collateralToken.balanceOf(address(this));
         SafeERC20.safeTransferFrom(_collateralToken, _owner, address(this), _amount);
+        uint256 difference = _collateralToken.balanceOf(address(this)) - preBalance;
+
+        vaultMapping[_collateralToken][_owner].depositedCollateral += difference;
+        collateralMapping[_collateralToken].totalDepositedCollateral += difference;
     }
 
     function _withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount) internal {
@@ -373,7 +377,6 @@ contract Vault is AccessControl, Pausable, IVault {
         uint256 _amount
     ) internal {
         _vault.accruedFees -= _amount;
-        _collateral.accruedFees -= _amount;
         accruedFees -= _amount;
 
         _collateral.paidFees += _amount;
@@ -390,7 +393,6 @@ contract Vault is AccessControl, Pausable, IVault {
         if (_accruedFees == 0) return;
 
         _vault.accruedFees += _accruedFees;
-        _collateral.accruedFees += _accruedFees;
         accruedFees += _accruedFees;
     }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20} from "../../../base.t.sol";
+import {BaseTest, ERC20, IVault} from "../../../base.t.sol";
 
 contract DepositCollateralTest is BaseTest {
     function test_WhenVaultIsPaused() external useUser1 {
@@ -76,10 +76,11 @@ contract DepositCollateralTest is BaseTest {
         vault.depositCollateral(usdc, user1, 1_000e18);
 
         // it should update the _owner's deposited collateral and collateral's total deposit
-        (uint256 totalDepositedCollateral,,,,,,,,,,,) = vault.collateralMapping(usdc);
-        (uint256 depositedCollateral,,,) = vault.vaultMapping(usdc, user1);
-        assertEq(totalDepositedCollateral, 1_000e18);
-        assertEq(depositedCollateral, 1_000e18);
+        IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
+        IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
+
+        assertEq(afterCollateralInfo.totalDepositedCollateral, 1_000e18);
+        assertEq(afterUserVaultInfo.depositedCollateral, 1_000e18);
 
         // it should send the collateral token to the vault from the _owner
         assertEq(usdc.balanceOf(address(vault)) - vaultOldBalance, 1_000e18);

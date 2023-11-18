@@ -169,7 +169,6 @@ contract BurnCurrencyTest is BaseTest {
 
         // it should accrue fees, per user, per collateral and globally
         assertEq(afterUserVaultInfo.accruedFees, initialUserVaultInfo.accruedFees + accruedFees);
-        assertEq(afterCollateralInfo.accruedFees, initialCollateralInfo.accruedFees + accruedFees);
         assertEq(vault.accruedFees(), initialAccruedFees + accruedFees);
 
         // it should pay back part of or all of the borrowed amount
@@ -411,7 +410,6 @@ contract BurnCurrencyTest is BaseTest {
 
         // it should accrue fees, per user, per collateral and globally
         assertEq(initialUserVaultInfo.accruedFees + accruedFees - fees, afterUserVaultInfo.accruedFees);
-        assertEq(initialCollateralInfo.accruedFees + accruedFees - fees, afterCollateralInfo.accruedFees);
         assertEq(initialAccruedFees + accruedFees - fees, vault.accruedFees());
 
         // it should pay back part of or all of the borrowed amount

@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Vault, IVault, Currency, ERC20} from "../src/vault.sol";
-import {VaultGetters} from "./mocks/vaultGetters.sol";
 import {Feed} from "../src/feed.sol";
 import {ERC20Token} from "./mocks/ERC20Token.sol";
 import {ErrorsAndEvents} from "./mocks/ErrorsAndEvents.sol";
@@ -14,7 +13,6 @@ contract BaseTest is Test, ErrorsAndEvents {
     Currency xNGN;
     ERC20 usdc;
     Feed feed;
-    VaultGetters vaultGetters;
     address owner = vm.addr(uint256(keccak256("OWNER")));
     address user1 = vm.addr(uint256(keccak256("User1")));
     address user2 = vm.addr(uint256(keccak256("User2")));
@@ -38,8 +36,6 @@ contract BaseTest is Test, ErrorsAndEvents {
 
     function setUp() public virtual {
         vm.startPrank(owner);
-
-        vaultGetters = new VaultGetters();
 
         xNGN = new Currency("xNGN", "xNGN");
 
@@ -125,7 +121,6 @@ contract BaseTest is Test, ErrorsAndEvents {
             Vault.RateInfo memory rateInfo,
             uint256 paidFees,
             uint256 price,
-            uint256 accruedFees,
             uint256 debtCeiling,
             uint256 collateralFloorPerPosition,
             uint256 additionalCollateralPercision,
@@ -140,7 +135,6 @@ contract BaseTest is Test, ErrorsAndEvents {
             rateInfo,
             paidFees,
             price,
-            accruedFees,
             debtCeiling,
             collateralFloorPerPosition,
             additionalCollateralPercision,
