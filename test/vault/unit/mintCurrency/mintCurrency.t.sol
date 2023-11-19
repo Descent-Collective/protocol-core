@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20} from "../../../base.t.sol";
+import {BaseTest, ERC20, IVault} from "../../../base.t.sol";
 
 contract MintCurrencyTest is BaseTest {
     function setUp() public override {
@@ -9,9 +9,6 @@ contract MintCurrencyTest is BaseTest {
 
         // use user1 as default for all tests
         vm.startPrank(user1);
-
-        // approve vault to spend all tokens
-        usdc.approve(address(vault), type(uint256).max);
 
         // deposit amount to be used when testing
         vault.depositCollateral(usdc, user1, 1_000e18);
@@ -36,7 +33,7 @@ contract MintCurrencyTest is BaseTest {
         _;
     }
 
-    function test_WhenCollateralDoesNotExist() external whenVaultIsNotPaused {
+    function test_WhenCollateralDoesNotExist() external whenVaultIsNotPaused useUser1 {
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);
 
@@ -179,9 +176,9 @@ contract MintCurrencyTest is BaseTest {
         uint256 oldTotalSupply = xNGN.totalSupply();
 
         // cache pre storage vars and old accrued fees
-        (, uint256 oldTotalBorrowedAmount,,,,,,,,,,) = vault.collateralMapping(usdc);
-        (, uint256 oldBorrowedAmount, uint256 oldAccruedFees, uint256 oldTotalAccumulatedRate) =
-            vault.vaultMapping(usdc, user1);
+        IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
+        IVault.CollateralInfo memory initialCollateralInfo = getCollateralMapping(usdc);
+        uint256 initialAccruedFees = vault.accruedFees();
 
         // skip time to be able to check accrued interest;
         skip(1_000);
@@ -201,25 +198,27 @@ contract MintCurrencyTest is BaseTest {
         assertEq(xNGN.balanceOf(recipient) - userOldBalance, amount);
 
         // it should update user's borrowed amount, collateral's borrowed amount and global debt
-        (, uint256 totalBorrowedAmount,,,,,,,,,,) = vault.collateralMapping(usdc);
-        (, uint256 borrowedAmount, uint256 accruedFees, uint256 currentTotalAccumulatedRate) =
-            vault.vaultMapping(usdc, user1);
+        IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
+        IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
 
         if (isCurrentBorrowedAmount0) {
             assertEq(
-                currentTotalAccumulatedRate - oldTotalAccumulatedRate,
+                afterUserVaultInfo.lastTotalAccumulatedRate - initialUserVaultInfo.lastTotalAccumulatedRate,
                 1_000 * (oneAndHalfPercentPerSecondInterestRate + onePercentPerSecondInterestRate)
             );
         } else {
+            // get expected accrued fees
+            uint256 accruedFees = (
+                (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate)
+                    * initialUserVaultInfo.borrowedAmount
+            ) / PRECISION;
+
             // it should update accrued fees for the user's position
-            assertEq(
-                accruedFees - oldAccruedFees,
-                (userOldBalance * (1_000 * (oneAndHalfPercentPerSecondInterestRate + onePercentPerSecondInterestRate)))
-                    / 1e18
-            );
+            assertEq(initialUserVaultInfo.accruedFees + accruedFees, afterUserVaultInfo.accruedFees);
+            assertEq(initialAccruedFees + accruedFees, vault.accruedFees());
         }
 
-        assertEq(totalBorrowedAmount, amount + oldTotalBorrowedAmount);
-        assertEq(borrowedAmount, amount + oldBorrowedAmount);
+        assertEq(afterCollateralInfo.totalBorrowedAmount, amount + initialCollateralInfo.totalBorrowedAmount);
+        assertEq(afterUserVaultInfo.borrowedAmount, amount + initialUserVaultInfo.borrowedAmount);
     }
 }
