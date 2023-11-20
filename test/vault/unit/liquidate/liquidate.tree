@@ -1,0 +1,7 @@
+liquidate.t.sol
+├── when vault is paused
+│   └── it should revert with custom error Paused()
+└── when vault is not paused
+    ├── when collateral does not exist
+    │   └── it should revert with custom error CollateralDoesNotExist()
+    └── when collateral exists
