@@ -36,11 +36,11 @@ contract Vault is AccessControl, Pausable, IVault {
         baseRateInfo.rate = _baseRate;
     }
 
-    function unpause() external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    function unpause() external override whenPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         status = TRUE;
     }
 
-    function pause() external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    function pause() external override whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         status = FALSE;
     }
 
@@ -82,7 +82,18 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev Creates a collateral type that'll be accepted by the system
+     * @notice Creates a collateral type that'll be accepted by the system
+     *
+     * @param _collateralToken contract address of the token to add
+     * @param _rate value to set as the collateral rate (per second) for the collateral, should be denominated in 1e18 where 1e18 is 100%
+     * @param _liquidationThreshold value to set as the liquidation threshold of the collateral, should be denominated in 1e18 where 1e18 is 100%
+     * @param _liquidationBonus value to set as the liquidation bonus of the collateral, used to incentivize liquidators, should be denominated in 1e18 where 1e18 is 100%
+     * @param _debtCeiling value to set as the debt ceiling of the collateral, used to limit risk by capping borrowable amount of currency backed by the given collateral
+     * @param _collateralFloorPerPosition value to set as the minimum amount of this collateral that can be borrowed against
+     *
+     * @dev should revert if contract is paused
+     *      should revert if the caller does not have the `DEFAULT_ADMIN_ROLE` role
+     *      should revert if the collateral already exists, i.e if _collateral.exists returns true
      */
     function createCollateralType(
         ERC20 _collateralToken,
@@ -108,9 +119,18 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev updates collateral data of an existing collateral type
+     * @notice updates `manually updateable` parameters of an existing collateral
+     *
+     * @param _collateralToken contract address of the token to modify it's parameters
+     * @param _param contract address of the token to modify it's parameters
+     *
+     * @dev updates the value of the chosen parameter with `_data`
+     * @dev should revert if the contract is paused
+     *      should revert if the caller does not have the `DEFAULT_ADMIN_ROLE` role
+     *      should revert if the collateral does not exist
+     *      should revert if `_param` is not a variant of ModifiableParameters enum
      */
-    function updateCollateralData(ERC20 _collateralToken, bytes32 _param, uint256 _data)
+    function updateCollateralData(ERC20 _collateralToken, ModifiableParameters _param, uint256 _data)
         external
         whenNotPaused
         onlyRole(DEFAULT_ADMIN_ROLE)
@@ -118,13 +138,13 @@ contract Vault is AccessControl, Pausable, IVault {
     {
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
 
-        if (_param == "debtCeiling") {
+        if (_param == ModifiableParameters.DEBT_CEILING) {
             _collateral.debtCeiling = _data;
-        } else if (_param == "collateralFloorPerPosition") {
+        } else if (_param == ModifiableParameters.COLLATERAL_FLOOR_PER_POSITION) {
             _collateral.collateralFloorPerPosition = _data;
-        } else if (_param == "liquidationBonus") {
+        } else if (_param == ModifiableParameters.LIQUIDATION_BONUS) {
             _collateral.liquidationBonus = _data;
-        } else if (_param == "liquidationThreshold") {
+        } else if (_param == ModifiableParameters.LIQUIDATION_THRESHOLD) {
             _collateral.liquidationThreshold = _data;
         } else {
             revert UnrecognizedParam();
@@ -132,7 +152,14 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev feed contract calls this to update the price with oracle value
+     * @notice feed contract calls this to update the price with the oracle value
+     *
+     * @param _collateralAddress contract address of the collateral token to update it's price
+     * @param _price new price
+     *
+     * @dev should revert if the contract is paused
+     *      should revert if the caller does not have the `FEED_CONTRACT_ROLE` role
+     *      should revert if the collateral does not exist
      */
     function updatePrice(address _collateralAddress, uint256 _price)
         external
@@ -143,14 +170,41 @@ contract Vault is AccessControl, Pausable, IVault {
         collateralMapping[ERC20(_collateralAddress)].price = _price;
     }
 
-    function updateBaseRate(uint256 _baseRate) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    /**
+     * @notice updates the base rate charged for borrowing this currency
+     *
+     * @param _baseRate new base rate (per second), should be denominated in 1e18 where 1e18 is 100%
+     *
+     * @dev updates the last stored accumulated rate by adding accumulated rate (since baseRateInfo.lastUpdateTime) to it before updating the rate, this way borrowers are charged the previous rate up until block.timestamp before being charged the new rate.
+     * @dev updates the last update time too for correct future updates to accumulate past rates correctly
+     * @dev should revert if the contract is paused
+     *      should revert if the caller does not have the `DEFAULT_ADMIN_ROLE` role
+     */
+    function updateBaseRate(uint256 _baseRate) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         baseRateInfo.accumulatedRate += (block.timestamp - baseRateInfo.lastUpdateTime) * baseRateInfo.rate;
         baseRateInfo.lastUpdateTime = block.timestamp;
 
         baseRateInfo.rate = _baseRate;
     }
 
-    function updateCollateralRate(ERC20 _collateralToken, uint256 _rate) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    /**
+     * @notice updates the collateral rate charged for borrowing this currency against a given collateral
+     *
+     * @param _collateralToken contract address of collateral token to update it's collateral rate
+     * @param _rate new collateral rate (per second), should be denominated in 1e18 where 1e18 is 100%
+     *
+     * @dev updates the last stored accumulated rate by adding accumulated rate (since _collateral.rateInfo.lastUpdateTime) to it before updating the rate, this way borrowers are charged the previous rate up until block.timestamp before being charged the new rate.
+     * @dev updates the last update time too for correct future updates to accumulate past rates correctly
+     * @dev should revert if the contract is paused
+     *      should revert if the caller does not have the `DEFAULT_ADMIN_ROLE` role
+     *      should revert if the collateral does not exist
+     */
+    function updateCollateralRate(ERC20 _collateralToken, uint256 _rate)
+        external
+        whenNotPaused
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        collateralExists(_collateralToken)
+    {
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
         _collateral.rateInfo.accumulatedRate +=
             (block.timestamp - _collateral.rateInfo.lastUpdateTime) * _collateral.rateInfo.rate;
@@ -159,7 +213,23 @@ contract Vault is AccessControl, Pausable, IVault {
         _collateral.rateInfo.rate = _rate;
     }
 
-    function withdrawFees(ERC20 _collateralToken, uint256 _amount) external onlyRole(STABILITY_MODULE_ROLE) {
+    /**
+     * @notice allows the stability module to withdraw fees that have been paid on borrowed currency
+     *
+     * @param _collateralToken contract address of collateral token to withdraw from it's paid fees
+     * @param _amount amount of fees to withdraw
+     *
+     * @dev updates the paidFees for the collateral and globally then transfers the token to the caller
+     * @dev should revert if the contract is paused
+     *      should revert if the caller does not have the `STABILITY_MODULE_ROLE` role
+     *      should revert if the collateral does not exist
+     */
+    function withdrawFees(ERC20 _collateralToken, uint256 _amount)
+        external
+        whenNotPaused
+        onlyRole(STABILITY_MODULE_ROLE)
+        collateralExists(_collateralToken)
+    {
         collateralMapping[_collateralToken].paidFees -= _amount;
         paidFees -= _amount;
 
@@ -167,21 +237,38 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev rely on an address for actions to your vault
+     * @notice lets an address (the caller) approve another address to perform actions on it's (the caller's) vault
+     *
+     * @param _relyUpon address to rely upon
+     *
+     * @dev should revert if the contract is paused
      */
-    function rely(address _reliedUpon) external whenNotPaused {
-        relyMapping[msg.sender][_reliedUpon] = true;
+    function rely(address _relyUpon) external whenNotPaused {
+        relyMapping[msg.sender][_relyUpon] = true;
     }
 
     /**
-     * @dev deny an address for actions to your vault
+     * @notice lets an address (the caller) remove access of another address to perform actions on it's (the caller's) vault
+     *
+     * @param _reliedUpon address to rely upon
+     *
+     * @dev should revert if the contract is paused
      */
     function deny(address _reliedUpon) external whenNotPaused {
         relyMapping[msg.sender][_reliedUpon] = false;
     }
 
     /**
-     * @dev deposits collateral into a vault
+     * @notice deposits collateral into `_owner`'s vault from `_owner`'s address
+     *
+     * @param _collateralToken contract address of the collateral to deposit
+     * @param _owner owner of the vault to deposit into
+     * @param _amount amount of `_collateralToken` to deposit into `_owner`'s vault
+     *
+     * @dev should revert if the contract is paused
+     *      should revert if the collateral does not exist
+     *      should revert if the caller is not the `_owner` and not also not relied upon
+     *      should revert if transfer from `_owner` to this contract fails based on SafeERC20.safeTransferFrom()'s expectations of a successful erc20 transferFrom call
      */
     function depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount)
         external
@@ -195,8 +282,19 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev withdraws collateral from a vault
-     * @dev revert if withdrawing will make vault health factor below min health factor
+     * @notice withdraws collateral from `_owner`'s vault to `_to`'s address
+     *
+     * @param _collateralToken contract address of the collateral to withdraw
+     * @param _owner owner of the vault to withdraw from
+     * @param _to address to send the withdrawn collateral to
+     * @param _amount amount of `_collateralToken` to withdraw from `_owner`'s vault to `_to`'s address
+     *
+     * @dev should update fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the health-factor check at the end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s health-factor
+     * @dev should revert if the contract is paused
+     *      should revert if the collateral does not exist
+     *      should revert if the caller is not the `_owner` and not also not relied upon
+     *      should revert if transfer from this contract to the `_to` address fails based on SafeERC20.safeTransfer()'s expectations of a successful erc20 transfer call
+     *      should revert if the health factor of `_owner` is below the minimum health factor (1e18) at the end of the function. This can happen if the position was already under-water (liquidatable) prior to the function call or if the withdrawal of `_amount` make it under-water
      */
     function withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount)
         external
@@ -218,8 +316,21 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev borrows currency
-     * @dev revert if withdrawing will make vault health factor below min health factor
+     * @notice mints/borrows `_amount` of currency to `_to`, backed by `_owner`'s deposited collateral
+     *
+     * @param _collateralToken contract address of collateral to mint/borrow the vault's currency against
+     * @param _owner owner of the vault to use it's collateral balance
+     * @param _to address to send the minted/borrowed currency to
+     * @param _amount amount of currency to mint
+     *
+     * @dev if the users currencly minted/borrwed amount if greater than 0, it should update fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the health-factor check at the end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s health-factor
+     *      else i.e when currenctly minted/borrwed amount is 0 (this means that no past fees to accrue), it should set the `lastTotalAccumulatedRate` of the vault to be the current totalAccumulatedRate (i.e current accumulated base rate + current accumulated collateral rate, emphaisis on current as these values are recalculated for both rates to their current values)
+     * @dev should revert if the contract is paused
+     *      should revert if the collateral does not exist
+     *      should revert if the caller is not the `_owner` and not also not relied upon
+     *      should revert if `_owner`'s deposited collateral amount is less than the collateralFloorPerPosition for the given collateral
+     *      should revert if mint to the `_to` address fails
+     *      should revert if the health factor of `_owner` is below the minimum health factor (1e18) at the end of the function. This can happen if the position was already under-water (liquidatable) prior to the function call or if the withdrawal of `_amount` make it under-water
      */
     function mintCurrency(ERC20 _collateralToken, address _owner, address _to, uint256 _amount)
         external
@@ -245,7 +356,17 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev pays back borrowed currency
+     * @notice burns/pays back a borrowed/minted currency, there by increases the health factor or the vault
+     *
+     * @param _collateralToken contract address of collateral to burn/pay back the vault's currency for,
+     * @param _owner owner of the vault to pay back it's loan
+     * @param _amount amount of currency to pay back / burn
+     *
+     * @dev we accrue fees here to enable full payment of both borrowed amount and fees in one function. This way unupdated accrued fees are accounted for too and can be paid back
+     * @dev should revert if the contract is paused
+     *      should revert if the collateral does not exist
+     *      should revert if the caller is not the `_owner` and not also not relied upon
+     *      should revert if the amount of currency to burn / pay back is more than `borrowed amount + total accrued fees`
      */
     function burnCurrency(ERC20 _collateralToken, address _owner, uint256 _amount)
         external
@@ -264,9 +385,18 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev liquidates a position
-     * @dev reverts if health factor of vault is not below min health factor
-     * @dev revert if withdrawing will make vault health factor below min health factor
+     * @notice liquidates a vault making sure the liquidation strictly improves the health factor i.e doesn't leave it the same as before or decreases it (if that's possible)
+     *
+     * @param _collateralToken contract address of collateral used by vault that is to be liquidate, also the token to recieved by the `_to` address after liquidation
+     * @param _owner owner of the vault to liquidate
+     * @param _to address to send the liquidated collateral (collateral covered) to
+     * @param _currencyAmountToPay the amount of currency tokens to pay back for `_owner`
+     *
+     * @dev updates fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the health-factor check at the start and end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s health-factor
+     * @dev should revert if the contract is paused
+     *      should revert if the collateral does not exist
+     *      should revert if the vault is not under-water
+     *      should revert if liqudiation did not strictly imporve the health factor of the vault
      */
     function liquidate(ERC20 _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
         external
@@ -284,24 +414,22 @@ contract Vault is AccessControl, Pausable, IVault {
         // need to accrue fees first in order to use updated fees for health factor calculation below
         _accrueFees(_vault, _collateral);
 
-        uint256 _preHealthFactor = _checkHealthFactor(_vault, _collateral);
+        uint256 _preHealthFactor = _getHealthFactor(_vault, _collateral);
         if (_preHealthFactor >= MIN_HEALTH_FACTOR) revert PositionIsSafe();
 
-        uint256 _collateralAmountCovered;
         if (_currencyAmountToPay == type(uint256).max) {
             // This is here to prevent frontrunning of full liquidation
-            // malicious owners can monitor mempool and frontrun any attempt to liquidate their position by liquidating it
+            // malicious owners can monitor the mempool and frontrun any attempt to liquidate their position by liquidating it
             // themselves but partially, (by 1 wei of collateral is enough) which causes underflow when the liquidator's tx is to be executed
-            // With this, liquidators can parse in type(uint256).max to liquidate regardless of the current collateral.
-            _collateralAmountCovered = _vault.depositedCollateral;
-        } else {
-            _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
+            // With this, liquidators can parse in type(uint256).max to liquidate everything regardless of the current borrowed amount.
+            _currencyAmountToPay = _vault.borrowedAmount + _vault.accruedFees;
         }
 
+        uint256 _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
         uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / PRECISION;
+        uint256 _total = _collateralAmountCovered + _bonus;
 
         // To make liquidations always possible, if _vault.depositedCollateral not enough to pay bonus, give out highest possible bonus
-        uint256 _total = _collateralAmountCovered + _bonus;
         if (_total > _vault.depositedCollateral) {
             _total = _vault.depositedCollateral;
         }
@@ -312,11 +440,15 @@ contract Vault is AccessControl, Pausable, IVault {
         _burnCurrency(_vault, _collateral, msg.sender, _currencyAmountToPay);
 
         // health factor must never reduce during a liquidation.
-        if (_preHealthFactor > _checkHealthFactor(_vault, _collateral)) revert HealthFactorNotImproved();
+        if (_preHealthFactor >= _getHealthFactor(_vault, _collateral)) revert HealthFactorNotImproved();
     }
 
     // ------------------------------------------------ INTERNAL FUNCTIONS ------------------------------------------------
 
+    /**
+     * @dev deposits collateral from `_owner` into this contract and updates the vaults depositedCollateral and collateral's totalDepositedCollateral
+     * @dev reverts if SafeERC20.safeTransferFrom() fails
+     */
     function _depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount) internal {
         // supporting fee on transfer tokens at the expense of NEVER SUPPORTING TOKENS WITH CALLBACKS
         // a solution for supporting it can be adding a mutex but that prevents batching.
@@ -328,6 +460,11 @@ contract Vault is AccessControl, Pausable, IVault {
         collateralMapping[_collateralToken].totalDepositedCollateral += difference;
     }
 
+    /**
+     * @dev withdraws collateral to `_to` and updates the vaults depositedCollateral and collateral's totalDepositedCollateral
+     * @dev reverts if `_amount` is greater than the vaults depositedCollateral
+     *      reverts if safeTransfer() fails
+     */
     function _withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount) internal {
         vaultMapping[_collateralToken][_owner].depositedCollateral -= _amount;
         collateralMapping[_collateralToken].totalDepositedCollateral -= _amount;
@@ -335,6 +472,10 @@ contract Vault is AccessControl, Pausable, IVault {
         SafeERC20.safeTransfer(_collateralToken, _to, _amount);
     }
 
+    /**
+     * @dev mints currency to `_to` and updates the vaults borrowedAmount and collateral's totalBorrowedAmount
+     * @dev reverts if CURRENCY_TOKEN.mint() fails
+     */
     function _mintCurrency(VaultInfo storage _vault, CollateralInfo storage _collateral, address _to, uint256 _amount)
         internal
     {
@@ -345,13 +486,17 @@ contract Vault is AccessControl, Pausable, IVault {
         CURRENCY_TOKEN.mint(_to, _amount);
     }
 
+    /**
+     * @dev burns currency from `_from` or/and tranfers currency from `_from` to this contract
+     * @dev if `_amount` > the vaults borrowed amount, the rest is used to pay accrued fees (if it is too big for that too, it reverts). else it's only used to pay the borrowed amount
+     * @dev borrowed amount paid back is burnt while accrued fees paid back is sent to this contract
+     * @dev reverts if CURRENCY_TOKEN.burn() fails
+     *      reverts if _payAccruedFees() fails
+     */
     function _burnCurrency(VaultInfo storage _vault, CollateralInfo storage _collateral, address _from, uint256 _amount)
         internal
     {
-        /**
-         * if _amount > _vault.borrowedAmount, subtract _amount from _vault.borrowedAmount and _vault.accruedFees else subtract from only _vault.borrowedAmount
-         */
-
+        // if _amount > _vault.borrowedAmount, subtract _amount from _vault.borrowedAmount and _vault.accruedFees else subtract from only _vault.borrowedAmount
         if (_amount <= _vault.borrowedAmount) {
             _vault.borrowedAmount -= _amount;
             _collateral.totalBorrowedAmount -= _amount;
@@ -370,6 +515,11 @@ contract Vault is AccessControl, Pausable, IVault {
         }
     }
 
+    /**
+     * @dev used to move `_amount` of accrued fees from accruedFees vault and global variables to the vault's and collateral's paidFees variables and then transfer the fee from the user to this contract
+     * @dev reverts if `_amount` is greater than the vault's accruedFees
+     *      reverts if CURRENCY_TOKEN.transferFrom() fails
+     */
     function _payAccruedFees(
         VaultInfo storage _vault,
         CollateralInfo storage _collateral,
@@ -386,17 +536,26 @@ contract Vault is AccessControl, Pausable, IVault {
         CURRENCY_TOKEN.transferFrom(_from, address(this), _amount);
     }
 
+    /**
+     * @dev increments accrued fees of a vault by it's accrued fees since it's`_vault.lastUpdateTime`.
+     * @dev should never revert!
+     */
     function _accrueFees(VaultInfo storage _vault, CollateralInfo storage _collateral) internal {
         (uint256 _accruedFees, uint256 _currentTotalAccumulatedRate) = _calculateAccruedFees(_vault, _collateral);
         _vault.lastTotalAccumulatedRate = _currentTotalAccumulatedRate;
 
+        // no need to update state if _accruedFees since last update time is 0
         if (_accruedFees == 0) return;
 
         _vault.accruedFees += _accruedFees;
         accruedFees += _accruedFees;
     }
 
-    function _checkHealthFactor(VaultInfo storage _vault, CollateralInfo storage _collateral)
+    /**
+     * @dev returns the health factor of a vault where anything below 1e18 is liquidatable
+     * @dev should never revert!
+     */
+    function _getHealthFactor(VaultInfo storage _vault, CollateralInfo storage _collateral)
         internal
         view
         returns (uint256)
@@ -419,6 +578,10 @@ contract Vault is AccessControl, Pausable, IVault {
         return _adjustedCollateralValueInCurrency / _totalUserDebt;
     }
 
+    /**
+     * @dev returns the conversion of a vaults deposited collateral to the vault's currency
+     * @dev should never revert!
+     */
     function _getCurrencyValueOfCollateral(VaultInfo storage _vault, CollateralInfo storage _collateral)
         internal
         view
@@ -431,6 +594,10 @@ contract Vault is AccessControl, Pausable, IVault {
         return _currencyValueOfCollateral;
     }
 
+    /**
+     * @dev returns the conversion of an amount of currency to a given supported collateral
+     * @dev should never revert!
+     */
     function _getCollateralAmountFromCurrencyValue(CollateralInfo storage _collateral, uint256 _amount)
         internal
         view
@@ -443,6 +610,10 @@ contract Vault is AccessControl, Pausable, IVault {
         return _collateralAmountOfCurrencyValue;
     }
 
+    /**
+     * @dev returns the fees accrued by a user's vault since `_vault.lastUpdateTime`
+     * @dev should never revert!
+     */
     function _calculateAccruedFees(VaultInfo storage _vault, CollateralInfo storage _collateral)
         internal
         view
@@ -457,6 +628,10 @@ contract Vault is AccessControl, Pausable, IVault {
         return (_accruedFees, _totalCurrentAccumulatedRate);
     }
 
+    /**
+     * @dev returns the current total accumulated rate i.e current accumulated base rate + current accumulated collateral rate of the given collateral
+     * @dev should never revert!
+     */
     function _calculateCurrentTotalAccumulatedRate(CollateralInfo storage _collateral)
         internal
         view
@@ -474,6 +649,10 @@ contract Vault is AccessControl, Pausable, IVault {
         return _collateralCurrentAccumulatedRate + _baseCurrentAccumulatedRate;
     }
 
+    /**
+     * @dev scales a given collateral to be represented in 1e18
+     * @dev should never revert!
+     */
     function _scaleCollateralToExpectedPrecision(CollateralInfo storage _collateral, uint256 amount)
         internal
         view
@@ -482,10 +661,13 @@ contract Vault is AccessControl, Pausable, IVault {
         return amount * (10 ** _collateral.additionalCollateralPercision);
     }
 
+    /**
+     * @dev reverts if the health factor of a vault is below the minimum health factor
+     */
     function _revertIfHealthFactorIsBroken(VaultInfo storage _vault, CollateralInfo storage _collateral)
         internal
         view
     {
-        if (_checkHealthFactor(_vault, _collateral) < MIN_HEALTH_FACTOR) revert BadHealthFactor();
+        if (_getHealthFactor(_vault, _collateral) < MIN_HEALTH_FACTOR) revert BadHealthFactor();
     }
 }

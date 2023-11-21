@@ -212,7 +212,7 @@ contract BurnCurrencyTest is BaseTest {
         assertTrue(accruedFees > 0);
 
         // it should revert with underflow error
-        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 17));
+        vm.expectRevert(UNDERFLOW_OVERFLOW_PANIC_ERROR);
         vault.burnCurrency(usdc, user1, 500_000e18 + accruedFees + 1);
     }
 
