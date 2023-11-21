@@ -22,5 +22,5 @@ withdrawCollateralTest.t.sol
                     ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
                     ├── it should update the owner's borrowed amount, collateral borrowed amount and global debt 
                     ├── it should pay off ALL borrowed amount
-                    ├── it should update the paid fees and global accrued fees and paid fees
-                    └── it should pay pay back part of or all of the accrued fees
+                    ├── it should update the global paid fees and collateral paid fees
+                    └── it should pay back part of or all of the accrued fees

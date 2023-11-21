@@ -67,7 +67,7 @@ contract WithdrawCollateralTest is BaseTest {
         useUser1
     {
         // it should revert with solidity panic error underflow error
-        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 17));
+        vm.expectRevert(UNDERFLOW_OVERFLOW_PANIC_ERROR);
         vault.withdrawCollateral(usdc, user1, user1, 1_000e18 + 1);
     }
 
