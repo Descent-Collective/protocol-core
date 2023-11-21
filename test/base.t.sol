@@ -8,6 +8,8 @@ import {ERC20Token} from "./mocks/ERC20Token.sol";
 import {ErrorsAndEvents} from "./mocks/ErrorsAndEvents.sol";
 
 contract BaseTest is Test, ErrorsAndEvents {
+    bytes constant UNDERFLOW_OVERFLOW_PANIC_ERROR = abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 17);
+
     uint256 PRECISION = 1e18;
     Vault vault;
     Currency xNGN;
@@ -154,5 +156,18 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         // adds together to get total rate since inception
         return _collateralCurrentAccumulatedRate + _baseCurrentAccumulatedRate;
+    }
+
+    function calculateUserCurrentAccruedFees(ERC20 _collateralToken, address _owner)
+        internal
+        view
+        returns (uint256 accruedFees)
+    {
+        IVault.VaultInfo memory userVaultInfo = getVaultMapping(_collateralToken, _owner);
+        accruedFees = userVaultInfo.accruedFees
+            + (
+                (calculateCurrentTotalAccumulatedRate(usdc) - userVaultInfo.lastTotalAccumulatedRate)
+                    * userVaultInfo.borrowedAmount
+            ) / PRECISION;
     }
 }

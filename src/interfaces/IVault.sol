@@ -54,4 +54,11 @@ interface IVault {
         uint256 accruedFees; // fees accrued as at `lastUpdateTime`
         uint256 lastTotalAccumulatedRate; // last `collateral accumulated rate + base accumulated rate`
     }
+
+    enum ModifiableParameters {
+        DEBT_CEILING,
+        COLLATERAL_FLOOR_PER_POSITION,
+        LIQUIDATION_BONUS,
+        LIQUIDATION_THRESHOLD
+    }
 }

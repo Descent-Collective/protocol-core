@@ -31,8 +31,13 @@ abstract contract BaseScript is Script {
             broadcaster = from;
         } else {
             mnemonic = vm.envOr({name: "MNEMONIC", defaultValue: TEST_MNEMONIC});
-            (broadcaster,) = deriveRememberKey({mnemonic: mnemonic, index: 0});
+            uint256 walletIndex = vm.envOr({name: "WALLET_INDEX", defaultValue: uint256(0)});
+            require(walletIndex <= type(uint32).max, "Invalid wallet index");
+
+            (broadcaster,) = deriveRememberKey({mnemonic: mnemonic, index: uint32(walletIndex)});
         }
+
+        console2.log(broadcaster);
 
         if (block.chainid == 31337) {
             currenctChain = Chains.Localnet;

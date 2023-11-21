@@ -8,13 +8,14 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ICurrency} from "./interfaces/ICurrency.sol";
 
 contract Currency is AccessControl, ERC20Permit, ICurrency {
-    // Create a new role identifier for the minter role
-    bytes32 constant MINTER_BURNER_ROLE = keccak256("MINTER_BURNER_ROLE");
+    bytes32 constant MINTER_BURNER_ROLE = keccak256("MINTER_BURNER_ROLE"); // Create a new role identifier for the minter role
     address public constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3; // permit2 contract
-    bool public permit2Enabled;
+
+    bool public permit2Enabled; // if permit 2 is enabled by default or not
 
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) ERC20Permit(_symbol) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        permit2Enabled = true;
     }
 
     /**
@@ -45,6 +46,10 @@ contract Currency is AccessControl, ERC20Permit, ICurrency {
         return true;
     }
 
+    /**
+     * @dev used to update if to default approve permit2 address for all addresses
+     * @param enabled if the default approval should be done or not
+     */
     function updatePermit2Allowance(bool enabled) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit Permit2AllowanceUpdated(enabled);
         permit2Enabled = enabled;
