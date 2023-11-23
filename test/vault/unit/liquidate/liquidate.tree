@@ -11,9 +11,9 @@ liquidate.t.sol
             ├── when the currency amount to burn is greater than the owner's borrowed amount and accrued fees
             │   └── it should revert with underflow error
             └── when the currency amount to burn is less than or equal to the owner's borrowed amount and accrued fees
-                ├── when the vaults health factor does not improve after liquidation
-                │   └── it should revert with custom error HealthFactorNotImproved()
-                └── when vaults health factor improves after liquidation
+                ├── when the vaults collateral ratio does not improve after liquidation
+                │   └── it should revert with custom error CollateralRatioNotImproved()
+                └── when vaults collateral ratio improves after liquidation
                     ├── when the _currencyAmountToPay is uint256 max
                     │   ├── it should accrue fees
                     │   ├── it should emit Liquidated() event with with expected indexed and unindexed parameters

@@ -5,14 +5,14 @@ interface IVault {
     // ------------------------------------------------ CUSTOM ERROR ------------------------------------------------
     error ZeroAddress();
     error UnrecognizedParam();
-    error BadHealthFactor();
+    error BadCollateralRatio();
     error PositionIsSafe();
     error ZeroCollateral();
     error TotalUserCollateralBelowFloor();
     error CollateralAlreadyExists();
     error CollateralDoesNotExist();
     error NotOwnerOrReliedUpon();
-    error HealthFactorNotImproved();
+    error CollateralRatioNotImproved();
     error NotEnoughCollateralToPay();
     error EthTransferFailed();
 

@@ -14,7 +14,6 @@ contract Vault is AccessControl, Pausable, IVault {
     bytes32 private constant STABILITY_MODULE_ROLE = keccak256("STABILITY_MODULE_ROLE");
     uint256 private constant PRECISION_DEGREE = 18;
     uint256 private constant PRECISION = 1 * (10 ** PRECISION_DEGREE);
-    uint256 private constant MIN_HEALTH_FACTOR = PRECISION;
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e12; // assuming the oracle returns data with 6 decimal places
 
     Currency public immutable CURRENCY_TOKEN; // stableTokenAddress
@@ -289,12 +288,12 @@ contract Vault is AccessControl, Pausable, IVault {
      * @param _to address to send the withdrawn collateral to
      * @param _amount amount of `_collateralToken` to withdraw from `_owner`'s vault to `_to`'s address
      *
-     * @dev should update fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the health-factor check at the end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s health-factor
+     * @dev should update fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the collateral-ratio check at the end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s collateral-ratio
      * @dev should revert if the contract is paused
      *      should revert if the collateral does not exist
      *      should revert if the caller is not the `_owner` and not also not relied upon
      *      should revert if transfer from this contract to the `_to` address fails based on SafeERC20.safeTransfer()'s expectations of a successful erc20 transfer call
-     *      should revert if the health factor of `_owner` is below the minimum health factor (1e18) at the end of the function. This can happen if the position was already under-water (liquidatable) prior to the function call or if the withdrawal of `_amount` make it under-water
+     *      should revert if the collateral ratio of `_owner` is below the liquidation threshold at the end of the function. This can happen if the position was already under-water (liquidatable) prior to the function call or if the withdrawal of `_amount` make it under-water
      */
     function withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount)
         external
@@ -305,14 +304,14 @@ contract Vault is AccessControl, Pausable, IVault {
         VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
 
-        // need to accrue fees first in order to use updated fees for health factor calculation below
+        // need to accrue fees first in order to use updated fees for collateral ratio calculation below
         _accrueFees(_vault, _collateral);
 
         emit CollateralWithdrawn(_owner, _to, _amount);
 
         _withdrawCollateral(_collateralToken, _owner, _to, _amount);
 
-        _revertIfHealthFactorIsBroken(_vault, _collateral);
+        _revertIfCollateralRatioIsAboveLiquidationThreshold(_vault, _collateral);
     }
 
     /**
@@ -323,14 +322,14 @@ contract Vault is AccessControl, Pausable, IVault {
      * @param _to address to send the minted/borrowed currency to
      * @param _amount amount of currency to mint
      *
-     * @dev if the users currencly minted/borrwed amount if greater than 0, it should update fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the health-factor check at the end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s health-factor
+     * @dev if the users currencly minted/borrwed amount if greater than 0, it should update fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the collateral-ratio check at the end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s collateral-ratio
      *      else i.e when currenctly minted/borrwed amount is 0 (this means that no past fees to accrue), it should set the `lastTotalAccumulatedRate` of the vault to be the current totalAccumulatedRate (i.e current accumulated base rate + current accumulated collateral rate, emphaisis on current as these values are recalculated for both rates to their current values)
      * @dev should revert if the contract is paused
      *      should revert if the collateral does not exist
      *      should revert if the caller is not the `_owner` and not also not relied upon
      *      should revert if `_owner`'s deposited collateral amount is less than the collateralFloorPerPosition for the given collateral
      *      should revert if mint to the `_to` address fails
-     *      should revert if the health factor of `_owner` is below the minimum health factor (1e18) at the end of the function. This can happen if the position was already under-water (liquidatable) prior to the function call or if the withdrawal of `_amount` make it under-water
+     *      should revert if the collateral ratio of `_owner` is below the liquidation threshold at the end of the function. This can happen if the position was already under-water (liquidatable) prior to the function call or if the withdrawal of `_amount` make it under-water
      */
     function mintCurrency(ERC20 _collateralToken, address _owner, address _to, uint256 _amount)
         external
@@ -345,18 +344,18 @@ contract Vault is AccessControl, Pausable, IVault {
         if (_collateral.collateralFloorPerPosition > _vault.depositedCollateral) revert TotalUserCollateralBelowFloor();
 
         // short circuit conditional to optimize all interactions after the first one.
-        // need to accrue fees first in order to use updated fees for health factor calculation below
+        // need to accrue fees first in order to use updated fees for collateral ratio calculation below
         if (_vault.borrowedAmount != 0) _accrueFees(_vault, _collateral);
         else _vault.lastTotalAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
 
         emit CurrencyMinted(_owner, _amount);
         _mintCurrency(_vault, _collateral, _to, _amount);
 
-        _revertIfHealthFactorIsBroken(_vault, _collateral);
+        _revertIfCollateralRatioIsAboveLiquidationThreshold(_vault, _collateral);
     }
 
     /**
-     * @notice burns/pays back a borrowed/minted currency, there by increases the health factor or the vault
+     * @notice burns/pays back a borrowed/minted currency
      *
      * @param _collateralToken contract address of collateral to burn/pay back the vault's currency for,
      * @param _owner owner of the vault to pay back it's loan
@@ -385,37 +384,37 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @notice liquidates a vault making sure the liquidation strictly improves the health factor i.e doesn't leave it the same as before or decreases it (if that's possible)
+     * @notice liquidates a vault making sure the liquidation strictly improves the collateral ratio i.e doesn't leave it the same as before or decreases it (if that's possible)
      *
      * @param _collateralToken contract address of collateral used by vault that is to be liquidate, also the token to recieved by the `_to` address after liquidation
      * @param _owner owner of the vault to liquidate
      * @param _to address to send the liquidated collateral (collateral covered) to
      * @param _currencyAmountToPay the amount of currency tokens to pay back for `_owner`
      *
-     * @dev updates fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the health-factor check at the start and end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s health-factor
+     * @dev updates fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the collateral-ratio check at the start and end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s collateral-ratio
      * @dev should revert if the contract is paused
      *      should revert if the collateral does not exist
      *      should revert if the vault is not under-water
-     *      should revert if liqudiation did not strictly imporve the health factor of the vault
+     *      should revert if liqudiation did not strictly imporve the collateral ratio of the vault
      */
     function liquidate(ERC20 _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
         external
         whenNotPaused
         collateralExists(_collateralToken)
     {
-        // get health factor
-        // require it's below health factor
+        // get collateral ratio
+        // require it's below liquidation threshold
         // liquidate and take discount
         // burn currency from caller
 
         VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
 
-        // need to accrue fees first in order to use updated fees for health factor calculation below
+        // need to accrue fees first in order to use updated fees for collateral ratio calculation below
         _accrueFees(_vault, _collateral);
 
-        uint256 _preHealthFactor = _getHealthFactor(_vault, _collateral);
-        if (_preHealthFactor >= MIN_HEALTH_FACTOR) revert PositionIsSafe();
+        uint256 _preCollateralRatio = _getCollateralRatio(_vault, _collateral);
+        if (_preCollateralRatio <= _collateral.liquidationThreshold) revert PositionIsSafe();
 
         if (_currencyAmountToPay == type(uint256).max) {
             // This is here to prevent frontrunning of full liquidation
@@ -439,8 +438,8 @@ contract Vault is AccessControl, Pausable, IVault {
         _withdrawCollateral(_collateralToken, _owner, _to, _total);
         _burnCurrency(_vault, _collateral, msg.sender, _currencyAmountToPay);
 
-        // health factor must never reduce during a liquidation.
-        if (_preHealthFactor >= _getHealthFactor(_vault, _collateral)) revert HealthFactorNotImproved();
+        // collateral ratio must never increase or stay the same during a liquidation.
+        if (_preCollateralRatio <= _getCollateralRatio(_vault, _collateral)) revert CollateralRatioNotImproved();
     }
 
     // ------------------------------------------------ INTERNAL FUNCTIONS ------------------------------------------------
@@ -552,10 +551,10 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev returns the health factor of a vault where anything below 1e18 is liquidatable
+     * @dev returns the collateral ratio of a vault where anything below 1e18 is liquidatable
      * @dev should never revert!
      */
-    function _getHealthFactor(VaultInfo storage _vault, CollateralInfo storage _collateral)
+    function _getCollateralRatio(VaultInfo storage _vault, CollateralInfo storage _collateral)
         internal
         view
         returns (uint256)
@@ -568,14 +567,13 @@ contract Vault is AccessControl, Pausable, IVault {
 
         // prevent division by 0 revert below
         uint256 _totalUserDebt = _vault.borrowedAmount + _vault.accruedFees;
-        if (_totalUserDebt == 0) return type(uint256).max;
+        if (_totalUserDebt == 0) return 0;
 
+        // _collateralValueInCurrency: divDown (solidity default) since _collateralValueInCurrency is denominator
         uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_vault, _collateral);
 
-        uint256 _adjustedCollateralValueInCurrency = _collateralValueInCurrency * _collateral.liquidationThreshold;
-
-        // _adjustedCollateralValueInCurrency is already in the form of 1e36 so dividing by a number in form of 1e18 brings it back.
-        return _adjustedCollateralValueInCurrency / _totalUserDebt;
+        // divUp as this benefits the protocol
+        return _divUp((_totalUserDebt * PRECISION), _collateralValueInCurrency);
     }
 
     /**
@@ -621,7 +619,6 @@ contract Vault is AccessControl, Pausable, IVault {
     {
         uint256 _totalCurrentAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
 
-        // any need to be extra harsh and use divUp to maximize fees?
         uint256 _accruedFees =
             ((_totalCurrentAccumulatedRate - _vault.lastTotalAccumulatedRate) * _vault.borrowedAmount) / PRECISION;
 
@@ -662,12 +659,19 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @dev reverts if the health factor of a vault is below the minimum health factor
+     * @dev reverts if the collateral ratio is above the liquidation threshold
      */
-    function _revertIfHealthFactorIsBroken(VaultInfo storage _vault, CollateralInfo storage _collateral)
-        internal
-        view
-    {
-        if (_getHealthFactor(_vault, _collateral) < MIN_HEALTH_FACTOR) revert BadHealthFactor();
+    function _revertIfCollateralRatioIsAboveLiquidationThreshold(
+        VaultInfo storage _vault,
+        CollateralInfo storage _collateral
+    ) internal view {
+        if (_getCollateralRatio(_vault, _collateral) > _collateral.liquidationThreshold) revert BadCollateralRatio();
+    }
+
+    function _divUp(uint256 a, uint256 b) private pure returns (uint256 c) {
+        if (b == 0) revert();
+        if (a == 0) return 0;
+
+        c = 1 + ((a - 1) / b);
     }
 }

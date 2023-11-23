@@ -75,7 +75,7 @@ contract WithdrawCollateralTest is BaseTest {
         _;
     }
 
-    function test_WhenTheWithdrawalMakesTheVaultsHealthFactorBelowTheMinHealthFactor_useUser1()
+    function test_WhenTheWithdrawalMakesTheVaultsCollateralRatioBelowTheLiquidationThreshold_useUser1()
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -86,12 +86,12 @@ contract WithdrawCollateralTest is BaseTest {
         // mint max amount possible of currency to make withdrawing any of my collateral bad for user1 vault position
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
 
-        // it should revert with custom error BadHealthFactor()
-        vm.expectRevert(BadHealthFactor.selector);
+        // it should revert with custom error BadCollateralRatio()
+        vm.expectRevert(BadCollateralRatio.selector);
         vault.withdrawCollateral(usdc, user1, user1, 1);
     }
 
-    function test_WhenTheWithdrawalMakesTheVaultsHealthFactorBelowTheMinHealthFactor_useReliedOnForUser1()
+    function test_WhenTheWithdrawalMakesTheVaultsCollateralRatioBelowTheLiquidationThreshold_useReliedOnForUser1()
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -102,9 +102,13 @@ contract WithdrawCollateralTest is BaseTest {
         // mint max amount possible of currency to make withdrawing any of my collateral bad for user1 vault position
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
 
-        // it should revert with custom error BadHealthFactor()
-        vm.expectRevert(BadHealthFactor.selector);
+        // it should revert with custom error BadCollateralRatio()
+        vm.expectRevert(BadCollateralRatio.selector);
         vault.withdrawCollateral(usdc, user1, user1, 1);
+    }
+
+    modifier whenTheWithdrawalDoesNotMakeTheVaultsCollateralRatioBelowTheLiquidationThreshold() {
+        _;
     }
 
     function test_WhenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral_useUser1()
@@ -113,6 +117,7 @@ contract WithdrawCollateralTest is BaseTest {
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
+        whenTheWithdrawalDoesNotMakeTheVaultsCollateralRatioBelowTheLiquidationThreshold
         useUser1
     {
         // it should update accrued fees for the user's position
@@ -130,6 +135,7 @@ contract WithdrawCollateralTest is BaseTest {
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
+        whenTheWithdrawalDoesNotMakeTheVaultsCollateralRatioBelowTheLiquidationThreshold
         useReliedOnForUser1(user2)
     {
         // it should update accrued fees for the user's position

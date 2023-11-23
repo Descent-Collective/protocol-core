@@ -93,7 +93,7 @@ contract LiquidateTest is BaseTest {
         _;
     }
 
-    function test_WhenTheVaultsHealthFactorDoesNotImproveAfterLiquidation()
+    function test_WhenTheVaultsCollateralRatioDoesNotImproveAfterLiquidation()
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -102,12 +102,12 @@ contract LiquidateTest is BaseTest {
     {
         vm.startPrank(user2);
 
-        // it should revert with custom error HealthFactorNotImproved()
-        vm.expectRevert(HealthFactorNotImproved.selector);
+        // it should revert with custom error CollateralRatioNotImproved()
+        vm.expectRevert(CollateralRatioNotImproved.selector);
         vault.liquidate(usdc, user1, user2, 1);
     }
 
-    modifier whenVaultsHealthFactorImprovesAfterLiquidation() {
+    modifier whenVaultsCollateralRatioImprovesAfterLiquidation() {
         _;
     }
 
@@ -117,7 +117,7 @@ contract LiquidateTest is BaseTest {
         whenCollateralExists
         whenTheVaultIsNotSafe
         whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees
-        whenVaultsHealthFactorImprovesAfterLiquidation
+        whenVaultsCollateralRatioImprovesAfterLiquidation
     {
         liquidate_exhaustively(type(uint256).max);
     }
@@ -128,7 +128,7 @@ contract LiquidateTest is BaseTest {
         whenCollateralExists
         whenTheVaultIsNotSafe
         whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees
-        whenVaultsHealthFactorImprovesAfterLiquidation
+        whenVaultsCollateralRatioImprovesAfterLiquidation
     {
         /// fully cover fees
         liquidate_exhaustively(0);
@@ -199,7 +199,7 @@ contract LiquidateTest is BaseTest {
         whenCollateralExists
         whenTheVaultIsNotSafe
         whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees
-        whenVaultsHealthFactorImprovesAfterLiquidation
+        whenVaultsCollateralRatioImprovesAfterLiquidation
     {
         vm.startPrank(user2);
 
@@ -265,7 +265,7 @@ contract LiquidateTest is BaseTest {
         whenCollateralExists
         whenTheVaultIsNotSafe
         whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees
-        whenVaultsHealthFactorImprovesAfterLiquidation
+        whenVaultsCollateralRatioImprovesAfterLiquidation
     {
         vm.startPrank(user2);
 
