@@ -386,7 +386,11 @@ contract BurnCurrencyTest is BaseTest {
 
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
-        emit CurrencyBurned(user1, amount);
+        emit CurrencyBurned(user1, 500_000e18);
+
+        // it should emit FeesPaid() event with with expected indexed and unindexed parameters
+        vm.expectEmit(true, false, false, true, address(vault));
+        emit FeesPaid(user1, amount - 500_000e18);
 
         // burn currency
         vault.burnCurrency(usdc, user1, amount);

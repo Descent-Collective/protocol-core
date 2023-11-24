@@ -17,6 +17,8 @@ liquidate.t.sol
                     ├── when the _currencyAmountToPay is uint256 max
                     │   ├── it should accrue fees
                     │   ├── it should emit Liquidated() event with with expected indexed and unindexed parameters
+                    │   ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+                    │   ├── it should emit FeesPaid() event with with expected indexed and unindexed parameters
                     │   ├── it should update the vault's deposited collateral and collateral total deposited collateral
                     │   ├── it should pay out a max of covered collateral + 10% and a min of 0
                     │   ├── it should update the vault's borrowed amount, collateral borrowed amount and global debt
@@ -26,6 +28,8 @@ liquidate.t.sol
                     └── when the _currencyAmountToPay is NOT uint256 max
                         ├── it should accrue fees
                         ├── it should emit Liquidated() event with with expected indexed and unindexed parameters
+                        ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+                        ├── it should emit FeesPaid() event with with expected indexed and unindexed parameters
                         ├── it should update the vault's deposited collateral and collateral total deposited collateral
                         ├── it should pay out a max of covered collateral + 10% and a min of 0
                         ├── it should update the vault's borrowed amount, collateral borrowed amount and global debt

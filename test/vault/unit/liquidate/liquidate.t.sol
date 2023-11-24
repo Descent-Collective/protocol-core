@@ -154,6 +154,14 @@ contract LiquidateTest is BaseTest {
         vm.expectEmit(true, false, false, true, address(vault));
         emit Liquidated(user1, user2, totalCurrencyPaid, collateralToPayOut);
 
+        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+        vm.expectEmit(true, false, false, true, address(vault));
+        emit CurrencyBurned(user1, initialUserVaultInfo.borrowedAmount);
+
+        // it should emit FeesPaid() event with with expected indexed and unindexed parameters
+        vm.expectEmit(true, false, false, true, address(vault));
+        emit FeesPaid(user1, userAccruedFees);
+
         // liquidate
         amount = amount != type(uint256).max ? totalCurrencyPaid : type(uint256).max;
         vault.liquidate(usdc, user1, user2, amount);
@@ -220,6 +228,10 @@ contract LiquidateTest is BaseTest {
         vm.expectEmit(true, false, false, true, address(vault));
         emit Liquidated(user1, user2, totalCurrencyPaid, collateralToPayOut);
 
+        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+        vm.expectEmit(true, false, false, true, address(vault));
+        emit CurrencyBurned(user1, initialUserVaultInfo.borrowedAmount);
+
         // liquidate
         vault.liquidate(usdc, user1, user2, totalCurrencyPaid);
 
@@ -285,6 +297,14 @@ contract LiquidateTest is BaseTest {
         // it should emit Liquidated() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
         emit Liquidated(user1, user2, totalCurrencyPaid, collateralToPayOut);
+
+        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+        vm.expectEmit(true, false, false, true, address(vault));
+        emit CurrencyBurned(user1, initialUserVaultInfo.borrowedAmount);
+
+        // it should emit FeesPaid() event with with expected indexed and unindexed parameters
+        vm.expectEmit(true, false, false, true, address(vault));
+        emit FeesPaid(user1, totalCurrencyPaid - initialUserVaultInfo.borrowedAmount);
 
         // liquidate
         vault.liquidate(usdc, user1, user2, totalCurrencyPaid);
