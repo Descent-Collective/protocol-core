@@ -36,6 +36,24 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
+     * @dev reverts if the collateral does not exist
+     */
+    modifier collateralExists(ERC20 _collateralToken) {
+        if (!collateralMapping[_collateralToken].exists) revert CollateralDoesNotExist();
+        _;
+    }
+
+    /**
+     * @param _owner address of the vault to interact with
+     *
+     * @dev reverts if the msg.sender is not `_owner` and is also not allowed to interact with `_owner`'s vault
+     */
+    modifier onlyOwnerOrReliedUpon(address _owner) {
+        if (_owner != msg.sender && !relyMapping[_owner][msg.sender]) revert NotOwnerOrReliedUpon();
+        _;
+    }
+
+    /**
      * @notice allows interactions with functions having `whenNotPaused` modifier and prevents interactions with ones with the `whenPaused` modifier
      *
      * @dev interactions with functions without a `whenNotPaused` or `whenPaused` modifier are unaffected
@@ -53,24 +71,6 @@ contract Vault is AccessControl, Pausable, IVault {
      */
     function pause() external override whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         status = FALSE;
-    }
-
-    /**
-     * @dev reverts if the collateral does not exist
-     */
-    modifier collateralExists(ERC20 _collateralToken) {
-        if (!collateralMapping[_collateralToken].exists) revert CollateralDoesNotExist();
-        _;
-    }
-
-    /**
-     * @param _owner address of the vault to interact with
-     *
-     * @dev reverts if the msg.sender is not `_owner` and is also not allowed to interact with `_owner`'s vault
-     */
-    modifier onlyOwnerOrReliedUpon(address _owner) {
-        if (_owner != msg.sender && !relyMapping[_owner][msg.sender]) revert NotOwnerOrReliedUpon();
-        _;
     }
 
     /**
