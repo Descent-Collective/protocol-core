@@ -204,16 +204,17 @@ contract BurnCurrencyTest is BaseTest {
         skip(1_000);
 
         // get accrued fees
-        (,, uint256 accruedFees, uint256 lastTotalAccumulatedRate) = vault.vaultMapping(usdc, user1);
-        accruedFees +=
-            ((calculateCurrentTotalAccumulatedRate(usdc) - lastTotalAccumulatedRate) * 500_000e18) / PRECISION;
+        IVault.VaultInfo memory userVaultInfo = getVaultMapping(usdc, user1);
+        userVaultInfo.accruedFees += (
+            (calculateCurrentTotalAccumulatedRate(usdc) - userVaultInfo.lastTotalAccumulatedRate) * 500_000e18
+        ) / PRECISION;
 
         // accrued fees should be > 0
-        assertTrue(accruedFees > 0);
+        assertTrue(userVaultInfo.accruedFees > 0);
 
         // it should revert with underflow error
         vm.expectRevert(UNDERFLOW_OVERFLOW_PANIC_ERROR);
-        vault.burnCurrency(usdc, user1, 500_000e18 + accruedFees + 1);
+        vault.burnCurrency(usdc, user1, 500_000e18 + userVaultInfo.accruedFees + 1);
     }
 
     function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_useUser1()
