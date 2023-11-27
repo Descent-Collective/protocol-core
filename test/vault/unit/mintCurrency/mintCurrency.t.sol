@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
 import {BaseTest, ERC20, IVault} from "../../../base.t.sol";
@@ -60,21 +60,21 @@ contract MintCurrencyTest is BaseTest {
         _;
     }
 
-    function test_WhenTheBorrowMakesTheVaultsHealthFactorBelowTheMinHealthFactor()
+    function test_WhenTheBorrowMakesTheVaultsCollateralRatioAboveTheLiquidationThreshold()
         external
         whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         useUser1
     {
-        // it should revert with custom error BadHealthFactor()
-        vm.expectRevert(BadHealthFactor.selector);
+        // it should revert with custom error BadCollateralRatio()
+        vm.expectRevert(BadCollateralRatio.selector);
 
         // try minting more than allowed
         vault.mintCurrency(usdc, user1, user1, 500_001e18);
     }
 
-    modifier whenTheBorrowDoesNotMakeTheVaultsHealthFactorBelowTheMinHealthFactor() {
+    modifier whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold() {
         _;
     }
 
@@ -83,7 +83,7 @@ contract MintCurrencyTest is BaseTest {
         whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
-        whenTheBorrowDoesNotMakeTheVaultsHealthFactorBelowTheMinHealthFactor
+        whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold
         useUser1
     {
         // user1 withdraws enough of their collateral to be below the floor
@@ -105,7 +105,7 @@ contract MintCurrencyTest is BaseTest {
         whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
-        whenTheBorrowDoesNotMakeTheVaultsHealthFactorBelowTheMinHealthFactor
+        whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold
         whenOwnersCollateralBalanceIsAboveOrEqualToTheCollateralFloor
         useUser1
     {
@@ -121,7 +121,7 @@ contract MintCurrencyTest is BaseTest {
         whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
-        whenTheBorrowDoesNotMakeTheVaultsHealthFactorBelowTheMinHealthFactor
+        whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold
         whenOwnersCollateralBalanceIsAboveOrEqualToTheCollateralFloor
         useReliedOnForUser1(user2)
     {
@@ -137,7 +137,7 @@ contract MintCurrencyTest is BaseTest {
         whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
-        whenTheBorrowDoesNotMakeTheVaultsHealthFactorBelowTheMinHealthFactor
+        whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold
         whenOwnersCollateralBalanceIsAboveOrEqualToTheCollateralFloor
         useUser1
     {
@@ -156,7 +156,7 @@ contract MintCurrencyTest is BaseTest {
         whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
-        whenTheBorrowDoesNotMakeTheVaultsHealthFactorBelowTheMinHealthFactor
+        whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold
         whenOwnersCollateralBalanceIsAboveOrEqualToTheCollateralFloor
         useReliedOnForUser1(user2)
     {

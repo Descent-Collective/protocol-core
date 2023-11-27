@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
 contract ErrorsAndEvents {
@@ -14,14 +14,14 @@ contract ErrorsAndEvents {
 
     error ZeroAddress();
     error UnrecognizedParam();
-    error BadHealthFactor();
+    error BadCollateralRatio();
     error PositionIsSafe();
     error ZeroCollateral();
     error TotalUserCollateralBelowFloor();
     error CollateralAlreadyExists();
     error CollateralDoesNotExist();
     error NotOwnerOrReliedUpon();
-    error HealthFactorNotImproved();
+    error CollateralRatioNotImproved();
     error NotEnoughCollateralToPay();
     error EthTransferFailed();
     error Paused();

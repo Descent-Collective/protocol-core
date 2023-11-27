@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
 import {BaseTest, ERC20, IVault} from "../../../base.t.sol";
@@ -204,16 +204,17 @@ contract BurnCurrencyTest is BaseTest {
         skip(1_000);
 
         // get accrued fees
-        (,, uint256 accruedFees, uint256 lastTotalAccumulatedRate) = vault.vaultMapping(usdc, user1);
-        accruedFees +=
-            ((calculateCurrentTotalAccumulatedRate(usdc) - lastTotalAccumulatedRate) * 500_000e18) / PRECISION;
+        IVault.VaultInfo memory userVaultInfo = getVaultMapping(usdc, user1);
+        userVaultInfo.accruedFees += (
+            (calculateCurrentTotalAccumulatedRate(usdc) - userVaultInfo.lastTotalAccumulatedRate) * 500_000e18
+        ) / PRECISION;
 
         // accrued fees should be > 0
-        assertTrue(accruedFees > 0);
+        assertTrue(userVaultInfo.accruedFees > 0);
 
         // it should revert with underflow error
         vm.expectRevert(UNDERFLOW_OVERFLOW_PANIC_ERROR);
-        vault.burnCurrency(usdc, user1, 500_000e18 + accruedFees + 1);
+        vault.burnCurrency(usdc, user1, 500_000e18 + userVaultInfo.accruedFees + 1);
     }
 
     function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_useUser1()
@@ -386,7 +387,11 @@ contract BurnCurrencyTest is BaseTest {
 
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
-        emit CurrencyBurned(user1, amount);
+        emit CurrencyBurned(user1, 500_000e18);
+
+        // it should emit FeesPaid() event with with expected indexed and unindexed parameters
+        vm.expectEmit(true, false, false, true, address(vault));
+        emit FeesPaid(user1, amount - 500_000e18);
 
         // burn currency
         vault.burnCurrency(usdc, user1, amount);
