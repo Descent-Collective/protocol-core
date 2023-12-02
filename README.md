@@ -2,7 +2,7 @@
 
 ### Deployment address
 
-#### Base Georli
+#### Base Goerli
 
 | Contract Name            | Addresses                                  |
 | ------------------------ | ------------------------------------------ |
