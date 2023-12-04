@@ -37,8 +37,6 @@ abstract contract BaseScript is Script {
             (broadcaster,) = deriveRememberKey({mnemonic: mnemonic, index: uint32(walletIndex)});
         }
 
-        console2.log(broadcaster);
-
         if (block.chainid == 31337) {
             currenctChain = Chains.Localnet;
         } else if (block.chainid == 84531) {
