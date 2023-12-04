@@ -125,7 +125,7 @@ contract BaseTest is Test, ErrorsAndEvents {
             uint256 price,
             uint256 debtCeiling,
             uint256 collateralFloorPerPosition,
-            uint256 additionalCollateralPercision,
+            uint256 additionalCollateralPrecision,
             bool exists
         ) = vault.collateralMapping(_collateralToken);
 
@@ -139,7 +139,7 @@ contract BaseTest is Test, ErrorsAndEvents {
             price,
             debtCeiling,
             collateralFloorPerPosition,
-            additionalCollateralPercision,
+            additionalCollateralPrecision,
             exists
         );
     }

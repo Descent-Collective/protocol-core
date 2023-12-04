@@ -153,7 +153,7 @@ contract Vault is AccessControl, Pausable, IVault {
         _collateral.liquidationBonus = _liquidationBonus;
         _collateral.debtCeiling = _debtCeiling;
         _collateral.collateralFloorPerPosition = _collateralFloorPerPosition;
-        _collateral.additionalCollateralPercision = PRECISION_DEGREE - _collateralToken.decimals();
+        _collateral.additionalCollateralPrecision = PRECISION_DEGREE - _collateralToken.decimals();
         _collateral.exists = true;
 
         emit CollateralTypeAdded(address(_collateralToken));
@@ -651,11 +651,10 @@ contract Vault is AccessControl, Pausable, IVault {
         view
         returns (uint256)
     {
-        uint256 _collateralAmountOfCurrencyValue = (
-            _scaleCollateralToExpectedPrecision(_collateral, _amount) * PRECISION
-        ) / (_collateral.price * ADDITIONAL_FEED_PRECISION);
+        uint256 _collateralAmountOfCurrencyValue =
+            _divUp((_amount * PRECISION), (_collateral.price * ADDITIONAL_FEED_PRECISION));
 
-        return _collateralAmountOfCurrencyValue;
+        return _divUp(_collateralAmountOfCurrencyValue, 10 ** _collateral.additionalCollateralPrecision);
     }
 
     /**
@@ -705,7 +704,7 @@ contract Vault is AccessControl, Pausable, IVault {
         view
         returns (uint256)
     {
-        return amount * (10 ** _collateral.additionalCollateralPercision);
+        return amount * (10 ** _collateral.additionalCollateralPrecision);
     }
 
     /**
