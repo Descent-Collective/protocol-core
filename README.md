@@ -6,8 +6,8 @@
 
 | Contract Name            | Addresses                                  |
 | ------------------------ | ------------------------------------------ |
-| Vault Contract           | 0xee2bDAE7896910c49BeA25106B9f8e9f4B671c82 |
-| Currency Contract (xNGN) | 0xE2386C5eF4deC9d5815C60168e36c7153ba00D0C |
+| Vault Contract           | 0xE2386C5eF4deC9d5815C60168e36c7153ba00D0C |
+| Currency Contract (xNGN) | 0xee2bDAE7896910c49BeA25106B9f8e9f4B671c82 |
 | Feed Contract            | 0x970066EE55DF2134D1b52451afb49034AE5Fa29a |
 
 To install libraries needed, run:
