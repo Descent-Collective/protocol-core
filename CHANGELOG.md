@@ -32,3 +32,18 @@ Solidity compiler: [0.8.21]
 - Replace use of health factor with collateral ratio
 - Fix wrong emitted event data and add tests for it
 - Add more natspec and use GPL-3.0 license
+
+# Version 0.1.2
+
+## Compiler settings
+
+Solidity compiler: [0.8.21]
+
+### contracts
+- Vault Contract: `0xee2bDAE7896910c49BeA25106B9f8e9f4B671c82`
+- Currency Contract(xNGN):    `0xE2386C5eF4deC9d5815C60168e36c7153ba00D0C`
+- Feed Contract     `0x970066EE55DF2134D1b52451afb49034AE5Fa29a`
+
+## Changes
+- Fix wrong calculation of withdrawable collateral
+- Fix typos

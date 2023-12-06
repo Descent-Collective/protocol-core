@@ -396,7 +396,7 @@
     "updatePrice(address)": "96e85ced",
     "vault()": "fbfa77cf"
   },
-  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.21+commit.d9974bed\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract Vault\",\"name\":\"_vault\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"AccessControlBadConfirmation\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"neededRole\",\"type\":\"bytes32\"}],\"name\":\"AccessControlUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"Paused\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"Read\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"collaterals\",\"outputs\":[{\"internalType\":\"contract IMedian\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"mockUpdatePrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"callerConfirmation\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oracle\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"}],\"name\":\"setPriceOracleContract\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"status\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"}],\"name\":\"updatePrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"vault\",\"outputs\":[{\"internalType\":\"contract Vault\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"errors\":{\"AccessControlBadConfirmation()\":[{\"details\":\"The caller of a function is not the expected one. NOTE: Don't confuse with {AccessControlUnauthorizedAccount}.\"}],\"AccessControlUnauthorizedAccount(address,bytes32)\":[{\"details\":\"The `account` is missing a role.\"}]},\"events\":{\"RoleAdminChanged(bytes32,bytes32,bytes32)\":{\"details\":\"Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole` `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite {RoleAdminChanged} not being emitted signaling this.\"},\"RoleGranted(bytes32,address,address)\":{\"details\":\"Emitted when `account` is granted `role`. `sender` is the account that originated the contract call, an admin role bearer except when using {AccessControl-_setupRole}.\"},\"RoleRevoked(bytes32,address,address)\":{\"details\":\"Emitted when `account` is revoked `role`. `sender` is the account that originated the contract call:   - if using `revokeRole`, it is the admin role bearer   - if using `renounceRole`, it is the role bearer (i.e. `account`)\"}},\"kind\":\"dev\",\"methods\":{\"getRoleAdmin(bytes32)\":{\"details\":\"Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role's admin, use {_setRoleAdmin}.\"},\"grantRole(bytes32,address)\":{\"details\":\"Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleGranted} event.\"},\"hasRole(bytes32,address)\":{\"details\":\"Returns `true` if `account` has been granted `role`.\"},\"renounceRole(bytes32,address)\":{\"details\":\"Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function's purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `callerConfirmation`. May emit a {RoleRevoked} event.\"},\"revokeRole(bytes32,address)\":{\"details\":\"Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleRevoked} event.\"},\"supportsInterface(bytes4)\":{\"details\":\"See {IERC165-supportsInterface}.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/feed.sol\":\"Feed\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"appendCBOR\":false,\"bytecodeHash\":\"none\"},\"optimizer\":{\"enabled\":true,\"runs\":1000000},\"remappings\":[\":@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/\"]},\"sources\":{\"lib/openzeppelin-contracts/contracts/access/AccessControl.sol\":{\"keccak256\":\"0xa0e92d42942f4f57c5be50568dac11e9d00c93efcb458026e18d2d9b9b2e7308\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://46326c0bb1e296b67185e81c918e0b40501b8b6386165855df0a3f3c634b6a80\",\"dweb:/ipfs/QmTwyrDYtsxsk6pymJTK94PnEpzsmkpUxFuzEiakDopy4Z\"]},\"lib/openzeppelin-contracts/contracts/access/IAccessControl.sol\":{\"keccak256\":\"0xb6b36edd6a2999fd243ff226d6cbf84bd71af2432bbd0dfe19392996a1d9cb41\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1fd2f35495652e57e3f99bc6c510bc5f7dd398a176ea2e72d8ed730aebc6ca26\",\"dweb:/ipfs/QmTQV6X4gkikTib49cho5iDX3JvSQbdsoEChoDwrk3CbbH\"]},\"lib/openzeppelin-contracts/contracts/interfaces/IERC5267.sol\":{\"keccak256\":\"0x92aa1df62dc3d33f1656d63bede0923e0df0b706ad4137c8b10b0a8fe549fd92\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c5c0f29195ad64cbe556da8e257dac8f05f78c53f90323c0d2accf8e6922d33a\",\"dweb:/ipfs/QmQ61TED8uaCZwcbh8KkgRSsCav7x7HbcGHwHts3U4DmUP\"]},\"lib/openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol\":{\"keccak256\":\"0x60c65f701957fdd6faea1acb0bb45825791d473693ed9ecb34726fdfaa849dd7\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://ea290300e0efc4d901244949dc4d877fd46e6c5e43dc2b26620e8efab3ab803f\",\"dweb:/ipfs/QmcLLJppxKeJWqHxE2CUkcfhuRTgHSn8J4kijcLa5MYhSt\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol\":{\"keccak256\":\"0xc3e1fa9d1987f8d349dfb4d6fe93bf2ca014b52ba335cfac30bfe71e357e6f80\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c5703ccdeb7b1d685e375ed719117e9edf2ab4bc544f24f23b0d50ec82257229\",\"dweb:/ipfs/QmTdwkbQq7owpCiyuzE7eh5LrD2ddrBCZ5WHVsWPi1RrTS\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol\":{\"keccak256\":\"0xc6a8ff0ea489379b61faa647490411b80102578440ab9d84e9a957cc12164e70\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0ea104e577e63faea3b69c415637e99e755dcbf64c5833d7140c35a714d6d90c\",\"dweb:/ipfs/Qmau6x4Ns9XdyynRCNNp3RhLqijJjFm7z5fyZazfYFGYdq\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol\":{\"keccak256\":\"0xc858a86a35701004d89022a5e98819aac46ccbdc4072fc9dd43928a676b1a2ee\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://18acebb483c512c0eaafcb437f09c839972c3f0d36f0201ea7baa2926b987dd2\",\"dweb:/ipfs/Qmd9bf2noaDSYDtf6FMSzKu7LPhuf91jsVNmcoCuTCuGic\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol\":{\"keccak256\":\"0xaa761817f6cd7892fcf158b3c776b34551cde36f48ff9703d53898bc45a94ea2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0ad7c8d4d08938c8dfc43d75a148863fb324b80cf53e0a36f7e5a4ac29008850\",\"dweb:/ipfs/QmcrhfPgVNf5mkdhQvy1pMv51TFokD3Y4Wa5WZhFqVh8UV\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol\":{\"keccak256\":\"0x6008dabfe393240d73d7dd7688033f72740d570aa422254d29a7dce8568f3aff\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f5196ec75139918c6c7bb4251b36395e668f1fa6d206beba7e7520e74913940d\",\"dweb:/ipfs/QmSyqjksXxmm2mCG6qRd1yuwLykypkSVBbnBnGqJRcuJMi\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol\":{\"keccak256\":\"0x37bb49513c49c87c4642a891b13b63571bc87013dde806617aa1efb54605f386\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b3036b3a83b7c48f96641f2a9002b9f2dcb6a5958dd670894ada21ae8229b3d0\",\"dweb:/ipfs/QmUNfSBdoVtjhETaUJCYcaC7pTMgbhht926tJ2uXJbiVd3\"]},\"lib/openzeppelin-contracts/contracts/utils/Address.sol\":{\"keccak256\":\"0xaf28a975a78550e45f65e559a3ad6a5ad43b9b8a37366999abd1b7084eb70721\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b7bd24e224f67f65bfadf85dc2929fa965456bb2415478bd0125471b5ce35245\",\"dweb:/ipfs/QmRaydGr8BTHs1kvaZfsNU69pKzUAGFrvABn1KiRSbE51y\"]},\"lib/openzeppelin-contracts/contracts/utils/Context.sol\":{\"keccak256\":\"0x75a4ee64c68dbd5f38bddd06e664a64c8271b4caa554fb6f0607dfd672bb4bf3\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0c4e6cb30d3601e2f7af5af09e265508147cb275a8dcd99d6f7363645cc56867\",\"dweb:/ipfs/QmNgFkoXNWoUbAyw71rr1sKQ95Rj2GfvYiWg79xEYDn2NY\"]},\"lib/openzeppelin-contracts/contracts/utils/Nonces.sol\":{\"keccak256\":\"0x0082767004fca261c332e9ad100868327a863a88ef724e844857128845ab350f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://132dce9686a54e025eb5ba5d2e48208f847a1ec3e60a3e527766d7bf53fb7f9e\",\"dweb:/ipfs/QmXn1a2nUZMpu2z6S88UoTfMVtY2YNh86iGrzJDYmMkKeZ\"]},\"lib/openzeppelin-contracts/contracts/utils/ShortStrings.sol\":{\"keccak256\":\"0x18a7171df639a934592915a520ecb97c5bbc9675a1105607aac8a94e72bf62c6\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7478e1f13da69a2867ccd883001d836b75620362e743f196376d63ed0c422a1c\",\"dweb:/ipfs/QmWywcQ9TNfwtoqAxbn25d8C5VrV12PrPS9UjtGe6pL2BA\"]},\"lib/openzeppelin-contracts/contracts/utils/StorageSlot.sol\":{\"keccak256\":\"0x32ba59b4b7299237c8ba56319110989d7978a039faf754793064e967e5894418\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1ae50c8b562427df610cc4540c9bf104acca7ef8e2dcae567ae7e52272281e9c\",\"dweb:/ipfs/QmTHiadFCSJUPpRjNegc5SahmeU8bAoY8i9Aq6tVscbcKR\"]},\"lib/openzeppelin-contracts/contracts/utils/Strings.sol\":{\"keccak256\":\"0x55f102ea785d8399c0e58d1108e2d289506dde18abc6db1b7f68c1f9f9bc5792\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6e52e0a7765c943ef14e5bcf11e46e6139fa044be564881378349236bf2e3453\",\"dweb:/ipfs/QmZEeeXoFPW47amyP35gfzomF9DixqqTEPwzBakv6cZw6i\"]},\"lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol\":{\"keccak256\":\"0xeed0a08b0b091f528356cbc7245891a4c748682d4f6a18055e8e6ca77d12a6cf\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://ba80ba06c8e6be852847e4c5f4492cef801feb6558ae09ed705ff2e04ea8b13c\",\"dweb:/ipfs/QmXRJDv3xHLVQCVXg1ZvR35QS9sij5y9NDWYzMfUfAdTHF\"]},\"lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol\":{\"keccak256\":\"0x999f705a027ed6dc2d4e0df2cc4a509852c6bfd11de1c8161bf88832d0503fd0\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0798def67258d9a3cc20b2b4da7ebf351a5cefe0abfdd665d2d81f8e32f89b21\",\"dweb:/ipfs/QmPEvJosnPfzHNjKvCv2D3891mA2Ww8eUwkqrxBjuYdHCt\"]},\"lib/openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol\":{\"keccak256\":\"0xba333517a3add42cd35fe877656fc3dfcc9de53baa4f3aabbd6d12a92e4ea435\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://2ceacff44c0fdc81e48e0e0b1db87a2076d3c1fb497341de077bf1da9f6b406c\",\"dweb:/ipfs/QmRUo1muMRAewxrKQ7TkXUtknyRoR57AyEkoPpiuZQ8FzX\"]},\"lib/openzeppelin-contracts/contracts/utils/introspection/ERC165.sol\":{\"keccak256\":\"0x9e8778b14317ba9e256c30a76fd6c32b960af621987f56069e1e819c77c6a133\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1777404f1dcd0fac188e55a288724ec3c67b45288e49cc64723e95e702b49ab8\",\"dweb:/ipfs/QmZFdC626GButBApwDUvvTnUzdinevC3B24d7yyh57XkiA\"]},\"lib/openzeppelin-contracts/contracts/utils/introspection/IERC165.sol\":{\"keccak256\":\"0x4296879f55019b23e135000eb36896057e7101fb7fb859c5ef690cf14643757b\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://87b3541437c8c443ccd36795e56a338ed12855eec17f8da624511b8d1a7e14df\",\"dweb:/ipfs/QmeJQCtZrQjtJLr6u7ZHWeH3pBnjtLWzvRrKViAi7UZqxL\"]},\"lib/openzeppelin-contracts/contracts/utils/math/Math.sol\":{\"keccak256\":\"0x005ec64c6313f0555d59e278f9a7a5ab2db5bdc72a027f255a37c327af1ec02d\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4ece9f0b9c8daca08c76b6b5405a6446b6f73b3a15fab7ff56e296cbd4a2c875\",\"dweb:/ipfs/QmQyRpyPRL5SQuAgj6SHmbir3foX65FJjbVTTQrA2EFg6L\"]},\"lib/openzeppelin-contracts/contracts/utils/math/SignedMath.sol\":{\"keccak256\":\"0x5f7e4076e175393767754387c962926577f1660dd9b810187b9002407656be72\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7d533a1c97cd43a57cd9c465f7ee8dd0e39ae93a8fb8ff8e5303a356b081cdcc\",\"dweb:/ipfs/QmVBEei6aTnvYNZp2CHYVNKyZS4q1KkjANfY39WVXZXVoT\"]},\"src/currency.sol\":{\"keccak256\":\"0xcff030c4bad135b27acbe405aba19da1184c406c30fe6839b17ffcb8548938d4\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://8ca7791099d9f9851622964e2668477dbe07441c4d687621eaff725c7e25d48b\",\"dweb:/ipfs/QmdsMzD9aVqBym5bS4QnYnGtN8872iBck94NFeyfLirJ8Y\"]},\"src/feed.sol\":{\"keccak256\":\"0x4f52711e9baae968c601bb555cc0d7b543e9ef23f0e4fbe4326a107fe4ea219e\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://3294b7769494af228749e329eba72938778b80ee2fbc326157bf352553fa2061\",\"dweb:/ipfs/QmamsCniX6ZGbYvH7WLHMZLLd8K5obLH49ZZkWzAPEZn3R\"]},\"src/helpers/pausable.sol\":{\"keccak256\":\"0x8acce52dcd450c73da0f77d9539962826da23aca05aa7d0c7568614e89aed997\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://35e2f674e01c0d6107f31d1c32bb2780d442420b7d26636f560a4eb1007f4a8b\",\"dweb:/ipfs/QmWwVLUGiJq6Q3fK6Zhx4pc6kaqC73pkZ1ntfVA3QCHTpd\"]},\"src/interfaces/ICurrency.sol\":{\"keccak256\":\"0x3b7adace3df08c34906612358d435ffff3b90b5eec0eae34b6335cc8dcd0e7ed\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://370c80ec5636bd95342256d4116f703e633e6b0467ee530397e9b5cada37f998\",\"dweb:/ipfs/QmPQ5KY37JpfuSAXpJ16kBXAQVJcE253cfjYGcBEcMLERz\"]},\"src/interfaces/IFeed.sol\":{\"keccak256\":\"0xa8a771e3d7fb9b87a0cb96577456b781735031c93cb1c15b5dce0cee75a1ef74\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://804a3b25232dcb9ced1765853d937613c58f262fa76e4f7a58c3882fcaf31497\",\"dweb:/ipfs/QmVJLCUsik63CU9MEcso3Y2EVEb9u3XR26A2YdHTQPLFz2\"]},\"src/interfaces/IMedian.sol\":{\"keccak256\":\"0xf04d193d2bef5a6ae3ba23a259d1df94d3943d96f4e25dfbe3448fb49b098654\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://6a3426b3bb7b1d3f204f55b4f4ca6b1ab174f37cf32770b3e44e7a8f84cbdbf2\",\"dweb:/ipfs/QmUAbUfXX35it1PGFVi6KDVKhKzRbUhCbTxS12AjtCwR1n\"]},\"src/interfaces/IVault.sol\":{\"keccak256\":\"0x324a22aba9abe88b246f7050c3948a3e644d19829b54685a52f47a878029982d\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://14b1122b6dd022c8a914f0ca6899febe33b554967a83c176a4dc8aa02066f547\",\"dweb:/ipfs/QmfLcWVqrzNhirpgmggtFBjtTBPPfDZusmqNo3vjushJW1\"]},\"src/vault.sol\":{\"keccak256\":\"0x4eec5f334103e46b4f0a7ae8cb5799748724bdbcc03e103669acb23d703d9dc9\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://5b82a85c261ff36fc9d79b5037aaea3c8d2f1f80e5f31a6a77812110c75d58ba\",\"dweb:/ipfs/QmZJdTPSiMDb6zhrC6i51ovbb3gsUgSK7Nc1RR2JSgsXfx\"]}},\"version\":1}",
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.21+commit.d9974bed\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract Vault\",\"name\":\"_vault\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"AccessControlBadConfirmation\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"neededRole\",\"type\":\"bytes32\"}],\"name\":\"AccessControlUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"Paused\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"Read\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"collaterals\",\"outputs\":[{\"internalType\":\"contract IMedian\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"mockUpdatePrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"callerConfirmation\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"oracle\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"}],\"name\":\"setPriceOracleContract\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"status\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"collateral\",\"type\":\"address\"}],\"name\":\"updatePrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"vault\",\"outputs\":[{\"internalType\":\"contract Vault\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"errors\":{\"AccessControlBadConfirmation()\":[{\"details\":\"The caller of a function is not the expected one. NOTE: Don't confuse with {AccessControlUnauthorizedAccount}.\"}],\"AccessControlUnauthorizedAccount(address,bytes32)\":[{\"details\":\"The `account` is missing a role.\"}]},\"events\":{\"RoleAdminChanged(bytes32,bytes32,bytes32)\":{\"details\":\"Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole` `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite {RoleAdminChanged} not being emitted signaling this.\"},\"RoleGranted(bytes32,address,address)\":{\"details\":\"Emitted when `account` is granted `role`. `sender` is the account that originated the contract call, an admin role bearer except when using {AccessControl-_setupRole}.\"},\"RoleRevoked(bytes32,address,address)\":{\"details\":\"Emitted when `account` is revoked `role`. `sender` is the account that originated the contract call:   - if using `revokeRole`, it is the admin role bearer   - if using `renounceRole`, it is the role bearer (i.e. `account`)\"}},\"kind\":\"dev\",\"methods\":{\"getRoleAdmin(bytes32)\":{\"details\":\"Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role's admin, use {_setRoleAdmin}.\"},\"grantRole(bytes32,address)\":{\"details\":\"Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleGranted} event.\"},\"hasRole(bytes32,address)\":{\"details\":\"Returns `true` if `account` has been granted `role`.\"},\"renounceRole(bytes32,address)\":{\"details\":\"Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function's purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `callerConfirmation`. May emit a {RoleRevoked} event.\"},\"revokeRole(bytes32,address)\":{\"details\":\"Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleRevoked} event.\"},\"supportsInterface(bytes4)\":{\"details\":\"See {IERC165-supportsInterface}.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/feed.sol\":\"Feed\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"appendCBOR\":false,\"bytecodeHash\":\"none\"},\"optimizer\":{\"enabled\":true,\"runs\":1000000},\"remappings\":[\":@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/\"]},\"sources\":{\"lib/openzeppelin-contracts/contracts/access/AccessControl.sol\":{\"keccak256\":\"0xa0e92d42942f4f57c5be50568dac11e9d00c93efcb458026e18d2d9b9b2e7308\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://46326c0bb1e296b67185e81c918e0b40501b8b6386165855df0a3f3c634b6a80\",\"dweb:/ipfs/QmTwyrDYtsxsk6pymJTK94PnEpzsmkpUxFuzEiakDopy4Z\"]},\"lib/openzeppelin-contracts/contracts/access/IAccessControl.sol\":{\"keccak256\":\"0xb6b36edd6a2999fd243ff226d6cbf84bd71af2432bbd0dfe19392996a1d9cb41\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1fd2f35495652e57e3f99bc6c510bc5f7dd398a176ea2e72d8ed730aebc6ca26\",\"dweb:/ipfs/QmTQV6X4gkikTib49cho5iDX3JvSQbdsoEChoDwrk3CbbH\"]},\"lib/openzeppelin-contracts/contracts/interfaces/IERC5267.sol\":{\"keccak256\":\"0x92aa1df62dc3d33f1656d63bede0923e0df0b706ad4137c8b10b0a8fe549fd92\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c5c0f29195ad64cbe556da8e257dac8f05f78c53f90323c0d2accf8e6922d33a\",\"dweb:/ipfs/QmQ61TED8uaCZwcbh8KkgRSsCav7x7HbcGHwHts3U4DmUP\"]},\"lib/openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol\":{\"keccak256\":\"0x60c65f701957fdd6faea1acb0bb45825791d473693ed9ecb34726fdfaa849dd7\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://ea290300e0efc4d901244949dc4d877fd46e6c5e43dc2b26620e8efab3ab803f\",\"dweb:/ipfs/QmcLLJppxKeJWqHxE2CUkcfhuRTgHSn8J4kijcLa5MYhSt\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol\":{\"keccak256\":\"0xc3e1fa9d1987f8d349dfb4d6fe93bf2ca014b52ba335cfac30bfe71e357e6f80\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c5703ccdeb7b1d685e375ed719117e9edf2ab4bc544f24f23b0d50ec82257229\",\"dweb:/ipfs/QmTdwkbQq7owpCiyuzE7eh5LrD2ddrBCZ5WHVsWPi1RrTS\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol\":{\"keccak256\":\"0xc6a8ff0ea489379b61faa647490411b80102578440ab9d84e9a957cc12164e70\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0ea104e577e63faea3b69c415637e99e755dcbf64c5833d7140c35a714d6d90c\",\"dweb:/ipfs/Qmau6x4Ns9XdyynRCNNp3RhLqijJjFm7z5fyZazfYFGYdq\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol\":{\"keccak256\":\"0xc858a86a35701004d89022a5e98819aac46ccbdc4072fc9dd43928a676b1a2ee\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://18acebb483c512c0eaafcb437f09c839972c3f0d36f0201ea7baa2926b987dd2\",\"dweb:/ipfs/Qmd9bf2noaDSYDtf6FMSzKu7LPhuf91jsVNmcoCuTCuGic\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol\":{\"keccak256\":\"0xaa761817f6cd7892fcf158b3c776b34551cde36f48ff9703d53898bc45a94ea2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0ad7c8d4d08938c8dfc43d75a148863fb324b80cf53e0a36f7e5a4ac29008850\",\"dweb:/ipfs/QmcrhfPgVNf5mkdhQvy1pMv51TFokD3Y4Wa5WZhFqVh8UV\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol\":{\"keccak256\":\"0x6008dabfe393240d73d7dd7688033f72740d570aa422254d29a7dce8568f3aff\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f5196ec75139918c6c7bb4251b36395e668f1fa6d206beba7e7520e74913940d\",\"dweb:/ipfs/QmSyqjksXxmm2mCG6qRd1yuwLykypkSVBbnBnGqJRcuJMi\"]},\"lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol\":{\"keccak256\":\"0x37bb49513c49c87c4642a891b13b63571bc87013dde806617aa1efb54605f386\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b3036b3a83b7c48f96641f2a9002b9f2dcb6a5958dd670894ada21ae8229b3d0\",\"dweb:/ipfs/QmUNfSBdoVtjhETaUJCYcaC7pTMgbhht926tJ2uXJbiVd3\"]},\"lib/openzeppelin-contracts/contracts/utils/Address.sol\":{\"keccak256\":\"0xaf28a975a78550e45f65e559a3ad6a5ad43b9b8a37366999abd1b7084eb70721\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b7bd24e224f67f65bfadf85dc2929fa965456bb2415478bd0125471b5ce35245\",\"dweb:/ipfs/QmRaydGr8BTHs1kvaZfsNU69pKzUAGFrvABn1KiRSbE51y\"]},\"lib/openzeppelin-contracts/contracts/utils/Context.sol\":{\"keccak256\":\"0x75a4ee64c68dbd5f38bddd06e664a64c8271b4caa554fb6f0607dfd672bb4bf3\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0c4e6cb30d3601e2f7af5af09e265508147cb275a8dcd99d6f7363645cc56867\",\"dweb:/ipfs/QmNgFkoXNWoUbAyw71rr1sKQ95Rj2GfvYiWg79xEYDn2NY\"]},\"lib/openzeppelin-contracts/contracts/utils/Nonces.sol\":{\"keccak256\":\"0x0082767004fca261c332e9ad100868327a863a88ef724e844857128845ab350f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://132dce9686a54e025eb5ba5d2e48208f847a1ec3e60a3e527766d7bf53fb7f9e\",\"dweb:/ipfs/QmXn1a2nUZMpu2z6S88UoTfMVtY2YNh86iGrzJDYmMkKeZ\"]},\"lib/openzeppelin-contracts/contracts/utils/ShortStrings.sol\":{\"keccak256\":\"0x18a7171df639a934592915a520ecb97c5bbc9675a1105607aac8a94e72bf62c6\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7478e1f13da69a2867ccd883001d836b75620362e743f196376d63ed0c422a1c\",\"dweb:/ipfs/QmWywcQ9TNfwtoqAxbn25d8C5VrV12PrPS9UjtGe6pL2BA\"]},\"lib/openzeppelin-contracts/contracts/utils/StorageSlot.sol\":{\"keccak256\":\"0x32ba59b4b7299237c8ba56319110989d7978a039faf754793064e967e5894418\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1ae50c8b562427df610cc4540c9bf104acca7ef8e2dcae567ae7e52272281e9c\",\"dweb:/ipfs/QmTHiadFCSJUPpRjNegc5SahmeU8bAoY8i9Aq6tVscbcKR\"]},\"lib/openzeppelin-contracts/contracts/utils/Strings.sol\":{\"keccak256\":\"0x55f102ea785d8399c0e58d1108e2d289506dde18abc6db1b7f68c1f9f9bc5792\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6e52e0a7765c943ef14e5bcf11e46e6139fa044be564881378349236bf2e3453\",\"dweb:/ipfs/QmZEeeXoFPW47amyP35gfzomF9DixqqTEPwzBakv6cZw6i\"]},\"lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol\":{\"keccak256\":\"0xeed0a08b0b091f528356cbc7245891a4c748682d4f6a18055e8e6ca77d12a6cf\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://ba80ba06c8e6be852847e4c5f4492cef801feb6558ae09ed705ff2e04ea8b13c\",\"dweb:/ipfs/QmXRJDv3xHLVQCVXg1ZvR35QS9sij5y9NDWYzMfUfAdTHF\"]},\"lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol\":{\"keccak256\":\"0x999f705a027ed6dc2d4e0df2cc4a509852c6bfd11de1c8161bf88832d0503fd0\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0798def67258d9a3cc20b2b4da7ebf351a5cefe0abfdd665d2d81f8e32f89b21\",\"dweb:/ipfs/QmPEvJosnPfzHNjKvCv2D3891mA2Ww8eUwkqrxBjuYdHCt\"]},\"lib/openzeppelin-contracts/contracts/utils/cryptography/MessageHashUtils.sol\":{\"keccak256\":\"0xba333517a3add42cd35fe877656fc3dfcc9de53baa4f3aabbd6d12a92e4ea435\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://2ceacff44c0fdc81e48e0e0b1db87a2076d3c1fb497341de077bf1da9f6b406c\",\"dweb:/ipfs/QmRUo1muMRAewxrKQ7TkXUtknyRoR57AyEkoPpiuZQ8FzX\"]},\"lib/openzeppelin-contracts/contracts/utils/introspection/ERC165.sol\":{\"keccak256\":\"0x9e8778b14317ba9e256c30a76fd6c32b960af621987f56069e1e819c77c6a133\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1777404f1dcd0fac188e55a288724ec3c67b45288e49cc64723e95e702b49ab8\",\"dweb:/ipfs/QmZFdC626GButBApwDUvvTnUzdinevC3B24d7yyh57XkiA\"]},\"lib/openzeppelin-contracts/contracts/utils/introspection/IERC165.sol\":{\"keccak256\":\"0x4296879f55019b23e135000eb36896057e7101fb7fb859c5ef690cf14643757b\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://87b3541437c8c443ccd36795e56a338ed12855eec17f8da624511b8d1a7e14df\",\"dweb:/ipfs/QmeJQCtZrQjtJLr6u7ZHWeH3pBnjtLWzvRrKViAi7UZqxL\"]},\"lib/openzeppelin-contracts/contracts/utils/math/Math.sol\":{\"keccak256\":\"0x005ec64c6313f0555d59e278f9a7a5ab2db5bdc72a027f255a37c327af1ec02d\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4ece9f0b9c8daca08c76b6b5405a6446b6f73b3a15fab7ff56e296cbd4a2c875\",\"dweb:/ipfs/QmQyRpyPRL5SQuAgj6SHmbir3foX65FJjbVTTQrA2EFg6L\"]},\"lib/openzeppelin-contracts/contracts/utils/math/SignedMath.sol\":{\"keccak256\":\"0x5f7e4076e175393767754387c962926577f1660dd9b810187b9002407656be72\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7d533a1c97cd43a57cd9c465f7ee8dd0e39ae93a8fb8ff8e5303a356b081cdcc\",\"dweb:/ipfs/QmVBEei6aTnvYNZp2CHYVNKyZS4q1KkjANfY39WVXZXVoT\"]},\"src/currency.sol\":{\"keccak256\":\"0xcff030c4bad135b27acbe405aba19da1184c406c30fe6839b17ffcb8548938d4\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://8ca7791099d9f9851622964e2668477dbe07441c4d687621eaff725c7e25d48b\",\"dweb:/ipfs/QmdsMzD9aVqBym5bS4QnYnGtN8872iBck94NFeyfLirJ8Y\"]},\"src/feed.sol\":{\"keccak256\":\"0x4f52711e9baae968c601bb555cc0d7b543e9ef23f0e4fbe4326a107fe4ea219e\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://3294b7769494af228749e329eba72938778b80ee2fbc326157bf352553fa2061\",\"dweb:/ipfs/QmamsCniX6ZGbYvH7WLHMZLLd8K5obLH49ZZkWzAPEZn3R\"]},\"src/helpers/pausable.sol\":{\"keccak256\":\"0x8acce52dcd450c73da0f77d9539962826da23aca05aa7d0c7568614e89aed997\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://35e2f674e01c0d6107f31d1c32bb2780d442420b7d26636f560a4eb1007f4a8b\",\"dweb:/ipfs/QmWwVLUGiJq6Q3fK6Zhx4pc6kaqC73pkZ1ntfVA3QCHTpd\"]},\"src/interfaces/ICurrency.sol\":{\"keccak256\":\"0x3b7adace3df08c34906612358d435ffff3b90b5eec0eae34b6335cc8dcd0e7ed\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://370c80ec5636bd95342256d4116f703e633e6b0467ee530397e9b5cada37f998\",\"dweb:/ipfs/QmPQ5KY37JpfuSAXpJ16kBXAQVJcE253cfjYGcBEcMLERz\"]},\"src/interfaces/IFeed.sol\":{\"keccak256\":\"0xa8a771e3d7fb9b87a0cb96577456b781735031c93cb1c15b5dce0cee75a1ef74\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://804a3b25232dcb9ced1765853d937613c58f262fa76e4f7a58c3882fcaf31497\",\"dweb:/ipfs/QmVJLCUsik63CU9MEcso3Y2EVEb9u3XR26A2YdHTQPLFz2\"]},\"src/interfaces/IMedian.sol\":{\"keccak256\":\"0xf04d193d2bef5a6ae3ba23a259d1df94d3943d96f4e25dfbe3448fb49b098654\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://6a3426b3bb7b1d3f204f55b4f4ca6b1ab174f37cf32770b3e44e7a8f84cbdbf2\",\"dweb:/ipfs/QmUAbUfXX35it1PGFVi6KDVKhKzRbUhCbTxS12AjtCwR1n\"]},\"src/interfaces/IVault.sol\":{\"keccak256\":\"0x0b07e90c8de2bb57e62990839bdc52077d067d9e38db6fd2a8c684dbaf74f1b4\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://50a4e4b3745f623e7ea99800c1472b5d2fdbc3332ceecc1e4eb1cb2546d6b7b5\",\"dweb:/ipfs/Qma91VRTUw3bJzxanpErFXze7R3N9gHE9pnmWm3oFwcC6g\"]},\"src/vault.sol\":{\"keccak256\":\"0xb42eb135923431b43ccd78a05d5937dc7faf98717fabd0b3a50a030b15db7977\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://7a1cadec603bec32da036fc3f095454601105ed00b90def95fa0912ac2ea7d6d\",\"dweb:/ipfs/QmYLDswPYNPuG2RguyZbtD7cWumTZXhPmNfvwsJDr3vGyv\"]}},\"version\":1}",
   "metadata": {
     "compiler": {
       "version": "0.8.21+commit.d9974bed"
@@ -1050,18 +1050,18 @@
         "license": "GPL-3.0"
       },
       "src/interfaces/IVault.sol": {
-        "keccak256": "0x324a22aba9abe88b246f7050c3948a3e644d19829b54685a52f47a878029982d",
+        "keccak256": "0x0b07e90c8de2bb57e62990839bdc52077d067d9e38db6fd2a8c684dbaf74f1b4",
         "urls": [
-          "bzz-raw://14b1122b6dd022c8a914f0ca6899febe33b554967a83c176a4dc8aa02066f547",
-          "dweb:/ipfs/QmfLcWVqrzNhirpgmggtFBjtTBPPfDZusmqNo3vjushJW1"
+          "bzz-raw://50a4e4b3745f623e7ea99800c1472b5d2fdbc3332ceecc1e4eb1cb2546d6b7b5",
+          "dweb:/ipfs/Qma91VRTUw3bJzxanpErFXze7R3N9gHE9pnmWm3oFwcC6g"
         ],
         "license": "GPL-3.0"
       },
       "src/vault.sol": {
-        "keccak256": "0x4eec5f334103e46b4f0a7ae8cb5799748724bdbcc03e103669acb23d703d9dc9",
+        "keccak256": "0xb42eb135923431b43ccd78a05d5937dc7faf98717fabd0b3a50a030b15db7977",
         "urls": [
-          "bzz-raw://5b82a85c261ff36fc9d79b5037aaea3c8d2f1f80e5f31a6a77812110c75d58ba",
-          "dweb:/ipfs/QmZJdTPSiMDb6zhrC6i51ovbb3gsUgSK7Nc1RR2JSgsXfx"
+          "bzz-raw://7a1cadec603bec32da036fc3f095454601105ed00b90def95fa0912ac2ea7d6d",
+          "dweb:/ipfs/QmYLDswPYNPuG2RguyZbtD7cWumTZXhPmNfvwsJDr3vGyv"
         ],
         "license": "GPL-3.0"
       }
@@ -1070,29 +1070,29 @@
   },
   "ast": {
     "absolutePath": "src/feed.sol",
-    "id": 48510,
+    "id": 48712,
     "exportedSymbols": {
       "AccessControl": [
         43683
       ],
       "Feed": [
-        48509
+        48711
       ],
       "IFeed": [
-        48618
+        48820
       ],
       "IMedian": [
-        48649
+        48851
       ],
       "Vault": [
-        50410
+        50616
       ]
     },
     "nodeType": "SourceUnit",
     "src": "36:1737:45",
     "nodes": [
       {
-        "id": 48349,
+        "id": 48551,
         "nodeType": "PragmaDirective",
         "src": "36:23:45",
         "nodes": [],
@@ -1103,19 +1103,19 @@
         ]
       },
       {
-        "id": 48351,
+        "id": 48553,
         "nodeType": "ImportDirective",
         "src": "108:79:45",
         "nodes": [],
         "absolutePath": "lib/openzeppelin-contracts/contracts/access/AccessControl.sol",
         "file": "@openzeppelin/contracts/access/AccessControl.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 48510,
+        "scope": 48712,
         "sourceUnit": 43684,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 48350,
+              "id": 48552,
               "name": "AccessControl",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
@@ -1129,23 +1129,23 @@
         "unitAlias": ""
       },
       {
-        "id": 48353,
+        "id": 48555,
         "nodeType": "ImportDirective",
         "src": "188:49:45",
         "nodes": [],
         "absolutePath": "src/interfaces/IMedian.sol",
         "file": "./interfaces/IMedian.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 48510,
-        "sourceUnit": 48650,
+        "scope": 48712,
+        "sourceUnit": 48852,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 48352,
+              "id": 48554,
               "name": "IMedian",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 48649,
+              "referencedDeclaration": 48851,
               "src": "196:7:45",
               "typeDescriptions": {}
             },
@@ -1155,23 +1155,23 @@
         "unitAlias": ""
       },
       {
-        "id": 48355,
+        "id": 48557,
         "nodeType": "ImportDirective",
         "src": "238:34:45",
         "nodes": [],
         "absolutePath": "src/vault.sol",
         "file": "./vault.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 48510,
-        "sourceUnit": 50411,
+        "scope": 48712,
+        "sourceUnit": 50617,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 48354,
+              "id": 48556,
               "name": "Vault",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 50410,
+              "referencedDeclaration": 50616,
               "src": "246:5:45",
               "typeDescriptions": {}
             },
@@ -1181,23 +1181,23 @@
         "unitAlias": ""
       },
       {
-        "id": 48357,
+        "id": 48559,
         "nodeType": "ImportDirective",
         "src": "273:45:45",
         "nodes": [],
         "absolutePath": "src/interfaces/IFeed.sol",
         "file": "./interfaces/IFeed.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 48510,
-        "sourceUnit": 48619,
+        "scope": 48712,
+        "sourceUnit": 48821,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 48356,
+              "id": 48558,
               "name": "IFeed",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 48618,
+              "referencedDeclaration": 48820,
               "src": "281:5:45",
               "typeDescriptions": {}
             },
@@ -1207,12 +1207,12 @@
         "unitAlias": ""
       },
       {
-        "id": 48509,
+        "id": 48711,
         "nodeType": "ContractDefinition",
         "src": "320:1452:45",
         "nodes": [
           {
-            "id": 48364,
+            "id": 48566,
             "nodeType": "VariableDeclaration",
             "src": "364:34:45",
             "nodes": [],
@@ -1220,7 +1220,7 @@
             "mutability": "constant",
             "name": "FALSE",
             "nameLocation": "389:5:45",
-            "scope": 48509,
+            "scope": 48711,
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -1228,7 +1228,7 @@
               "typeString": "uint256"
             },
             "typeName": {
-              "id": 48362,
+              "id": 48564,
               "name": "uint256",
               "nodeType": "ElementaryTypeName",
               "src": "364:7:45",
@@ -1239,7 +1239,7 @@
             },
             "value": {
               "hexValue": "31",
-              "id": 48363,
+              "id": 48565,
               "isConstant": false,
               "isLValue": false,
               "isPure": true,
@@ -1256,7 +1256,7 @@
             "visibility": "private"
           },
           {
-            "id": 48367,
+            "id": 48569,
             "nodeType": "VariableDeclaration",
             "src": "404:33:45",
             "nodes": [],
@@ -1264,7 +1264,7 @@
             "mutability": "constant",
             "name": "TRUE",
             "nameLocation": "429:4:45",
-            "scope": 48509,
+            "scope": 48711,
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -1272,7 +1272,7 @@
               "typeString": "uint256"
             },
             "typeName": {
-              "id": 48365,
+              "id": 48567,
               "name": "uint256",
               "nodeType": "ElementaryTypeName",
               "src": "404:7:45",
@@ -1283,7 +1283,7 @@
             },
             "value": {
               "hexValue": "32",
-              "id": 48366,
+              "id": 48568,
               "isConstant": false,
               "isLValue": false,
               "isPure": true,
@@ -1300,7 +1300,7 @@
             "visibility": "private"
           },
           {
-            "id": 48370,
+            "id": 48572,
             "nodeType": "VariableDeclaration",
             "src": "444:18:45",
             "nodes": [],
@@ -1309,37 +1309,37 @@
             "mutability": "mutable",
             "name": "vault",
             "nameLocation": "457:5:45",
-            "scope": 48509,
+            "scope": 48711,
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_Vault_$50410",
+              "typeIdentifier": "t_contract$_Vault_$50616",
               "typeString": "contract Vault"
             },
             "typeName": {
-              "id": 48369,
+              "id": 48571,
               "nodeType": "UserDefinedTypeName",
               "pathNode": {
-                "id": 48368,
+                "id": 48570,
                 "name": "Vault",
                 "nameLocations": [
                   "444:5:45"
                 ],
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 50410,
+                "referencedDeclaration": 50616,
                 "src": "444:5:45"
               },
-              "referencedDeclaration": 50410,
+              "referencedDeclaration": 50616,
               "src": "444:5:45",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Vault_$50410",
+                "typeIdentifier": "t_contract$_Vault_$50616",
                 "typeString": "contract Vault"
               }
             },
             "visibility": "public"
           },
           {
-            "id": 48372,
+            "id": 48574,
             "nodeType": "VariableDeclaration",
             "src": "468:21:45",
             "nodes": [],
@@ -1348,7 +1348,7 @@
             "mutability": "mutable",
             "name": "status",
             "nameLocation": "483:6:45",
-            "scope": 48509,
+            "scope": 48711,
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -1356,7 +1356,7 @@
               "typeString": "uint256"
             },
             "typeName": {
-              "id": 48371,
+              "id": 48573,
               "name": "uint256",
               "nodeType": "ElementaryTypeName",
               "src": "468:7:45",
@@ -1368,7 +1368,7 @@
             "visibility": "public"
           },
           {
-            "id": 48377,
+            "id": 48579,
             "nodeType": "VariableDeclaration",
             "src": "513:46:45",
             "nodes": [],
@@ -1377,19 +1377,19 @@
             "mutability": "mutable",
             "name": "collaterals",
             "nameLocation": "548:11:45",
-            "scope": 48509,
+            "scope": 48711,
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_mapping$_t_address_$_t_contract$_IMedian_$48649_$",
+              "typeIdentifier": "t_mapping$_t_address_$_t_contract$_IMedian_$48851_$",
               "typeString": "mapping(address => contract IMedian)"
             },
             "typeName": {
-              "id": 48376,
+              "id": 48578,
               "keyName": "",
               "keyNameLocation": "-1:-1:-1",
               "keyType": {
-                "id": 48373,
+                "id": 48575,
                 "name": "address",
                 "nodeType": "ElementaryTypeName",
                 "src": "521:7:45",
@@ -1401,28 +1401,28 @@
               "nodeType": "Mapping",
               "src": "513:27:45",
               "typeDescriptions": {
-                "typeIdentifier": "t_mapping$_t_address_$_t_contract$_IMedian_$48649_$",
+                "typeIdentifier": "t_mapping$_t_address_$_t_contract$_IMedian_$48851_$",
                 "typeString": "mapping(address => contract IMedian)"
               },
               "valueName": "",
               "valueNameLocation": "-1:-1:-1",
               "valueType": {
-                "id": 48375,
+                "id": 48577,
                 "nodeType": "UserDefinedTypeName",
                 "pathNode": {
-                  "id": 48374,
+                  "id": 48576,
                   "name": "IMedian",
                   "nameLocations": [
                     "532:7:45"
                   ],
                   "nodeType": "IdentifierPath",
-                  "referencedDeclaration": 48649,
+                  "referencedDeclaration": 48851,
                   "src": "532:7:45"
                 },
-                "referencedDeclaration": 48649,
+                "referencedDeclaration": 48851,
                 "src": "532:7:45",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_contract$_IMedian_$48649",
+                  "typeIdentifier": "t_contract$_IMedian_$48851",
                   "typeString": "contract IMedian"
                 }
               }
@@ -1430,12 +1430,12 @@
             "visibility": "public"
           },
           {
-            "id": 48388,
+            "id": 48590,
             "nodeType": "ModifierDefinition",
             "src": "566:89:45",
             "nodes": [],
             "body": {
-              "id": 48387,
+              "id": 48589,
               "nodeType": "Block",
               "src": "591:64:45",
               "nodes": [],
@@ -1446,17 +1446,17 @@
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     },
-                    "id": 48381,
+                    "id": 48583,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftExpression": {
-                      "id": 48379,
+                      "id": 48581,
                       "name": "status",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48372,
+                      "referencedDeclaration": 48574,
                       "src": "605:6:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1466,11 +1466,11 @@
                     "nodeType": "BinaryOperation",
                     "operator": "==",
                     "rightExpression": {
-                      "id": 48380,
+                      "id": 48582,
                       "name": "FALSE",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48364,
+                      "referencedDeclaration": 48566,
                       "src": "615:5:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1483,7 +1483,7 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 48385,
+                  "id": 48587,
                   "nodeType": "IfStatement",
                   "src": "601:36:45",
                   "trueBody": {
@@ -1491,18 +1491,18 @@
                       "arguments": [],
                       "expression": {
                         "argumentTypes": [],
-                        "id": 48382,
+                        "id": 48584,
                         "name": "Paused",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48599,
+                        "referencedDeclaration": 48801,
                         "src": "629:6:45",
                         "typeDescriptions": {
                           "typeIdentifier": "t_function_error_pure$__$returns$__$",
                           "typeString": "function () pure"
                         }
                       },
-                      "id": 48383,
+                      "id": 48585,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -1518,13 +1518,13 @@
                         "typeString": "tuple()"
                       }
                     },
-                    "id": 48384,
+                    "id": 48586,
                     "nodeType": "RevertStatement",
                     "src": "622:15:45"
                   }
                 },
                 {
-                  "id": 48386,
+                  "id": 48588,
                   "nodeType": "PlaceholderStatement",
                   "src": "647:1:45"
                 }
@@ -1533,7 +1533,7 @@
             "name": "whenNotPaused",
             "nameLocation": "575:13:45",
             "parameters": {
-              "id": 48378,
+              "id": 48580,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "588:2:45"
@@ -1542,29 +1542,29 @@
             "visibility": "internal"
           },
           {
-            "id": 48399,
+            "id": 48601,
             "nodeType": "FunctionDefinition",
             "src": "661:87:45",
             "nodes": [],
             "body": {
-              "id": 48398,
+              "id": 48600,
               "nodeType": "Block",
               "src": "718:30:45",
               "nodes": [],
               "statements": [
                 {
                   "expression": {
-                    "id": 48396,
+                    "id": 48598,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 48394,
+                      "id": 48596,
                       "name": "status",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48372,
+                      "referencedDeclaration": 48574,
                       "src": "728:6:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1574,11 +1574,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 48395,
+                      "id": 48597,
                       "name": "TRUE",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48367,
+                      "referencedDeclaration": 48569,
                       "src": "737:4:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1591,7 +1591,7 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 48397,
+                  "id": 48599,
                   "nodeType": "ExpressionStatement",
                   "src": "728:13:45"
                 }
@@ -1604,7 +1604,7 @@
               {
                 "arguments": [
                   {
-                    "id": 48391,
+                    "id": 48593,
                     "name": "DEFAULT_ADMIN_ROLE",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
@@ -1616,10 +1616,10 @@
                     }
                   }
                 ],
-                "id": 48392,
+                "id": 48594,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 48390,
+                  "id": 48592,
                   "name": "onlyRole",
                   "nameLocations": [
                     "689:8:45"
@@ -1635,46 +1635,46 @@
             "name": "unpause",
             "nameLocation": "670:7:45",
             "parameters": {
-              "id": 48389,
+              "id": 48591,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "677:2:45"
             },
             "returnParameters": {
-              "id": 48393,
+              "id": 48595,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "718:0:45"
             },
-            "scope": 48509,
+            "scope": 48711,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 48410,
+            "id": 48612,
             "nodeType": "FunctionDefinition",
             "src": "754:86:45",
             "nodes": [],
             "body": {
-              "id": 48409,
+              "id": 48611,
               "nodeType": "Block",
               "src": "809:31:45",
               "nodes": [],
               "statements": [
                 {
                   "expression": {
-                    "id": 48407,
+                    "id": 48609,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 48405,
+                      "id": 48607,
                       "name": "status",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48372,
+                      "referencedDeclaration": 48574,
                       "src": "819:6:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1684,11 +1684,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 48406,
+                      "id": 48608,
                       "name": "FALSE",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48364,
+                      "referencedDeclaration": 48566,
                       "src": "828:5:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1701,7 +1701,7 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 48408,
+                  "id": 48610,
                   "nodeType": "ExpressionStatement",
                   "src": "819:14:45"
                 }
@@ -1714,7 +1714,7 @@
               {
                 "arguments": [
                   {
-                    "id": 48402,
+                    "id": 48604,
                     "name": "DEFAULT_ADMIN_ROLE",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
@@ -1726,10 +1726,10 @@
                     }
                   }
                 ],
-                "id": 48403,
+                "id": 48605,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 48401,
+                  "id": 48603,
                   "name": "onlyRole",
                   "nameLocations": [
                     "780:8:45"
@@ -1745,29 +1745,29 @@
             "name": "pause",
             "nameLocation": "763:5:45",
             "parameters": {
-              "id": 48400,
+              "id": 48602,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "768:2:45"
             },
             "returnParameters": {
-              "id": 48404,
+              "id": 48606,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "809:0:45"
             },
-            "scope": 48509,
+            "scope": 48711,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 48431,
+            "id": 48633,
             "nodeType": "FunctionDefinition",
             "src": "846:132:45",
             "nodes": [],
             "body": {
-              "id": 48430,
+              "id": 48632,
               "nodeType": "Block",
               "src": "872:106:45",
               "nodes": [],
@@ -1776,7 +1776,7 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 48417,
+                        "id": 48619,
                         "name": "DEFAULT_ADMIN_ROLE",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -1789,7 +1789,7 @@
                       },
                       {
                         "expression": {
-                          "id": 48418,
+                          "id": 48620,
                           "name": "msg",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
@@ -1800,7 +1800,7 @@
                             "typeString": "msg"
                           }
                         },
-                        "id": 48419,
+                        "id": 48621,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1826,7 +1826,7 @@
                           "typeString": "address"
                         }
                       ],
-                      "id": 48416,
+                      "id": 48618,
                       "name": "_grantRole",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
@@ -1837,7 +1837,7 @@
                         "typeString": "function (bytes32,address) returns (bool)"
                       }
                     },
-                    "id": 48420,
+                    "id": 48622,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1853,66 +1853,66 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 48421,
+                  "id": 48623,
                   "nodeType": "ExpressionStatement",
                   "src": "882:42:45"
                 },
                 {
                   "expression": {
-                    "id": 48424,
+                    "id": 48626,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 48422,
+                      "id": 48624,
                       "name": "vault",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48370,
+                      "referencedDeclaration": 48572,
                       "src": "934:5:45",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_Vault_$50410",
+                        "typeIdentifier": "t_contract$_Vault_$50616",
                         "typeString": "contract Vault"
                       }
                     },
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 48423,
+                      "id": 48625,
                       "name": "_vault",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48413,
+                      "referencedDeclaration": 48615,
                       "src": "942:6:45",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_Vault_$50410",
+                        "typeIdentifier": "t_contract$_Vault_$50616",
                         "typeString": "contract Vault"
                       }
                     },
                     "src": "934:14:45",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_Vault_$50410",
+                      "typeIdentifier": "t_contract$_Vault_$50616",
                       "typeString": "contract Vault"
                     }
                   },
-                  "id": 48425,
+                  "id": 48627,
                   "nodeType": "ExpressionStatement",
                   "src": "934:14:45"
                 },
                 {
                   "expression": {
-                    "id": 48428,
+                    "id": 48630,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 48426,
+                      "id": 48628,
                       "name": "status",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48372,
+                      "referencedDeclaration": 48574,
                       "src": "958:6:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1922,11 +1922,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 48427,
+                      "id": 48629,
                       "name": "TRUE",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48367,
+                      "referencedDeclaration": 48569,
                       "src": "967:4:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -1939,7 +1939,7 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 48429,
+                  "id": 48631,
                   "nodeType": "ExpressionStatement",
                   "src": "958:13:45"
                 }
@@ -1951,41 +1951,41 @@
             "name": "",
             "nameLocation": "-1:-1:-1",
             "parameters": {
-              "id": 48414,
+              "id": 48616,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 48413,
+                  "id": 48615,
                   "mutability": "mutable",
                   "name": "_vault",
                   "nameLocation": "864:6:45",
                   "nodeType": "VariableDeclaration",
-                  "scope": 48431,
+                  "scope": 48633,
                   "src": "858:12:45",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_contract$_Vault_$50410",
+                    "typeIdentifier": "t_contract$_Vault_$50616",
                     "typeString": "contract Vault"
                   },
                   "typeName": {
-                    "id": 48412,
+                    "id": 48614,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 48411,
+                      "id": 48613,
                       "name": "Vault",
                       "nameLocations": [
                         "858:5:45"
                       ],
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 50410,
+                      "referencedDeclaration": 50616,
                       "src": "858:5:45"
                     },
-                    "referencedDeclaration": 50410,
+                    "referencedDeclaration": 50616,
                     "src": "858:5:45",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_Vault_$50410",
+                      "typeIdentifier": "t_contract$_Vault_$50616",
                       "typeString": "contract Vault"
                     }
                   },
@@ -1995,54 +1995,54 @@
               "src": "857:14:45"
             },
             "returnParameters": {
-              "id": 48415,
+              "id": 48617,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "872:0:45"
             },
-            "scope": 48509,
+            "scope": 48711,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "public"
           },
           {
-            "id": 48452,
+            "id": 48654,
             "nodeType": "FunctionDefinition",
             "src": "984:206:45",
             "nodes": [],
             "body": {
-              "id": 48451,
+              "id": 48653,
               "nodeType": "Block",
               "src": "1132:58:45",
               "nodes": [],
               "statements": [
                 {
                   "expression": {
-                    "id": 48449,
+                    "id": 48651,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "baseExpression": {
-                        "id": 48443,
+                        "id": 48645,
                         "name": "collaterals",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48377,
+                        "referencedDeclaration": 48579,
                         "src": "1142:11:45",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_mapping$_t_address_$_t_contract$_IMedian_$48649_$",
+                          "typeIdentifier": "t_mapping$_t_address_$_t_contract$_IMedian_$48851_$",
                           "typeString": "mapping(address => contract IMedian)"
                         }
                       },
-                      "id": 48445,
+                      "id": 48647,
                       "indexExpression": {
-                        "id": 48444,
+                        "id": 48646,
                         "name": "collateral",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48435,
+                        "referencedDeclaration": 48637,
                         "src": "1154:10:45",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -2056,7 +2056,7 @@
                       "nodeType": "IndexAccess",
                       "src": "1142:23:45",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IMedian_$48649",
+                        "typeIdentifier": "t_contract$_IMedian_$48851",
                         "typeString": "contract IMedian"
                       }
                     },
@@ -2065,11 +2065,11 @@
                     "rightHandSide": {
                       "arguments": [
                         {
-                          "id": 48447,
+                          "id": 48649,
                           "name": "oracle",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 48433,
+                          "referencedDeclaration": 48635,
                           "src": "1176:6:45",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -2084,18 +2084,18 @@
                             "typeString": "address"
                           }
                         ],
-                        "id": 48446,
+                        "id": 48648,
                         "name": "IMedian",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48649,
+                        "referencedDeclaration": 48851,
                         "src": "1168:7:45",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_IMedian_$48649_$",
+                          "typeIdentifier": "t_type$_t_contract$_IMedian_$48851_$",
                           "typeString": "type(contract IMedian)"
                         }
                       },
-                      "id": 48448,
+                      "id": 48650,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -2107,40 +2107,40 @@
                       "src": "1168:15:45",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_IMedian_$48649",
+                        "typeIdentifier": "t_contract$_IMedian_$48851",
                         "typeString": "contract IMedian"
                       }
                     },
                     "src": "1142:41:45",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_IMedian_$48649",
+                      "typeIdentifier": "t_contract$_IMedian_$48851",
                       "typeString": "contract IMedian"
                     }
                   },
-                  "id": 48450,
+                  "id": 48652,
                   "nodeType": "ExpressionStatement",
                   "src": "1142:41:45"
                 }
               ]
             },
             "baseFunctions": [
-              48617
+              48819
             ],
             "functionSelector": "5ab68dd8",
             "implemented": true,
             "kind": "function",
             "modifiers": [
               {
-                "id": 48438,
+                "id": 48640,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 48437,
+                  "id": 48639,
                   "name": "whenNotPaused",
                   "nameLocations": [
                     "1077:13:45"
                   ],
                   "nodeType": "IdentifierPath",
-                  "referencedDeclaration": 48388,
+                  "referencedDeclaration": 48590,
                   "src": "1077:13:45"
                 },
                 "nodeType": "ModifierInvocation",
@@ -2149,7 +2149,7 @@
               {
                 "arguments": [
                   {
-                    "id": 48440,
+                    "id": 48642,
                     "name": "DEFAULT_ADMIN_ROLE",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
@@ -2161,10 +2161,10 @@
                     }
                   }
                 ],
-                "id": 48441,
+                "id": 48643,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 48439,
+                  "id": 48641,
                   "name": "onlyRole",
                   "nameLocations": [
                     "1099:8:45"
@@ -2180,17 +2180,17 @@
             "name": "setPriceOracleContract",
             "nameLocation": "993:22:45",
             "parameters": {
-              "id": 48436,
+              "id": 48638,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 48433,
+                  "id": 48635,
                   "mutability": "mutable",
                   "name": "oracle",
                   "nameLocation": "1024:6:45",
                   "nodeType": "VariableDeclaration",
-                  "scope": 48452,
+                  "scope": 48654,
                   "src": "1016:14:45",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2199,7 +2199,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 48432,
+                    "id": 48634,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1016:7:45",
@@ -2213,12 +2213,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 48435,
+                  "id": 48637,
                   "mutability": "mutable",
                   "name": "collateral",
                   "nameLocation": "1040:10:45",
                   "nodeType": "VariableDeclaration",
-                  "scope": 48452,
+                  "scope": 48654,
                   "src": "1032:18:45",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2227,7 +2227,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 48434,
+                    "id": 48636,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1032:7:45",
@@ -2243,23 +2243,23 @@
               "src": "1015:36:45"
             },
             "returnParameters": {
-              "id": 48442,
+              "id": 48644,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1132:0:45"
             },
-            "scope": 48509,
+            "scope": 48711,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 48483,
+            "id": 48685,
             "nodeType": "FunctionDefinition",
             "src": "1255:246:45",
             "nodes": [],
             "body": {
-              "id": 48482,
+              "id": 48684,
               "nodeType": "Block",
               "src": "1348:153:45",
               "nodes": [],
@@ -2267,18 +2267,18 @@
                 {
                   "assignments": [
                     null,
-                    48463
+                    48665
                   ],
                   "declarations": [
                     null,
                     {
                       "constant": false,
-                      "id": 48463,
+                      "id": 48665,
                       "mutability": "mutable",
                       "name": "price",
                       "nameLocation": "1369:5:45",
                       "nodeType": "VariableDeclaration",
-                      "scope": 48482,
+                      "scope": 48684,
                       "src": "1361:13:45",
                       "stateVariable": false,
                       "storageLocation": "default",
@@ -2287,7 +2287,7 @@
                         "typeString": "uint256"
                       },
                       "typeName": {
-                        "id": 48462,
+                        "id": 48664,
                         "name": "uint256",
                         "nodeType": "ElementaryTypeName",
                         "src": "1361:7:45",
@@ -2299,31 +2299,31 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 48469,
+                  "id": 48671,
                   "initialValue": {
                     "arguments": [],
                     "expression": {
                       "argumentTypes": [],
                       "expression": {
                         "baseExpression": {
-                          "id": 48464,
+                          "id": 48666,
                           "name": "collaterals",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 48377,
+                          "referencedDeclaration": 48579,
                           "src": "1378:11:45",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_mapping$_t_address_$_t_contract$_IMedian_$48649_$",
+                            "typeIdentifier": "t_mapping$_t_address_$_t_contract$_IMedian_$48851_$",
                             "typeString": "mapping(address => contract IMedian)"
                           }
                         },
-                        "id": 48466,
+                        "id": 48668,
                         "indexExpression": {
-                          "id": 48465,
+                          "id": 48667,
                           "name": "collateral",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 48454,
+                          "referencedDeclaration": 48656,
                           "src": "1390:10:45",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -2337,11 +2337,11 @@
                         "nodeType": "IndexAccess",
                         "src": "1378:23:45",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_IMedian_$48649",
+                          "typeIdentifier": "t_contract$_IMedian_$48851",
                           "typeString": "contract IMedian"
                         }
                       },
-                      "id": 48467,
+                      "id": 48669,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -2349,14 +2349,14 @@
                       "memberLocation": "1402:4:45",
                       "memberName": "read",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 48639,
+                      "referencedDeclaration": 48841,
                       "src": "1378:28:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$__$returns$_t_uint256_$_t_uint256_$",
                         "typeString": "function () view external returns (uint256,uint256)"
                       }
                     },
-                    "id": 48468,
+                    "id": 48670,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2379,11 +2379,11 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 48473,
+                        "id": 48675,
                         "name": "collateral",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48454,
+                        "referencedDeclaration": 48656,
                         "src": "1437:10:45",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -2391,11 +2391,11 @@
                         }
                       },
                       {
-                        "id": 48474,
+                        "id": 48676,
                         "name": "price",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48463,
+                        "referencedDeclaration": 48665,
                         "src": "1449:5:45",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -2415,18 +2415,18 @@
                         }
                       ],
                       "expression": {
-                        "id": 48470,
+                        "id": 48672,
                         "name": "vault",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48370,
+                        "referencedDeclaration": 48572,
                         "src": "1419:5:45",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Vault_$50410",
+                          "typeIdentifier": "t_contract$_Vault_$50616",
                           "typeString": "contract Vault"
                         }
                       },
-                      "id": 48472,
+                      "id": 48674,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -2434,14 +2434,14 @@
                       "memberLocation": "1425:11:45",
                       "memberName": "updatePrice",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 49278,
+                      "referencedDeclaration": 49480,
                       "src": "1419:17:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$__$",
                         "typeString": "function (address,uint256) external"
                       }
                     },
-                    "id": 48475,
+                    "id": 48677,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2457,7 +2457,7 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 48476,
+                  "id": 48678,
                   "nodeType": "ExpressionStatement",
                   "src": "1419:36:45"
                 },
@@ -2465,11 +2465,11 @@
                   "eventCall": {
                     "arguments": [
                       {
-                        "id": 48478,
+                        "id": 48680,
                         "name": "collateral",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48454,
+                        "referencedDeclaration": 48656,
                         "src": "1476:10:45",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -2477,11 +2477,11 @@
                         }
                       },
                       {
-                        "id": 48479,
+                        "id": 48681,
                         "name": "price",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48463,
+                        "referencedDeclaration": 48665,
                         "src": "1488:5:45",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -2500,18 +2500,18 @@
                           "typeString": "uint256"
                         }
                       ],
-                      "id": 48477,
+                      "id": 48679,
                       "name": "Read",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48605,
+                      "referencedDeclaration": 48807,
                       "src": "1471:4:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_event_nonpayable$_t_address_$_t_uint256_$returns$__$",
                         "typeString": "function (address,uint256)"
                       }
                     },
-                    "id": 48480,
+                    "id": 48682,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2527,30 +2527,30 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 48481,
+                  "id": 48683,
                   "nodeType": "EmitStatement",
                   "src": "1466:28:45"
                 }
               ]
             },
             "baseFunctions": [
-              48610
+              48812
             ],
             "functionSelector": "96e85ced",
             "implemented": true,
             "kind": "function",
             "modifiers": [
               {
-                "id": 48457,
+                "id": 48659,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 48456,
+                  "id": 48658,
                   "name": "whenNotPaused",
                   "nameLocations": [
                     "1305:13:45"
                   ],
                   "nodeType": "IdentifierPath",
-                  "referencedDeclaration": 48388,
+                  "referencedDeclaration": 48590,
                   "src": "1305:13:45"
                 },
                 "nodeType": "ModifierInvocation",
@@ -2559,7 +2559,7 @@
               {
                 "arguments": [
                   {
-                    "id": 48459,
+                    "id": 48661,
                     "name": "DEFAULT_ADMIN_ROLE",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
@@ -2571,10 +2571,10 @@
                     }
                   }
                 ],
-                "id": 48460,
+                "id": 48662,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 48458,
+                  "id": 48660,
                   "name": "onlyRole",
                   "nameLocations": [
                     "1319:8:45"
@@ -2590,17 +2590,17 @@
             "name": "updatePrice",
             "nameLocation": "1264:11:45",
             "parameters": {
-              "id": 48455,
+              "id": 48657,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 48454,
+                  "id": 48656,
                   "mutability": "mutable",
                   "name": "collateral",
                   "nameLocation": "1284:10:45",
                   "nodeType": "VariableDeclaration",
-                  "scope": 48483,
+                  "scope": 48685,
                   "src": "1276:18:45",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2609,7 +2609,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 48453,
+                    "id": 48655,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1276:7:45",
@@ -2625,23 +2625,23 @@
               "src": "1275:20:45"
             },
             "returnParameters": {
-              "id": 48461,
+              "id": 48663,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1348:0:45"
             },
-            "scope": 48509,
+            "scope": 48711,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 48508,
+            "id": 48710,
             "nodeType": "FunctionDefinition",
             "src": "1566:204:45",
             "nodes": [],
             "body": {
-              "id": 48507,
+              "id": 48709,
               "nodeType": "Block",
               "src": "1678:92:45",
               "nodes": [],
@@ -2650,11 +2650,11 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 48498,
+                        "id": 48700,
                         "name": "collateral",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48485,
+                        "referencedDeclaration": 48687,
                         "src": "1706:10:45",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -2662,11 +2662,11 @@
                         }
                       },
                       {
-                        "id": 48499,
+                        "id": 48701,
                         "name": "price",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48487,
+                        "referencedDeclaration": 48689,
                         "src": "1718:5:45",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -2686,18 +2686,18 @@
                         }
                       ],
                       "expression": {
-                        "id": 48495,
+                        "id": 48697,
                         "name": "vault",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48370,
+                        "referencedDeclaration": 48572,
                         "src": "1688:5:45",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_Vault_$50410",
+                          "typeIdentifier": "t_contract$_Vault_$50616",
                           "typeString": "contract Vault"
                         }
                       },
-                      "id": 48497,
+                      "id": 48699,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -2705,14 +2705,14 @@
                       "memberLocation": "1694:11:45",
                       "memberName": "updatePrice",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 49278,
+                      "referencedDeclaration": 49480,
                       "src": "1688:17:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_nonpayable$_t_address_$_t_uint256_$returns$__$",
                         "typeString": "function (address,uint256) external"
                       }
                     },
-                    "id": 48500,
+                    "id": 48702,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2728,7 +2728,7 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 48501,
+                  "id": 48703,
                   "nodeType": "ExpressionStatement",
                   "src": "1688:36:45"
                 },
@@ -2736,11 +2736,11 @@
                   "eventCall": {
                     "arguments": [
                       {
-                        "id": 48503,
+                        "id": 48705,
                         "name": "collateral",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48485,
+                        "referencedDeclaration": 48687,
                         "src": "1745:10:45",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -2748,11 +2748,11 @@
                         }
                       },
                       {
-                        "id": 48504,
+                        "id": 48706,
                         "name": "price",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 48487,
+                        "referencedDeclaration": 48689,
                         "src": "1757:5:45",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -2771,18 +2771,18 @@
                           "typeString": "uint256"
                         }
                       ],
-                      "id": 48502,
+                      "id": 48704,
                       "name": "Read",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 48605,
+                      "referencedDeclaration": 48807,
                       "src": "1740:4:45",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_event_nonpayable$_t_address_$_t_uint256_$returns$__$",
                         "typeString": "function (address,uint256)"
                       }
                     },
-                    "id": 48505,
+                    "id": 48707,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2798,7 +2798,7 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 48506,
+                  "id": 48708,
                   "nodeType": "EmitStatement",
                   "src": "1735:28:45"
                 }
@@ -2809,16 +2809,16 @@
             "kind": "function",
             "modifiers": [
               {
-                "id": 48490,
+                "id": 48692,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 48489,
+                  "id": 48691,
                   "name": "whenNotPaused",
                   "nameLocations": [
                     "1635:13:45"
                   ],
                   "nodeType": "IdentifierPath",
-                  "referencedDeclaration": 48388,
+                  "referencedDeclaration": 48590,
                   "src": "1635:13:45"
                 },
                 "nodeType": "ModifierInvocation",
@@ -2827,7 +2827,7 @@
               {
                 "arguments": [
                   {
-                    "id": 48492,
+                    "id": 48694,
                     "name": "DEFAULT_ADMIN_ROLE",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
@@ -2839,10 +2839,10 @@
                     }
                   }
                 ],
-                "id": 48493,
+                "id": 48695,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 48491,
+                  "id": 48693,
                   "name": "onlyRole",
                   "nameLocations": [
                     "1649:8:45"
@@ -2858,17 +2858,17 @@
             "name": "mockUpdatePrice",
             "nameLocation": "1575:15:45",
             "parameters": {
-              "id": 48488,
+              "id": 48690,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 48485,
+                  "id": 48687,
                   "mutability": "mutable",
                   "name": "collateral",
                   "nameLocation": "1599:10:45",
                   "nodeType": "VariableDeclaration",
-                  "scope": 48508,
+                  "scope": 48710,
                   "src": "1591:18:45",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2877,7 +2877,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 48484,
+                    "id": 48686,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1591:7:45",
@@ -2891,12 +2891,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 48487,
+                  "id": 48689,
                   "mutability": "mutable",
                   "name": "price",
                   "nameLocation": "1619:5:45",
                   "nodeType": "VariableDeclaration",
-                  "scope": 48508,
+                  "scope": 48710,
                   "src": "1611:13:45",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2905,7 +2905,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 48486,
+                    "id": 48688,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "1611:7:45",
@@ -2920,12 +2920,12 @@
               "src": "1590:35:45"
             },
             "returnParameters": {
-              "id": 48494,
+              "id": 48696,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "1678:0:45"
             },
-            "scope": 48509,
+            "scope": 48711,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
@@ -2935,22 +2935,22 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 48358,
+              "id": 48560,
               "name": "IFeed",
               "nameLocations": [
                 "337:5:45"
               ],
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 48618,
+              "referencedDeclaration": 48820,
               "src": "337:5:45"
             },
-            "id": 48359,
+            "id": 48561,
             "nodeType": "InheritanceSpecifier",
             "src": "337:5:45"
           },
           {
             "baseName": {
-              "id": 48360,
+              "id": 48562,
               "name": "AccessControl",
               "nameLocations": [
                 "344:13:45"
@@ -2959,7 +2959,7 @@
               "referencedDeclaration": 43683,
               "src": "344:13:45"
             },
-            "id": 48361,
+            "id": 48563,
             "nodeType": "InheritanceSpecifier",
             "src": "344:13:45"
           }
@@ -2969,27 +2969,27 @@
         "contractKind": "contract",
         "fullyImplemented": true,
         "linearizedBaseContracts": [
-          48509,
+          48711,
           43683,
           46625,
           46637,
           43766,
           45302,
-          48618
+          48820
         ],
         "name": "Feed",
         "nameLocation": "329:4:45",
-        "scope": 48510,
+        "scope": 48712,
         "usedErrors": [
           43693,
           43696,
-          48599
+          48801
         ],
         "usedEvents": [
           43705,
           43714,
           43723,
-          48605
+          48807
         ]
       }
     ],
