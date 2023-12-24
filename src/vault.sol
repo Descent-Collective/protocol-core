@@ -20,6 +20,7 @@ contract Vault is AccessControl, Pausable, IVault {
     Currency public immutable CURRENCY_TOKEN; // stableTokenAddress
 
     RateInfo public baseRateInfo; // base rate info
+    uint256 public debtCeiling; // global debt ceiling
     uint256 public debt; // sum of all currency minted
     uint256 public accruedFees; // sum of all fees
     uint256 public paidFees; // sum of all unwithdrawn paid fees
@@ -28,12 +29,14 @@ contract Vault is AccessControl, Pausable, IVault {
     mapping(ERC20 => mapping(address => VaultInfo)) public vaultMapping; // collateral address => user address => vault data
     mapping(address => mapping(address => bool)) public relyMapping; // borrower -> addresss -> is allowed to take actions on borrowers vaults on their behalf
 
-    constructor(Currency _currencyToken, uint256 _baseRate) {
+    constructor(Currency _currencyToken, uint256 _baseRate, uint256 _debtCeiling) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         CURRENCY_TOKEN = _currencyToken;
 
         baseRateInfo.lastUpdateTime = block.timestamp;
         baseRateInfo.rate = _baseRate;
+
+        debtCeiling = _debtCeiling;
     }
 
     /**
@@ -92,6 +95,16 @@ contract Vault is AccessControl, Pausable, IVault {
      */
     function updateStabilityModule(address _stabilityModule) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(STABILITY_MODULE_ROLE, _stabilityModule);
+    }
+
+    /**
+     * @notice updates the global debt ceiling
+     *
+     * @dev reverts if the contract is paused
+     * @dev reverts if msg.sender does not have the `DEFAULT_ADMIN_ROLE` role
+     */
+    function updateDebtCeiling(uint256 _debtCeiling) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        debtCeiling = _debtCeiling;
     }
 
     /**
@@ -386,6 +399,10 @@ contract Vault is AccessControl, Pausable, IVault {
         // to prevent positions too little in value to incentivize liquidation, assert a floor for collateral possible to borrow against
         if (_collateral.collateralFloorPerPosition > _vault.depositedCollateral) revert TotalUserCollateralBelowFloor();
 
+        // check that global and collateral debt ceilings are not exceedded
+        if (debt + _amount > debtCeiling) revert GlobalDebtCeilingExceeded();
+        if (_collateral.debt + _amount > _collateral.debtCeiling) revert CollateralDebtCeilingExceeded();
+
         // short circuit conditional to optimize all interactions after the first one.
         // need to accrue fees first in order to use updated fees for collateral ratio calculation below
         if (_vault.borrowedAmount != 0) _accrueFees(_collateral, _vault);
@@ -522,6 +539,7 @@ contract Vault is AccessControl, Pausable, IVault {
     {
         _vault.borrowedAmount += _amount;
         _collateral.totalBorrowedAmount += _amount;
+        _collateral.debt += _amount;
         debt += _amount;
 
         CURRENCY_TOKEN.mint(_to, _amount);
@@ -545,6 +563,7 @@ contract Vault is AccessControl, Pausable, IVault {
         if (_amount <= _vault.borrowedAmount) {
             _vault.borrowedAmount -= _amount;
             _collateral.totalBorrowedAmount -= _amount;
+            _collateral.debt -= _amount;
             debt -= _amount;
 
             emit CurrencyBurned(_owner, _amount);
@@ -554,6 +573,7 @@ contract Vault is AccessControl, Pausable, IVault {
 
             _vault.borrowedAmount = 0;
             _collateral.totalBorrowedAmount -= _cacheBorrowedAmount;
+            _collateral.debt -= _cacheBorrowedAmount;
             debt -= _cacheBorrowedAmount;
 
             emit CurrencyBurned(_owner, _cacheBorrowedAmount);

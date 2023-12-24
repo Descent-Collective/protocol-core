@@ -15,13 +15,14 @@ contract DeployScript is BaseScript {
     function run() external broadcast returns (Currency xNGN, Vault vault, Feed feed) {
         string memory deployConfigJson = getDeployConfigJson();
         uint256 baseRate = deployConfigJson.readUint(".baseRate");
+        uint256 debtCeiling = deployConfigJson.readUint(".debtCeiling");
 
         console2.log("\n  Deploying xNGN contract");
         xNGN = new Currency("xNGN", "xNGN");
         console2.log("xNGN deployed successfully at address:", address(xNGN));
 
         console2.log("\n  Deploying vault contract");
-        vault = new Vault(xNGN, baseRate);
+        vault = new Vault(xNGN, baseRate, debtCeiling);
         console2.log("Vault deployed successfully at address:", address(vault));
 
         console2.log("\n  Deploying feed contract");

@@ -1,6 +1,7 @@
 {
   "name": "Base Testnet Deployment Config",
   "baseRate": "317097919",
+  "debtCeiling": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
   "collaterals": {
     "USDC": {
       "collateralAddress": "0xF175520C52418dfE19C8098071a252da48Cd1C19",

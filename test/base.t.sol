@@ -43,7 +43,7 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         usdc = ERC20(address(new ERC20Token("Circle USD", "USDC")));
 
-        vault = new Vault(xNGN, onePercentPerSecondInterestRate);
+        vault = new Vault(xNGN, onePercentPerSecondInterestRate, type(uint256).max);
 
         feed = new Feed(vault);
 
@@ -123,6 +123,7 @@ contract BaseTest is Test, ErrorsAndEvents {
             Vault.RateInfo memory rateInfo,
             uint256 paidFees,
             uint256 price,
+            uint256 debt,
             uint256 debtCeiling,
             uint256 collateralFloorPerPosition,
             uint256 additionalCollateralPrecision,
@@ -137,6 +138,7 @@ contract BaseTest is Test, ErrorsAndEvents {
             rateInfo,
             paidFees,
             price,
+            debt,
             debtCeiling,
             collateralFloorPerPosition,
             additionalCollateralPrecision,
