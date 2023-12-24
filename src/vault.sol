@@ -14,6 +14,7 @@ contract Vault is AccessControl, Pausable, IVault {
     bytes32 private constant STABILITY_MODULE_ROLE = keccak256("STABILITY_MODULE_ROLE");
     uint256 private constant PRECISION_DEGREE = 18;
     uint256 private constant PRECISION = 1 * (10 ** PRECISION_DEGREE);
+    uint256 private constant HUNDRED_PERCENTAGE = 100 * (10 ** PRECISION_DEGREE);
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e12; // assuming the oracle returns data with 6 decimal places
 
     Currency public immutable CURRENCY_TOKEN; // stableTokenAddress
@@ -466,7 +467,7 @@ contract Vault is AccessControl, Pausable, IVault {
         }
 
         uint256 _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
-        uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / PRECISION;
+        uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / HUNDRED_PERCENTAGE;
         uint256 _total = _collateralAmountCovered + _bonus;
 
         // To make liquidations always possible, if _vault.depositedCollateral not enough to pay bonus, give out highest possible bonus
@@ -623,7 +624,7 @@ contract Vault is AccessControl, Pausable, IVault {
         uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_collateral, _vault);
 
         // divUp as this benefits the protocol
-        return _divUp((_totalUserDebt * PRECISION), _collateralValueInCurrency);
+        return _divUp((_totalUserDebt * HUNDRED_PERCENTAGE), _collateralValueInCurrency);
     }
 
     /**
@@ -668,8 +669,9 @@ contract Vault is AccessControl, Pausable, IVault {
     {
         uint256 _totalCurrentAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
 
-        uint256 _accruedFees =
-            ((_totalCurrentAccumulatedRate - _vault.lastTotalAccumulatedRate) * _vault.borrowedAmount) / PRECISION;
+        uint256 _accruedFees = (
+            (_totalCurrentAccumulatedRate - _vault.lastTotalAccumulatedRate) * _vault.borrowedAmount
+        ) / HUNDRED_PERCENTAGE;
 
         return (_accruedFees, _totalCurrentAccumulatedRate);
     }

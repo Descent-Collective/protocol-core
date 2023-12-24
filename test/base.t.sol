@@ -11,6 +11,7 @@ contract BaseTest is Test, ErrorsAndEvents {
     bytes constant UNDERFLOW_OVERFLOW_PANIC_ERROR = abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 17);
 
     uint256 PRECISION = 1e18;
+    uint256 HUNDRED_PERCENTAGE = 100e18;
     Vault vault;
     Currency xNGN;
     ERC20 usdc;
@@ -21,9 +22,8 @@ contract BaseTest is Test, ErrorsAndEvents {
     address user3 = vm.addr(uint256(keccak256("User3")));
     address user4 = vm.addr(uint256(keccak256("User4")));
     address user5 = vm.addr(uint256(keccak256("User5")));
-    uint256 constant onePercentPerAnnum = 1;
-    uint256 onePercentPerSecondInterestRate = ((1e18 * onePercentPerAnnum) / 100) / 365 days;
-    uint256 oneAndHalfPercentPerSecondInterestRate = ((1.5e18 * onePercentPerAnnum) / 100) / 365 days;
+    uint256 onePercentPerSecondInterestRate = uint256(1e18) / 365 days;
+    uint256 oneAndHalfPercentPerSecondInterestRate = uint256(1.5e18) / 365 days;
 
     function labelAddresses() private {
         vm.label(owner, "Owner");
@@ -48,7 +48,7 @@ contract BaseTest is Test, ErrorsAndEvents {
         feed = new Feed(vault);
 
         vault.createCollateralType(
-            usdc, oneAndHalfPercentPerSecondInterestRate, 0.5e18, 0.1e18, type(uint256).max, 100e18
+            usdc, oneAndHalfPercentPerSecondInterestRate, 50e18, 10e18, type(uint256).max, 100e18
         );
         vault.updateFeedContract(address(feed));
         feed.mockUpdatePrice(address(usdc), 1000e6);
@@ -168,6 +168,6 @@ contract BaseTest is Test, ErrorsAndEvents {
             + (
                 (calculateCurrentTotalAccumulatedRate(usdc) - userVaultInfo.lastTotalAccumulatedRate)
                     * userVaultInfo.borrowedAmount
-            ) / PRECISION;
+            ) / HUNDRED_PERCENTAGE;
     }
 }

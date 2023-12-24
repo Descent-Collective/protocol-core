@@ -165,7 +165,7 @@ contract BurnCurrencyTest is BaseTest {
         uint256 accruedFees = (
             (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate)
                 * initialUserVaultInfo.borrowedAmount
-        ) / PRECISION;
+        ) / HUNDRED_PERCENTAGE;
 
         // it should accrue fees, per user, per collateral and globally
         assertEq(afterUserVaultInfo.accruedFees, initialUserVaultInfo.accruedFees + accruedFees);
@@ -207,7 +207,7 @@ contract BurnCurrencyTest is BaseTest {
         IVault.VaultInfo memory userVaultInfo = getVaultMapping(usdc, user1);
         userVaultInfo.accruedFees += (
             (calculateCurrentTotalAccumulatedRate(usdc) - userVaultInfo.lastTotalAccumulatedRate) * 500_000e18
-        ) / PRECISION;
+        ) / HUNDRED_PERCENTAGE;
 
         // accrued fees should be > 0
         assertTrue(userVaultInfo.accruedFees > 0);
@@ -250,7 +250,7 @@ contract BurnCurrencyTest is BaseTest {
         // get expected accrued fees
         uint256 accruedFees = (
             (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
-        ) / PRECISION;
+        ) / HUNDRED_PERCENTAGE;
 
         whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(500_000e18 + (accruedFees / 2));
     }
@@ -289,7 +289,7 @@ contract BurnCurrencyTest is BaseTest {
         // get expected accrued fees
         uint256 accruedFees = (
             (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
-        ) / PRECISION;
+        ) / HUNDRED_PERCENTAGE;
 
         whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(500_000e18 + accruedFees);
     }
@@ -328,7 +328,7 @@ contract BurnCurrencyTest is BaseTest {
         // get expected accrued fees
         uint256 accruedFees = (
             (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
-        ) / PRECISION;
+        ) / HUNDRED_PERCENTAGE;
 
         whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(500_000e18 + accruedFees);
     }
@@ -368,7 +368,7 @@ contract BurnCurrencyTest is BaseTest {
         // get expected accrued fees
         uint256 accruedFees = (
             (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
-        ) / PRECISION;
+        ) / HUNDRED_PERCENTAGE;
 
         whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(500_000e18 + (accruedFees / 2));
     }
@@ -411,7 +411,7 @@ contract BurnCurrencyTest is BaseTest {
         // get expected accrued fees
         uint256 accruedFees = (
             (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
-        ) / PRECISION;
+        ) / HUNDRED_PERCENTAGE;
 
         // it should accrue fees, per user, per collateral and globally
         assertEq(initialUserVaultInfo.accruedFees + accruedFees - fees, afterUserVaultInfo.accruedFees);

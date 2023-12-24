@@ -211,7 +211,7 @@ contract MintCurrencyTest is BaseTest {
             uint256 accruedFees = (
                 (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate)
                     * initialUserVaultInfo.borrowedAmount
-            ) / PRECISION;
+            ) / HUNDRED_PERCENTAGE;
 
             // it should update accrued fees for the user's position
             assertEq(initialUserVaultInfo.accruedFees + accruedFees, afterUserVaultInfo.accruedFees);
