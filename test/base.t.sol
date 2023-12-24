@@ -64,35 +64,35 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         labelAddresses();
 
-        allUsersApproveTokensForVault();
+        // allUsersApproveTokensForVault();
     }
 
-    function allUsersApproveTokensForVault() private {
-        vm.startPrank(user1);
-        usdc.approve(address(vault), type(uint256).max);
-        xNGN.approve(address(vault), type(uint256).max);
-        vm.stopPrank();
+    // function allUsersApproveTokensForVault() private {
+    //     vm.startPrank(user1);
+    //     usdc.approve(address(vault), type(uint256).max);
+    //     xNGN.approve(address(vault), type(uint256).max);
+    //     vm.stopPrank();
 
-        vm.startPrank(user2);
-        usdc.approve(address(vault), type(uint256).max);
-        xNGN.approve(address(vault), type(uint256).max);
-        vm.stopPrank();
+    //     vm.startPrank(user2);
+    //     usdc.approve(address(vault), type(uint256).max);
+    //     xNGN.approve(address(vault), type(uint256).max);
+    //     vm.stopPrank();
 
-        vm.startPrank(user3);
-        usdc.approve(address(vault), type(uint256).max);
-        xNGN.approve(address(vault), type(uint256).max);
-        vm.stopPrank();
+    //     vm.startPrank(user3);
+    //     usdc.approve(address(vault), type(uint256).max);
+    //     xNGN.approve(address(vault), type(uint256).max);
+    //     vm.stopPrank();
 
-        vm.startPrank(user4);
-        usdc.approve(address(vault), type(uint256).max);
-        xNGN.approve(address(vault), type(uint256).max);
-        vm.stopPrank();
+    //     vm.startPrank(user4);
+    //     usdc.approve(address(vault), type(uint256).max);
+    //     xNGN.approve(address(vault), type(uint256).max);
+    //     vm.stopPrank();
 
-        vm.startPrank(user5);
-        usdc.approve(address(vault), type(uint256).max);
-        xNGN.approve(address(vault), type(uint256).max);
-        vm.stopPrank();
-    }
+    //     vm.startPrank(user5);
+    //     usdc.approve(address(vault), type(uint256).max);
+    //     xNGN.approve(address(vault), type(uint256).max);
+    //     vm.stopPrank();
+    // }
 
     modifier useUser1() {
         vm.startPrank(user1);

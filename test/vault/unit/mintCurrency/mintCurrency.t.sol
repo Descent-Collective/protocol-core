@@ -11,7 +11,8 @@ contract MintCurrencyTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000e18);
+        usdc.transfer(address(vault), 1_000e18);
+        vault.depositCollateral(usdc, user1);
 
         vm.stopPrank();
     }
@@ -178,7 +179,6 @@ contract MintCurrencyTest is BaseTest {
         // cache pre storage vars and old accrued fees
         IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory initialCollateralInfo = getCollateralMapping(usdc);
-        uint256 initialAccruedFees = vault.accruedFees();
 
         // skip time to be able to check accrued interest;
         skip(1_000);
@@ -215,7 +215,6 @@ contract MintCurrencyTest is BaseTest {
 
             // it should update accrued fees for the user's position
             assertEq(initialUserVaultInfo.accruedFees + accruedFees, afterUserVaultInfo.accruedFees);
-            assertEq(initialAccruedFees + accruedFees, vault.accruedFees());
         }
 
         assertEq(afterCollateralInfo.totalBorrowedAmount, amount + initialCollateralInfo.totalBorrowedAmount);

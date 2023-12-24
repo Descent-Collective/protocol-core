@@ -17,6 +17,7 @@ interface IVault {
     error EthTransferFailed();
     error GlobalDebtCeilingExceeded();
     error CollateralDebtCeilingExceeded();
+    error InsufficientCurrencyAmountToPay();
 
     // ------------------------------------------------ EVENTS ------------------------------------------------
     event CollateralTypeAdded(address collateralAddress);

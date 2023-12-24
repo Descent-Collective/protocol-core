@@ -3,7 +3,7 @@ pragma solidity 0.8.21;
 
 //  ==========  External imports    ==========
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IMedian} from "./interfaces/IMedian.sol";
+import {IOSM} from "./interfaces/IOSM.sol";
 import {Vault} from "./vault.sol";
 import {IFeed} from "./interfaces/IFeed.sol";
 
@@ -14,7 +14,7 @@ contract Feed is IFeed, AccessControl {
     Vault public vault;
     uint256 public status; // Active status
 
-    mapping(address => IMedian) public collaterals;
+    mapping(address => IOSM) public collaterals;
 
     modifier whenNotPaused() {
         if (status == FALSE) revert Paused();
@@ -35,27 +35,20 @@ contract Feed is IFeed, AccessControl {
         status = TRUE;
     }
 
-    function setPriceOracleContract(address oracle, address collateral)
-        external
-        whenNotPaused
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        collaterals[collateral] = IMedian(oracle);
+    function setCollateralOSM(address oracle, address collateral) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        collaterals[collateral] = IOSM(oracle);
     }
 
     // Updates the price of a collateral in the accounting
     function updatePrice(address collateral) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
-        (, uint256 price) = collaterals[collateral].read();
-
+        uint256 price = collaterals[collateral].current();
+        if (price == 0) revert BadPrice();
         vault.updatePrice(collateral, price);
-
-        emit Read(collateral, price);
     }
 
     // Updates the price of a collateral in the accounting
     function mockUpdatePrice(address collateral, uint256 price) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (price == 0) revert BadPrice();
         vault.updatePrice(collateral, price);
-
-        emit Read(collateral, price);
     }
 }

@@ -11,7 +11,8 @@ contract LiquidateTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000e18);
+        usdc.transfer(address(vault), 1_000e18);
+        vault.depositCollateral(usdc, user1);
 
         // mint max amount
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
@@ -22,7 +23,8 @@ contract LiquidateTest is BaseTest {
         // deposit and mint with user 2, to be used for liquidation
         vm.stopPrank();
         vm.startPrank(user2);
-        vault.depositCollateral(usdc, user2, 10_000e18);
+        usdc.transfer(address(vault), 10_000e18);
+        vault.depositCollateral(usdc, user2);
         vault.mintCurrency(usdc, user2, user2, 5_000_000e18);
 
         vm.stopPrank();
@@ -38,7 +40,7 @@ contract LiquidateTest is BaseTest {
 
         // it should revert with custom error Paused()
         vm.expectRevert(Paused.selector);
-        vault.liquidate(usdc, user1, user2, 100_000e18);
+        vault.liquidate(usdc, user1, user2, false);
     }
 
     modifier whenVaultIsNotPaused() {
@@ -52,7 +54,7 @@ contract LiquidateTest is BaseTest {
         vm.expectRevert(CollateralDoesNotExist.selector);
 
         // call with non existing collateral
-        vault.liquidate(ERC20(address(11111)), user1, user2, 100_000e18);
+        vault.liquidate(ERC20(address(11111)), user1, user2, false);
     }
 
     modifier whenCollateralExists() {
@@ -61,15 +63,18 @@ contract LiquidateTest is BaseTest {
 
     function test_WhenTheVaultIsSafe() external whenVaultIsNotPaused whenCollateralExists useUser1 {
         // pay back some currency to make position safe
-        vault.burnCurrency(usdc, user1, 100_000e18);
+        xNGN.transfer(address(vault), 100_000e18);
+        vault.burnCurrency(usdc, user1);
 
         // use user 2
         vm.stopPrank();
         vm.startPrank(user2);
 
+        xNGN.transfer(address(vault), 100_000e18);
+
         // it should revert with custom error PositionIsSafe()
         vm.expectRevert(PositionIsSafe.selector);
-        vault.liquidate(usdc, user1, user2, 100_000e18);
+        vault.liquidate(usdc, user1, user2, false);
     }
 
     modifier whenTheVaultIsNotSafe() {
@@ -84,9 +89,11 @@ contract LiquidateTest is BaseTest {
     {
         vm.startPrank(user2);
 
+        xNGN.transfer(address(vault), 600_000e18);
+
         // it should revert with underflow error
         vm.expectRevert(UNDERFLOW_OVERFLOW_PANIC_ERROR);
-        vault.liquidate(usdc, user1, user2, 600_000e18);
+        vault.liquidate(usdc, user1, user2, false);
     }
 
     modifier whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees() {
@@ -102,24 +109,15 @@ contract LiquidateTest is BaseTest {
     {
         vm.startPrank(user2);
 
+        xNGN.transfer(address(vault), 1);
+
         // it should revert with custom error CollateralRatioNotImproved()
         vm.expectRevert(CollateralRatioNotImproved.selector);
-        vault.liquidate(usdc, user1, user2, 1);
+        vault.liquidate(usdc, user1, user2, false);
     }
 
     modifier whenVaultsCollateralRatioImprovesAfterLiquidation() {
         _;
-    }
-
-    function test_WhenThe_currencyAmountToPayIsUint256Max()
-        external
-        whenVaultIsNotPaused
-        whenCollateralExists
-        whenTheVaultIsNotSafe
-        whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees
-        whenVaultsCollateralRatioImprovesAfterLiquidation
-    {
-        liquidate_exhaustively(type(uint256).max);
     }
 
     function test_WhenThe_currencyAmountToPayIsNOTUint256Max_fullyCoveringFees()
@@ -130,11 +128,6 @@ contract LiquidateTest is BaseTest {
         whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees
         whenVaultsCollateralRatioImprovesAfterLiquidation
     {
-        /// fully cover fees
-        liquidate_exhaustively(0);
-    }
-
-    function liquidate_exhaustively(uint256 amount) private {
         vm.startPrank(user2);
 
         uint256 oldTotalSupply = xNGN.totalSupply();
@@ -147,8 +140,11 @@ contract LiquidateTest is BaseTest {
 
         uint256 userAccruedFees = calculateUserCurrentAccruedFees(usdc, user1);
         uint256 totalCurrencyPaid = initialUserVaultInfo.borrowedAmount + userAccruedFees;
-        uint256 collateralToPayOut = ((totalCurrencyPaid * initialCollateralInfo.price) * 1.1e18) / (1e18 * 1e12);
+        uint256 collateralToPayOut =
+            ((totalCurrencyPaid * initialCollateralInfo.price) * 110e18) / (HUNDRED_PERCENTAGE * 1e12);
         uint256 initialUser2Bal = usdc.balanceOf(user2);
+
+        xNGN.transfer(address(vault), totalCurrencyPaid);
 
         // it should emit Liquidated() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
@@ -163,8 +159,7 @@ contract LiquidateTest is BaseTest {
         emit FeesPaid(user1, userAccruedFees);
 
         // liquidate
-        amount = amount != type(uint256).max ? totalCurrencyPaid : type(uint256).max;
-        vault.liquidate(usdc, user1, user2, amount);
+        vault.liquidate(usdc, user1, user2, true);
 
         IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
@@ -198,7 +193,6 @@ contract LiquidateTest is BaseTest {
 
         // it should pay off all of vaults fees (set to be 0) and update the collateral and global accrued fees
         assertEq(afterUserVaultInfo.accruedFees, 0);
-        assertEq(vault.accruedFees(), 0);
     }
 
     function test_WhenThe_currencyAmountToPayIsNOTUint256Max_notCoveringFees()
@@ -224,6 +218,8 @@ contract LiquidateTest is BaseTest {
         uint256 collateralToPayOut = ((totalCurrencyPaid * initialCollateralInfo.price) * 1.1e18) / (1e18 * 1e12);
         uint256 initialUser2Bal = usdc.balanceOf(user2);
 
+        xNGN.transfer(address(vault), totalCurrencyPaid);
+
         // it should emit Liquidated() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
         emit Liquidated(user1, user2, totalCurrencyPaid, collateralToPayOut);
@@ -233,7 +229,7 @@ contract LiquidateTest is BaseTest {
         emit CurrencyBurned(user1, initialUserVaultInfo.borrowedAmount);
 
         // liquidate
-        vault.liquidate(usdc, user1, user2, totalCurrencyPaid);
+        vault.liquidate(usdc, user1, user2, false);
 
         IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
@@ -266,9 +262,8 @@ contract LiquidateTest is BaseTest {
         assertEq(afterCollateralInfo.paidFees, initialCollateralInfo.paidFees);
 
         // it should pay off all of or part of the vaults fees
-        // it should update the vaults, collateral and global accrued fees
+        // it should update the vaults
         assertEq(afterUserVaultInfo.accruedFees, userAccruedFees);
-        assertEq(vault.accruedFees(), userAccruedFees);
     }
 
     function test_WhenThe_currencyAmountToPayIsNOTUint256Max_partiallyCoveringFees()
@@ -294,6 +289,8 @@ contract LiquidateTest is BaseTest {
         uint256 collateralToPayOut = ((totalCurrencyPaid * initialCollateralInfo.price) * 1.1e18) / (1e18 * 1e12);
         uint256 initialUser2Bal = usdc.balanceOf(user2);
 
+        xNGN.transfer(address(vault), totalCurrencyPaid);
+
         // it should emit Liquidated() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
         emit Liquidated(user1, user2, totalCurrencyPaid, collateralToPayOut);
@@ -307,7 +304,7 @@ contract LiquidateTest is BaseTest {
         emit FeesPaid(user1, totalCurrencyPaid - initialUserVaultInfo.borrowedAmount);
 
         // liquidate
-        vault.liquidate(usdc, user1, user2, totalCurrencyPaid);
+        vault.liquidate(usdc, user1, user2, false);
 
         IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
@@ -340,8 +337,7 @@ contract LiquidateTest is BaseTest {
         assertEq(afterCollateralInfo.paidFees, initialCollateralInfo.paidFees + (userAccruedFees / 2));
 
         // it should pay off all of or part of the vaults fees
-        // it should update the vaults, collateral and global accrued fees
+        // it should update the vaults
         assertEq(afterUserVaultInfo.accruedFees, userAccruedFees - (userAccruedFees / 2));
-        assertEq(vault.accruedFees(), userAccruedFees - (userAccruedFees / 2));
     }
 }

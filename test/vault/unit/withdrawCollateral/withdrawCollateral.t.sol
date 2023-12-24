@@ -11,7 +11,8 @@ contract WithdrawCollateralTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000e18);
+        usdc.transfer(address(vault), 1_000e18);
+        vault.depositCollateral(usdc, user1);
 
         vm.stopPrank();
     }
@@ -155,7 +156,6 @@ contract WithdrawCollateralTest is BaseTest {
         // cache pre storage vars and old accrued fees
         IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory initialCollateralInfo = getCollateralMapping(usdc);
-        uint256 initialAccruedFees = vault.accruedFees();
 
         // take a loan of xNGN to be able to calculate fees acrrual
         uint256 amountMinted = 100_000e18;
@@ -186,7 +186,6 @@ contract WithdrawCollateralTest is BaseTest {
 
         // it should update accrued fees for the user's position
         assertEq(initialUserVaultInfo.accruedFees + accruedFees, afterUserVaultInfo.accruedFees);
-        assertEq(initialAccruedFees + accruedFees, vault.accruedFees());
 
         // it should update the storage vars correctly
         assertEq(afterCollateralInfo.totalDepositedCollateral, initialCollateralInfo.totalDepositedCollateral - amount);
