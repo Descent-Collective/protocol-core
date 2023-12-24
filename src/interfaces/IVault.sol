@@ -44,7 +44,6 @@ interface IVault {
         RateInfo rateInfo;
         uint256 paidFees; // total unwithdrawn paid fees
         uint256 price; // Price with precision of 6 decimal places
-        uint256 debt;
         uint256 debtCeiling; // Debt Ceiling
         uint256 collateralFloorPerPosition; // Debt floor per position to always make liquidations profitable after gas fees
         uint256 additionalCollateralPrecision; // precision scaler. basically `18 - decimal of token`

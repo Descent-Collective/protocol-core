@@ -401,7 +401,7 @@ contract Vault is AccessControl, Pausable, IVault {
 
         // check that global and collateral debt ceilings are not exceedded
         if (debt + _amount > debtCeiling) revert GlobalDebtCeilingExceeded();
-        if (_collateral.debt + _amount > _collateral.debtCeiling) revert CollateralDebtCeilingExceeded();
+        if (_collateral.totalBorrowedAmount + _amount > _collateral.debtCeiling) revert CollateralDebtCeilingExceeded();
 
         // short circuit conditional to optimize all interactions after the first one.
         // need to accrue fees first in order to use updated fees for collateral ratio calculation below
@@ -539,7 +539,6 @@ contract Vault is AccessControl, Pausable, IVault {
     {
         _vault.borrowedAmount += _amount;
         _collateral.totalBorrowedAmount += _amount;
-        _collateral.debt += _amount;
         debt += _amount;
 
         CURRENCY_TOKEN.mint(_to, _amount);
@@ -563,7 +562,6 @@ contract Vault is AccessControl, Pausable, IVault {
         if (_amount <= _vault.borrowedAmount) {
             _vault.borrowedAmount -= _amount;
             _collateral.totalBorrowedAmount -= _amount;
-            _collateral.debt -= _amount;
             debt -= _amount;
 
             emit CurrencyBurned(_owner, _amount);
@@ -573,7 +571,6 @@ contract Vault is AccessControl, Pausable, IVault {
 
             _vault.borrowedAmount = 0;
             _collateral.totalBorrowedAmount -= _cacheBorrowedAmount;
-            _collateral.debt -= _cacheBorrowedAmount;
             debt -= _cacheBorrowedAmount;
 
             emit CurrencyBurned(_owner, _cacheBorrowedAmount);
