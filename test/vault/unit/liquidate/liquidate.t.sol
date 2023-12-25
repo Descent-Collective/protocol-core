@@ -187,9 +187,8 @@ contract LiquidateTest is BaseTest {
         // it should pay off all of vaults borrowed amount
         assertEq(afterUserVaultInfo.borrowedAmount, 0);
 
-        // it should update the global paid fees and collateral paid fees
+        // it should update the global paid fees
         assertEq(vault.paidFees(), initialPaidFees + userAccruedFees);
-        assertEq(afterCollateralInfo.paidFees, initialCollateralInfo.paidFees + userAccruedFees);
 
         // it should pay off all of vaults fees (set to be 0) and update the collateral and global accrued fees
         assertEq(afterUserVaultInfo.accruedFees, 0);
@@ -257,9 +256,8 @@ contract LiquidateTest is BaseTest {
         // it should pay off all of or part of the vaults borrowed amount
         assertEq(afterUserVaultInfo.borrowedAmount, initialUserVaultInfo.borrowedAmount - 500_000e18);
 
-        // it should update the global paid fees and collateral paid fees
+        // it should update the global paid fees
         assertEq(vault.paidFees(), initialPaidFees);
-        assertEq(afterCollateralInfo.paidFees, initialCollateralInfo.paidFees);
 
         // it should pay off all of or part of the vaults fees
         // it should update the vaults
@@ -332,9 +330,8 @@ contract LiquidateTest is BaseTest {
         // it should pay off all of or part of the vaults borrowed amount
         assertEq(afterUserVaultInfo.borrowedAmount, initialUserVaultInfo.borrowedAmount - 500_000e18);
 
-        // it should update the global paid fees and collateral paid fees
+        // it should update the global paid fees
         assertEq(vault.paidFees(), initialPaidFees + (userAccruedFees / 2));
-        assertEq(afterCollateralInfo.paidFees, initialCollateralInfo.paidFees + (userAccruedFees / 2));
 
         // it should pay off all of or part of the vaults fees
         // it should update the vaults

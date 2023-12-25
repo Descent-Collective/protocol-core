@@ -63,36 +63,7 @@ contract BaseTest is Test, ErrorsAndEvents {
         vm.stopPrank();
 
         labelAddresses();
-
-        // allUsersApproveTokensForVault();
     }
-
-    // function allUsersApproveTokensForVault() private {
-    //     vm.startPrank(user1);
-    //     usdc.approve(address(vault), type(uint256).max);
-    //     xNGN.approve(address(vault), type(uint256).max);
-    //     vm.stopPrank();
-
-    //     vm.startPrank(user2);
-    //     usdc.approve(address(vault), type(uint256).max);
-    //     xNGN.approve(address(vault), type(uint256).max);
-    //     vm.stopPrank();
-
-    //     vm.startPrank(user3);
-    //     usdc.approve(address(vault), type(uint256).max);
-    //     xNGN.approve(address(vault), type(uint256).max);
-    //     vm.stopPrank();
-
-    //     vm.startPrank(user4);
-    //     usdc.approve(address(vault), type(uint256).max);
-    //     xNGN.approve(address(vault), type(uint256).max);
-    //     vm.stopPrank();
-
-    //     vm.startPrank(user5);
-    //     usdc.approve(address(vault), type(uint256).max);
-    //     xNGN.approve(address(vault), type(uint256).max);
-    //     vm.stopPrank();
-    // }
 
     modifier useUser1() {
         vm.startPrank(user1);
@@ -121,12 +92,10 @@ contract BaseTest is Test, ErrorsAndEvents {
             uint256 liquidationThreshold,
             uint256 liquidationBonus,
             Vault.RateInfo memory rateInfo,
-            uint256 paidFees,
             uint256 price,
             uint256 debtCeiling,
             uint256 collateralFloorPerPosition,
-            uint256 additionalCollateralPrecision,
-            bool exists
+            uint256 additionalCollateralPrecision
         ) = vault.collateralMapping(_collateralToken);
 
         return IVault.CollateralInfo(
@@ -135,12 +104,10 @@ contract BaseTest is Test, ErrorsAndEvents {
             liquidationThreshold,
             liquidationBonus,
             rateInfo,
-            paidFees,
             price,
             debtCeiling,
             collateralFloorPerPosition,
-            additionalCollateralPrecision,
-            exists
+            additionalCollateralPrecision
         );
     }
 

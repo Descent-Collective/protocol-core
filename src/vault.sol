@@ -42,7 +42,7 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev reverts if the collateral does not exist
      */
     modifier collateralExists(ERC20 _collateralToken) {
-        if (!collateralMapping[_collateralToken].exists) revert CollateralDoesNotExist();
+        if (collateralMapping[_collateralToken].rateInfo.rate == 0) revert CollateralDoesNotExist();
         _;
     }
 
@@ -147,7 +147,7 @@ contract Vault is AccessControl, Pausable, IVault {
      *
      * @dev should revert if contract is paused
      *      should revert if the caller does not have the `DEFAULT_ADMIN_ROLE` role
-     *      should revert if the collateral already exists, i.e if _collateral.exists returns true
+     *      should revert if the collateral already exists, i.e if _collateral.rateInfo.rate == 0
      */
     function createCollateralType(
         ERC20 _collateralToken,
@@ -158,7 +158,7 @@ contract Vault is AccessControl, Pausable, IVault {
         uint256 _collateralFloorPerPosition
     ) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
-        if (_collateral.exists) revert CollateralAlreadyExists();
+        if (_collateral.rateInfo.rate != 0) revert CollateralAlreadyExists();
 
         _collateral.rateInfo.rate = _rate;
         _collateral.rateInfo.lastUpdateTime = block.timestamp;
@@ -167,7 +167,6 @@ contract Vault is AccessControl, Pausable, IVault {
         _collateral.debtCeiling = _debtCeiling;
         _collateral.collateralFloorPerPosition = _collateralFloorPerPosition;
         _collateral.additionalCollateralPrecision = PRECISION_DEGREE - _collateralToken.decimals();
-        _collateral.exists = true;
 
         emit CollateralTypeAdded(address(_collateralToken));
     }
@@ -270,7 +269,6 @@ contract Vault is AccessControl, Pausable, IVault {
     /**
      * @notice allows the stability module to withdraw fees that have been paid on borrowed currency
      *
-     * @param _collateralToken contract address of collateral token to withdraw from it's paid fees
      * @param _amount amount of fees to withdraw
      *
      * @dev updates the paidFees for the collateral and globally then transfers the token to the caller
@@ -278,13 +276,7 @@ contract Vault is AccessControl, Pausable, IVault {
      *      should revert if the caller does not have the `STABILITY_MODULE_ROLE` role
      *      should revert if the collateral does not exist
      */
-    function withdrawFees(ERC20 _collateralToken, uint256 _amount)
-        external
-        whenNotPaused
-        onlyRole(STABILITY_MODULE_ROLE)
-        collateralExists(_collateralToken)
-    {
-        collateralMapping[_collateralToken].paidFees -= _amount;
+    function withdrawFees(uint256 _amount) external whenNotPaused onlyRole(STABILITY_MODULE_ROLE) {
         paidFees -= _amount;
 
         CURRENCY_TOKEN.transfer(msg.sender, _amount);
@@ -361,8 +353,6 @@ contract Vault is AccessControl, Pausable, IVault {
         // need to accrue fees first in order to use updated fees for collateral ratio calculation below
         _accrueFees(_collateral, _vault);
 
-        emit CollateralWithdrawn(_owner, _to, _amount);
-
         _withdrawCollateral(_collateralToken, _owner, _to, _amount);
 
         _revertIfCollateralRatioIsAboveLiquidationThreshold(_collateral, _vault);
@@ -406,8 +396,7 @@ contract Vault is AccessControl, Pausable, IVault {
         if (_vault.borrowedAmount != 0) _accrueFees(_collateral, _vault);
         else _vault.lastTotalAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
 
-        emit CurrencyMinted(_owner, _amount);
-        _mintCurrency(_collateral, _vault, _to, _amount);
+        _mintCurrency(_collateral, _vault, _owner, _to, _amount);
 
         _revertIfCollateralRatioIsAboveLiquidationThreshold(_collateral, _vault);
     }
@@ -506,7 +495,7 @@ contract Vault is AccessControl, Pausable, IVault {
     /**
      * @dev deposits collateral from `_owner` into this contract and updates the vaults depositedCollateral and collateral's totalDepositedCollateral
      */
-    function _depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount) internal {
+    function _depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount) private {
         vaultMapping[_collateralToken][_owner].depositedCollateral += _amount;
         collateralMapping[_collateralToken].totalDepositedCollateral += _amount;
 
@@ -518,10 +507,11 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev reverts if `_amount` is greater than the vaults depositedCollateral
      *      reverts if safeTransfer() fails
      */
-    function _withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount) internal {
+    function _withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount) private {
         vaultMapping[_collateralToken][_owner].depositedCollateral -= _amount;
         collateralMapping[_collateralToken].totalDepositedCollateral -= _amount;
 
+        emit CollateralWithdrawn(_owner, _to, _amount);
         SafeERC20.safeTransfer(_collateralToken, _to, _amount);
     }
 
@@ -529,13 +519,18 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev mints currency to `_to` and updates the vaults borrowedAmount and collateral's totalBorrowedAmount
      * @dev reverts if CURRENCY_TOKEN.mint() fails
      */
-    function _mintCurrency(CollateralInfo storage _collateral, VaultInfo storage _vault, address _to, uint256 _amount)
-        internal
-    {
+    function _mintCurrency(
+        CollateralInfo storage _collateral,
+        VaultInfo storage _vault,
+        address _owner,
+        address _to,
+        uint256 _amount
+    ) private {
         _vault.borrowedAmount += _amount;
         _collateral.totalBorrowedAmount += _amount;
         debt += _amount;
 
+        emit CurrencyMinted(_owner, _amount);
         CURRENCY_TOKEN.mint(_to, _amount);
     }
 
@@ -551,7 +546,7 @@ contract Vault is AccessControl, Pausable, IVault {
         VaultInfo storage _vault,
         address _owner,
         uint256 _amount
-    ) internal {
+    ) private {
         // if _amount > _vault.borrowedAmount, subtract _amount from _vault.borrowedAmount and _vault.accruedFees else subtract from only _vault.borrowedAmount
         if (_amount <= _vault.borrowedAmount) {
             _vault.borrowedAmount -= _amount;
@@ -570,7 +565,7 @@ contract Vault is AccessControl, Pausable, IVault {
             emit CurrencyBurned(_owner, _cacheBorrowedAmount);
             CURRENCY_TOKEN.burn(address(this), _cacheBorrowedAmount);
 
-            _payAccruedFees(_collateral, _vault, _owner, _amount - _cacheBorrowedAmount);
+            _payAccruedFees(_vault, _owner, _amount - _cacheBorrowedAmount);
         }
     }
 
@@ -578,15 +573,8 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev used to move `_amount` of accrued fees from accruedFees vault and global variables to the vault's and collateral's paidFees variables and then transfer the fee from the user to this contract
      * @dev reverts if `_amount` is greater than the vault's accruedFees
      */
-    function _payAccruedFees(
-        CollateralInfo storage _collateral,
-        VaultInfo storage _vault,
-        address _owner,
-        uint256 _amount
-    ) internal {
+    function _payAccruedFees(VaultInfo storage _vault, address _owner, uint256 _amount) private {
         _vault.accruedFees -= _amount;
-
-        _collateral.paidFees += _amount;
         paidFees += _amount;
 
         emit FeesPaid(_owner, _amount);
@@ -596,7 +584,7 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev increments accrued fees of a vault by it's accrued fees since it's`_vault.lastUpdateTime`.
      * @dev should never revert!
      */
-    function _accrueFees(CollateralInfo storage _collateral, VaultInfo storage _vault) internal {
+    function _accrueFees(CollateralInfo storage _collateral, VaultInfo storage _vault) private {
         (uint256 _accruedFees, uint256 _currentTotalAccumulatedRate) = _calculateAccruedFees(_collateral, _vault);
         _vault.lastTotalAccumulatedRate = _currentTotalAccumulatedRate;
 
@@ -611,7 +599,7 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev should never revert!
      */
     function _getCollateralRatio(CollateralInfo storage _collateral, VaultInfo storage _vault)
-        internal
+        private
         view
         returns (uint256)
     {
@@ -637,7 +625,7 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev should never revert!
      */
     function _getCurrencyValueOfCollateral(CollateralInfo storage _collateral, VaultInfo storage _vault)
-        internal
+        private
         view
         returns (uint256)
     {
@@ -653,7 +641,7 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev should never revert!
      */
     function _getCollateralAmountFromCurrencyValue(CollateralInfo storage _collateral, uint256 _amount)
-        internal
+        private
         view
         returns (uint256)
     {
@@ -668,7 +656,7 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev should never revert!
      */
     function _calculateAccruedFees(CollateralInfo storage _collateral, VaultInfo storage _vault)
-        internal
+        private
         view
         returns (uint256, uint256)
     {
@@ -685,11 +673,7 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev returns the current total accumulated rate i.e current accumulated base rate + current accumulated collateral rate of the given collateral
      * @dev should never revert!
      */
-    function _calculateCurrentTotalAccumulatedRate(CollateralInfo storage _collateral)
-        internal
-        view
-        returns (uint256)
-    {
+    function _calculateCurrentTotalAccumulatedRate(CollateralInfo storage _collateral) private view returns (uint256) {
         // calculates pending collateral rate and adds it to the last stored collateral rate
         uint256 _collateralCurrentAccumulatedRate = _collateral.rateInfo.accumulatedRate
             + (_collateral.rateInfo.rate * (block.timestamp - _collateral.rateInfo.lastUpdateTime));
@@ -707,7 +691,7 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev should never revert!
      */
     function _scaleCollateralToExpectedPrecision(CollateralInfo storage _collateral, uint256 amount)
-        internal
+        private
         view
         returns (uint256)
     {
@@ -720,7 +704,7 @@ contract Vault is AccessControl, Pausable, IVault {
     function _revertIfCollateralRatioIsAboveLiquidationThreshold(
         CollateralInfo storage _collateral,
         VaultInfo storage _vault
-    ) internal view {
+    ) private view {
         if (_getCollateralRatio(_collateral, _vault) > _collateral.liquidationThreshold) revert BadCollateralRatio();
     }
 

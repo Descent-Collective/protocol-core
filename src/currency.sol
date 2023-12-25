@@ -8,7 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ICurrency} from "./interfaces/ICurrency.sol";
 
 contract Currency is AccessControl, ERC20Permit, ICurrency {
-    bytes32 constant MINTER_BURNER_ROLE = keccak256("MINTER_BURNER_ROLE"); // Create a new role identifier for the minter role
+    bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE"); // Create a new role identifier for the minter role
     address public constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3; // permit2 contract
 
     bool public permit2Enabled; // if permit 2 is enabled by default or not
@@ -23,7 +23,7 @@ contract Currency is AccessControl, ERC20Permit, ICurrency {
      * @param account address for the minter role
      */
     function setMinterRole(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _grantRole(MINTER_BURNER_ROLE, account);
+        _grantRole(MINTER_ROLE, account);
     }
 
     /**
@@ -31,7 +31,7 @@ contract Currency is AccessControl, ERC20Permit, ICurrency {
      * @param account address to send the minted tokens to
      * @param amount amount of tokens to mint
      */
-    function mint(address account, uint256 amount) external onlyRole(MINTER_BURNER_ROLE) returns (bool) {
+    function mint(address account, uint256 amount) external onlyRole(MINTER_ROLE) returns (bool) {
         _mint(account, amount);
         return true;
     }
@@ -41,7 +41,7 @@ contract Currency is AccessControl, ERC20Permit, ICurrency {
      * @param account address to burn tokens from
      * @param amount amount of tokens to burn
      */
-    function burn(address account, uint256 amount) external onlyRole(MINTER_BURNER_ROLE) returns (bool) {
+    function burn(address account, uint256 amount) external returns (bool) {
         _burn(account, amount);
         return true;
     }

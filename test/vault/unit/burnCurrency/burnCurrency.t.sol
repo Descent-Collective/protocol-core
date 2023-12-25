@@ -192,7 +192,6 @@ contract BurnCurrencyTest is BaseTest {
         assertEq(xNGN.totalSupply(), initialTotalSupply - amount);
 
         // it should not pay any accrued fees
-        assertEq(initialCollateralInfo.paidFees, afterCollateralInfo.paidFees);
         assertEq(initialPaidFees, vault.paidFees());
     }
 
@@ -446,8 +445,7 @@ contract BurnCurrencyTest is BaseTest {
         assertEq(xNGN.balanceOf(payer), initialUserBalance - amount);
         assertEq(xNGN.totalSupply(), initialTotalSupply - (amount - fees));
 
-        // it should update collateral paid fees, global paid fees
-        assertEq(initialCollateralInfo.paidFees, afterCollateralInfo.paidFees - fees);
+        // it should update global paid fees
         assertEq(initialPaidFees, vault.paidFees() - fees);
     }
 }

@@ -35,12 +35,12 @@ contract Feed is IFeed, AccessControl {
         status = TRUE;
     }
 
-    function setCollateralOSM(address oracle, address collateral) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setCollateralOSM(address collateral, address oracle) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         collaterals[collateral] = IOSM(oracle);
     }
 
     // Updates the price of a collateral in the accounting
-    function updatePrice(address collateral) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function updatePrice(address collateral) external whenNotPaused {
         uint256 price = collaterals[collateral].current();
         if (price == 0) revert BadPrice();
         vault.updatePrice(collateral, price);
