@@ -11,7 +11,6 @@ import {Pausable} from "./helpers/pausable.sol";
 
 contract Vault is AccessControl, Pausable, IVault {
     bytes32 private constant FEED_CONTRACT_ROLE = keccak256("FEED_CONTRACT_ROLE");
-    bytes32 private constant STABILITY_MODULE_ROLE = keccak256("STABILITY_MODULE_ROLE");
     uint256 private constant PRECISION_DEGREE = 18;
     uint256 private constant PRECISION = 1 * (10 ** PRECISION_DEGREE);
     uint256 private constant HUNDRED_PERCENTAGE = 100 * (10 ** PRECISION_DEGREE);
@@ -19,6 +18,7 @@ contract Vault is AccessControl, Pausable, IVault {
 
     Currency public immutable CURRENCY_TOKEN; // stableTokenAddress
 
+    address public stabilityModule; // stability module
     RateInfo public baseRateInfo; // base rate info
     uint256 public debtCeiling; // global debt ceiling
     uint256 public debt; // sum of all currency minted
@@ -87,13 +87,13 @@ contract Vault is AccessControl, Pausable, IVault {
     }
 
     /**
-     * @notice updates the address allowed to perform actions requiring caller to have the `STABILITY_MODULE_ROLE` role
+     * @notice updates the address fees are sent to
      *
      * @dev reverts if the contract is paused
      * @dev reverts if msg.sender does not have the `DEFAULT_ADMIN_ROLE` role
      */
     function updateStabilityModule(address _stabilityModule) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
-        _grantRole(STABILITY_MODULE_ROLE, _stabilityModule);
+        stabilityModule = _stabilityModule;
     }
 
     /**
@@ -273,10 +273,12 @@ contract Vault is AccessControl, Pausable, IVault {
      *
      * @dev updates the paidFees for the collateral and globally then transfers the token to the caller
      * @dev should revert if the contract is paused
-     *      should revert if the caller does not have the `STABILITY_MODULE_ROLE` role
-     *      should revert if the collateral does not exist
+     *      should revert if _amount is smaller than paidFees
      */
-    function withdrawFees(uint256 _amount) external whenNotPaused onlyRole(STABILITY_MODULE_ROLE) {
+    function withdrawFees(uint256 _amount) external whenNotPaused {
+        address _stabilityModule = stabilityModule;
+        if (_stabilityModule == address(0)) revert InvalidStabilityModule();
+
         paidFees -= _amount;
 
         CURRENCY_TOKEN.transfer(msg.sender, _amount);
@@ -312,13 +314,11 @@ contract Vault is AccessControl, Pausable, IVault {
      *
      * @dev should revert if the contract is paused
      *      should revert if the collateral does not exist
-     *      should revert if the caller is not the `_owner` and not also not relied upon
      */
     function depositCollateral(ERC20 _collateralToken, address _owner)
         external
         whenNotPaused
         collateralExists(_collateralToken)
-        onlyOwnerOrReliedUpon(_owner)
     {
         // expects token to already be transferred
         uint256 _amount =
@@ -410,14 +410,12 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev we accrue fees here to enable full payment of both borrowed amount and fees in one function. This way unupdated accrued fees are accounted for too and can be paid back
      * @dev should revert if the contract is paused
      *      should revert if the collateral does not exist
-     *      should revert if the caller is not the `_owner` and not also not relied upon
      *      should revert if the amount of currency to burn / pay back is more than `borrowed amount + total accrued fees`
      */
     function burnCurrency(ERC20 _collateralToken, address _owner)
         external
         whenNotPaused
         collateralExists(_collateralToken)
-        onlyOwnerOrReliedUpon(_owner)
     {
         VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
@@ -440,9 +438,9 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev should revert if the contract is paused
      *      should revert if the collateral does not exist
      *      should revert if the vault is not under-water
-     *      should revert if liqudiation did not strictly imporve the collateral ratio of the vault
+     *      should revert if liqudiation did not strictly improve the collateral ratio of the vault
      */
-    function liquidate(ERC20 _collateralToken, address _owner, address _to, bool isFullLiquidation)
+    function liquidate(ERC20 _collateralToken, address _owner, address _to, bool _isFullLiquidation)
         external
         whenNotPaused
         collateralExists(_collateralToken)
@@ -467,7 +465,7 @@ contract Vault is AccessControl, Pausable, IVault {
         // themselves but partially, (by 1 wei of collateral is enough) which causes underflow when the liquidator's tx is to be executed
         // With this, liquidators can parse in type(uint256).max to liquidate everything regardless of the current borrowed amount.
         uint256 _totalDebt = _vault.borrowedAmount + _vault.accruedFees;
-        if (isFullLiquidation && _currencyAmountToPay < _totalDebt) revert InsufficientCurrencyAmountToPay();
+        if (_isFullLiquidation && _currencyAmountToPay < _totalDebt) revert InsufficientCurrencyAmountToPay();
 
         uint256 _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
         uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / HUNDRED_PERCENTAGE;

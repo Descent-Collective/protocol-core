@@ -18,6 +18,7 @@ interface IVault {
     error GlobalDebtCeilingExceeded();
     error CollateralDebtCeilingExceeded();
     error InsufficientCurrencyAmountToPay();
+    error InvalidStabilityModule();
 
     // ------------------------------------------------ EVENTS ------------------------------------------------
     event CollateralTypeAdded(address collateralAddress);
