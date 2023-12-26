@@ -40,15 +40,12 @@ contract DepositCollateralTest is BaseTest {
 
     function test_WhenCallerIsNotOwnerAndNotReliedUponByOwner() external whenVaultIsNotPaused whenCollateralExist {
         // use unrelied upon user2
-        vm.prank(user2);
+        vm.startPrank(user2);
 
-        usdc.transfer(address(vault), 1_000e18);
-
-        // it should revert with custom error NotOwnerOrReliedUpon()
-        vm.expectRevert(NotOwnerOrReliedUpon.selector);
-
-        // call and try to interact with user1 vault with address user1 does not rely on
-        vault.depositCollateral(usdc, user1);
+        // it should emit CollateralDeposited() event
+        // it should update the _owner's deposited collateral and collateral's total deposit
+        // it should send the collateral token to the vault from the _owner
+        whenCallerIsOwnerOrReliedUponByOwner(user2);
     }
 
     function test_WhenCallerIsReliedUponByOwner()
