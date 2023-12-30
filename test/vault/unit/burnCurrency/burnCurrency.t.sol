@@ -11,26 +11,37 @@ contract BurnCurrencyTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        usdc.transfer(address(vault), 1_000e18);
-        vault.depositCollateral(usdc, user1);
+        vault.depositCollateral(usdc, user1, 1_000e18);
 
         // mint max amount of xNGN allowed given my collateral deposited
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
 
-        // mint xngn for user2 to take actions for user1
+        vm.stopPrank();
+
+        // get xNGN for testing burn for
         vm.startPrank(user2);
 
         // deposit amount to be used when testing
-        usdc.transfer(address(vault), 1_000e18);
-        vault.depositCollateral(usdc, user2);
+        vault.depositCollateral(usdc, user2, 10_000e18);
 
         // mint max amount of xNGN allowed given my collateral deposited
-        vault.mintCurrency(usdc, user2, user2, 500_000e18);
+        vault.mintCurrency(usdc, user2, user2, 5_000_000e18);
+
+        vm.stopPrank();
+
+        // get xNGN for testing burn for
+        vm.startPrank(user3);
+
+        // deposit amount to be used when testing
+        vault.depositCollateral(usdc, user3, 10_000e18);
+
+        // mint max amount of xNGN allowed given my collateral deposited
+        vault.mintCurrency(usdc, user3, user3, 5_000_000e18);
 
         vm.stopPrank();
     }
 
-    function test_WhenVaultIsPaused() external useUser1 {
+    function test_WhenVaultIsPaused(ERC20 collateral, address user, uint256 amount) external useUser1 {
         // pause vault
         vm.stopPrank();
         vm.prank(owner);
@@ -38,40 +49,68 @@ contract BurnCurrencyTest is BaseTest {
         // pause vault
         vault.pause();
 
-        vm.startPrank(user1);
-
         // it should revert with custom error Paused()
-        xNGN.transfer(address(vault), 500_000e18);
         vm.expectRevert(Paused.selector);
-        vault.burnCurrency(usdc, user1);
+        vault.burnCurrency(collateral, user, amount);
     }
 
     modifier whenVaultIsNotPaused() {
         _;
     }
 
-    function test_WhenCollateralDoesNotExist() external whenVaultIsNotPaused useUser1 {
-        xNGN.transfer(address(vault), 500_000e18);
+    function test_WhenCollateralDoesNotExist(ERC20 collateral, address user, uint256 amount)
+        external
+        whenVaultIsNotPaused
+        useUser1
+    {
+        if (collateral == usdc) collateral = ERC20(address(uint160(uint256(uint160(address(usdc)))) + 1));
 
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);
 
         // call with non existing collateral
-        vault.burnCurrency(ERC20(address(11111)), user1);
+        vault.burnCurrency(collateral, user, amount);
     }
 
     modifier whenCollateralExists() {
         _;
     }
 
-    function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_useNonReliedOnForUser1()
-        external
-        whenVaultIsNotPaused
-        whenCollateralExists
-    {
-        // use unrelied upon user2
+    function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_useUser1(
+        uint256 amount,
+        uint256 timeElapsed
+    ) external whenVaultIsNotPaused whenCollateralExists useUser1 {
+        // it should accrue fees
+        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
+        // it should pay back part of or all of the borrowed amount
+        // it should update the owner's accrued fees, collateral accrued fees and paid fees and global accrued fees and paid fees
+        // it should not pay any accrued fees
+
+        amount = bound(amount, 0, 500_000e18);
+        whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(user1, amount, timeElapsed);
+    }
+
+    function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_useReliedOnForUser1(
+        uint256 amount,
+        uint256 timeElapsed
+    ) external whenVaultIsNotPaused whenCollateralExists useReliedOnForUser1(user2) {
+        // it should accrue fees
+        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
+        // it should pay back part of or all of the borrowed amount
+        // it should update the owner's accrued fees, collateral accrued fees and paid fees and global accrued fees and paid fees
+        // it should not pay any accrued fees
+
+        amount = bound(amount, 0, 500_000e18);
+        whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(user2, amount, timeElapsed);
+    }
+
+    function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_useNonReliedOnForUser1(
+        uint256 amount,
+        uint256 timeElapsed
+    ) external whenVaultIsNotPaused whenCollateralExists {
         vm.startPrank(user2);
-
         // it should accrue fees
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
         // it should update the owner's borrowed amount, collateral borrowed amount and global debt
@@ -79,113 +118,35 @@ contract BurnCurrencyTest is BaseTest {
         // it should update the owner's accrued fees, collateral accrued fees and paid fees and global accrued fees and paid fees
         // it should not pay any accrued fees
 
-        whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(user2, 250_000e18);
+        amount = bound(amount, 0, 500_000e18);
+        whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(user2, amount, timeElapsed);
     }
 
-    function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_exhaustive_useNonReliedOnForUser11()
-        external
-        whenVaultIsNotPaused
-        whenCollateralExists
-    {
-        // use unrelied upon user2
-        vm.startPrank(user2);
-
-        // it should accrue fees
-        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
-        // it should pay back part of or all of the borrowed amount
-        // it should update the owner's accrued fees, collateral accrued fees and paid fees and global accrued fees and paid fees
-        // it should not pay any accrued fees
-
-        whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(user2, 500_000e18);
-    }
-
-    function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_useUser1()
-        external
-        whenVaultIsNotPaused
-        whenCollateralExists
-        useUser1
-    {
-        // it should accrue fees
-        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
-        // it should pay back part of or all of the borrowed amount
-        // it should update the owner's accrued fees, collateral accrued fees and paid fees and global accrued fees and paid fees
-        // it should not pay any accrued fees
-
-        whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(user1, 250_000e18);
-    }
-
-    function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_exhaustive_useUser1()
-        external
-        whenVaultIsNotPaused
-        whenCollateralExists
-        useUser1
-    {
-        // it should accrue fees
-        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
-        // it should pay back part of or all of the borrowed amount
-        // it should update the owner's accrued fees, collateral accrued fees and paid fees and global accrued fees and paid fees
-        // it should not pay any accrued fees
-
-        whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(user1, 500_000e18);
-    }
-
-    function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_useReliedOnForUser1()
-        external
-        whenVaultIsNotPaused
-        whenCollateralExists
-        useReliedOnForUser1(user2)
-    {
-        // it should accrue fees
-        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
-        // it should pay back part of or all of the borrowed amount
-        // it should update the owner's accrued fees, collateral accrued fees and paid fees and global accrued fees and paid fees
-        // it should not pay any accrued fees
-
-        whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(user2, 250_000e18);
-    }
-
-    function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_exhaustive_useReliedOnForUser1()
-        external
-        whenVaultIsNotPaused
-        whenCollateralExists
-        useReliedOnForUser1(user2)
-    {
-        // it should accrue fees
-        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
-        // it should pay back part of or all of the borrowed amount
-        // it should update the owner's accrued fees, collateral accrued fees and paid fees and global accrued fees and paid fees
-        // it should not pay any accrued fees
-
-        whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(user2, 500_000e18);
-    }
-
-    function whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(address payer, uint256 amount) private {
+    function whenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount(
+        address sender,
+        uint256 amount,
+        uint256 timeElapsed
+    ) private {
         // skip time to make accrued fees and paid fees test be effective
-        skip(1_000);
+        timeElapsed = bound(timeElapsed, 0, TEN_YEARS);
+        skip(timeElapsed);
 
         IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory initialCollateralInfo = getCollateralMapping(usdc);
         uint256 initialDebt = vault.debt();
         uint256 initialPaidFees = vault.paidFees();
-        uint256 initialUserBalance = xNGN.balanceOf(payer);
+        uint256 initialUserBalance = xNGN.balanceOf(sender);
         uint256 initialTotalSupply = xNGN.totalSupply();
 
         // make sure it's being tested for the right amount scenario/path
         assertTrue(initialUserVaultInfo.borrowedAmount >= amount);
-
-        xNGN.transfer(address(vault), amount);
 
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
         emit CurrencyBurned(user1, amount);
 
         // burn currency
-        vault.burnCurrency(usdc, user1);
+        vault.burnCurrency(usdc, user1, amount);
 
         IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
@@ -201,11 +162,11 @@ contract BurnCurrencyTest is BaseTest {
                 * initialUserVaultInfo.borrowedAmount
         ) / HUNDRED_PERCENTAGE;
 
-        // it should accrue fees, per user, per collateral and globally
+        // it should accrue fees, per user
         assertEq(afterUserVaultInfo.accruedFees, initialUserVaultInfo.accruedFees + accruedFees);
 
         // it should pay back part of or all of the borrowed amount
-        assertEq(xNGN.balanceOf(payer), initialUserBalance - amount);
+        assertEq(xNGN.balanceOf(sender), initialUserBalance - amount);
         assertEq(xNGN.totalSupply(), initialTotalSupply - amount);
 
         // it should not pay any accrued fees
@@ -216,7 +177,7 @@ contract BurnCurrencyTest is BaseTest {
         _;
     }
 
-    function test_WhenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmountAndAccruedFees()
+    function test_WhenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmountAndAccruedFees(uint256 timeElapsed)
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -224,16 +185,16 @@ contract BurnCurrencyTest is BaseTest {
     {
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
-        usdc.transfer(address(vault), 1_000e18);
-        vault.depositCollateral(usdc, user2);
-        vault.mintCurrency(usdc, user2, user1, 100_000e18);
+        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
         // use user1
         vm.stopPrank();
         vm.startPrank(user1);
 
         // to enable fee accrual
-        skip(1_000);
+        timeElapsed = bound(timeElapsed, 0, TEN_YEARS);
+        skip(timeElapsed);
 
         // get accrued fees
         IVault.VaultInfo memory userVaultInfo = getVaultMapping(usdc, user1);
@@ -241,85 +202,12 @@ contract BurnCurrencyTest is BaseTest {
             (calculateCurrentTotalAccumulatedRate(usdc) - userVaultInfo.lastTotalAccumulatedRate) * 500_000e18
         ) / HUNDRED_PERCENTAGE;
 
-        // accrued fees should be > 0
-        assertTrue(userVaultInfo.accruedFees > 0);
-
-        xNGN.transfer(address(vault), 500_000e18 + userVaultInfo.accruedFees + 1);
-
         // it should revert with underflow error
         vm.expectRevert(UNDERFLOW_OVERFLOW_PANIC_ERROR);
-        vault.burnCurrency(usdc, user1);
+        vault.burnCurrency(usdc, user1, 500_000e18 + userVaultInfo.accruedFees + 1);
     }
 
-    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_useNonReliedOnForUser1()
-        external
-        whenVaultIsNotPaused
-        whenCollateralExists
-        whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount
-    {
-        vm.startPrank(user3);
-        // get more balance for user2 by borrowing with user3 and sending to user1 to prevent the test to revert with insufficient balance error)
-        usdc.transfer(address(vault), 1_000e18);
-        vault.depositCollateral(usdc, user3);
-        vault.mintCurrency(usdc, user3, user2, 100_000e18);
-
-        // use user2
-        vm.stopPrank();
-        vm.startPrank(user2);
-
-        // it should accrue fees
-        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
-        // it should pay off ALL borrowed amount
-        // it should update the paid fees and global accrued fees and paid fees
-        // it should pay pay back part of or all of the accrued fees
-
-        // skip time to make accrued fees and paid fees test be effective
-        skip(1_000);
-
-        IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
-
-        // get expected accrued fees
-        uint256 accruedFees = (
-            (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
-        ) / HUNDRED_PERCENTAGE;
-
-        whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(user2, 500_000e18 + accruedFees);
-    }
-
-    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_exhaustive_useNonReliedOnForUser1(
-    ) external whenVaultIsNotPaused whenCollateralExists whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount {
-        vm.startPrank(user3);
-        // get more balance for user2 by borrowing with user3 and sending to user1 to prevent the test to revert with insufficient balance error)
-        usdc.transfer(address(vault), 1_000e18);
-        vault.depositCollateral(usdc, user3);
-        vault.mintCurrency(usdc, user3, user2, 100_000e18);
-
-        // use user2
-        vm.stopPrank();
-        vm.startPrank(user2);
-
-        // it should accrue fees
-        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
-        // it should pay off ALL borrowed amount
-        // it should update the paid fees and global accrued fees and paid fees
-        // it should pay pay back part of or all of the accrued fees
-
-        // skip time to make accrued fees and paid fees test be effective
-        skip(1_000);
-
-        IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
-
-        // get expected accrued fees
-        uint256 accruedFees = (
-            (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
-        ) / HUNDRED_PERCENTAGE;
-
-        whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(user2, 500_000e18 + (accruedFees / 2));
-    }
-
-    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_useUser1()
+    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_useUser1(uint256 timeElapsed)
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -329,9 +217,8 @@ contract BurnCurrencyTest is BaseTest {
         vm.stopPrank();
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
-        usdc.transfer(address(vault), 1_000e18);
-        vault.depositCollateral(usdc, user2);
-        vault.mintCurrency(usdc, user2, user1, 100_000e18);
+        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
         // use user1
         vm.stopPrank();
@@ -345,7 +232,8 @@ contract BurnCurrencyTest is BaseTest {
         // it should pay pay back part of or all of the accrued fees
 
         // skip time to make accrued fees and paid fees test be effective
-        skip(1_000);
+        timeElapsed = bound(timeElapsed, 1, TEN_YEARS);
+        skip(timeElapsed);
 
         IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
 
@@ -357,7 +245,9 @@ contract BurnCurrencyTest is BaseTest {
         whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(user1, 500_000e18 + (accruedFees / 2));
     }
 
-    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_exhaustive_useUser1()
+    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_exhaustive_useUser1(
+        uint256 timeElapsed
+    )
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -365,12 +255,10 @@ contract BurnCurrencyTest is BaseTest {
         useUser1
     {
         vm.stopPrank();
-
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
-        usdc.transfer(address(vault), 1_000e18);
-        vault.depositCollateral(usdc, user2);
-        vault.mintCurrency(usdc, user2, user1, 100_000e18);
+        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
         // use user1
         vm.stopPrank();
@@ -384,7 +272,8 @@ contract BurnCurrencyTest is BaseTest {
         // it should pay pay back part of or all of the accrued fees
 
         // skip time to make accrued fees and paid fees test be effective
-        skip(1_000);
+        timeElapsed = bound(timeElapsed, 1, TEN_YEARS);
+        skip(timeElapsed);
 
         IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
 
@@ -396,46 +285,8 @@ contract BurnCurrencyTest is BaseTest {
         whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(user1, 500_000e18 + accruedFees);
     }
 
-    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_useReliedOnForUser1()
-        external
-        whenVaultIsNotPaused
-        whenCollateralExists
-        whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount
-        useReliedOnForUser1(user2)
-    {
-        vm.stopPrank();
-
-        vm.startPrank(user3);
-        // get more balance for user2 by borrowing with user3 and sending to user1 to prevent the test to revert with insufficient balance error)
-        usdc.transfer(address(vault), 1_000e18);
-        vault.depositCollateral(usdc, user3);
-        vault.mintCurrency(usdc, user3, user2, 100_000e18);
-
-        // use user2
-        vm.stopPrank();
-        vm.startPrank(user2);
-
-        // it should accrue fees
-        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
-        // it should pay off ALL borrowed amount
-        // it should update the paid fees and global accrued fees and paid fees
-        // it should pay pay back part of or all of the accrued fees
-
-        // skip time to make accrued fees and paid fees test be effective
-        skip(1_000);
-
-        IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
-
-        // get expected accrued fees
-        uint256 accruedFees = (
-            (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
-        ) / HUNDRED_PERCENTAGE;
-
-        whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(user2, 500_000e18 + accruedFees);
-    }
-
-    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_exhaustive_useReliedOnForUser1(
+    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_useReliedOnForUser1(
+        uint256 timeElapsed
     )
         external
         whenVaultIsNotPaused
@@ -444,14 +295,12 @@ contract BurnCurrencyTest is BaseTest {
         useReliedOnForUser1(user2)
     {
         vm.stopPrank();
+        vm.startPrank(user2);
+        // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
+        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
-        vm.startPrank(user3);
-        // get more balance for user2 by borrowing with user3 and sending to user1 to prevent the test to revert with insufficient balance error)
-        usdc.transfer(address(vault), 1_000e18);
-        vault.depositCollateral(usdc, user3);
-        vault.mintCurrency(usdc, user3, user2, 100_000e18);
-
-        // use user2
+        // use user1
         vm.stopPrank();
         vm.startPrank(user2);
 
@@ -463,7 +312,8 @@ contract BurnCurrencyTest is BaseTest {
         // it should pay pay back part of or all of the accrued fees
 
         // skip time to make accrued fees and paid fees test be effective
-        skip(1_000);
+        timeElapsed = bound(timeElapsed, 1, TEN_YEARS);
+        skip(timeElapsed);
 
         IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
 
@@ -475,20 +325,126 @@ contract BurnCurrencyTest is BaseTest {
         whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(user2, 500_000e18 + (accruedFees / 2));
     }
 
-    function whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(address payer, uint256 amount)
+    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_exhaustive_useReliedOnForUser1(
+        uint256 timeElapsed
+    )
+        external
+        whenVaultIsNotPaused
+        whenCollateralExists
+        whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount
+        useReliedOnForUser1(user2)
+    {
+        vm.stopPrank();
+        vm.startPrank(user2);
+        // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
+        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.mintCurrency(usdc, user2, user1, 200_000e18);
+
+        // use user1
+        vm.stopPrank();
+        vm.startPrank(user2);
+
+        // it should accrue fees
+        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
+        // it should pay off ALL borrowed amount
+        // it should update the paid fees and global accrued fees and paid fees
+        // it should pay pay back part of or all of the accrued fees
+
+        // skip time to make accrued fees and paid fees test be effective
+        timeElapsed = bound(timeElapsed, 1, TEN_YEARS);
+        skip(timeElapsed);
+
+        IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
+
+        // get expected accrued fees
+        uint256 accruedFees = (
+            (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
+        ) / HUNDRED_PERCENTAGE;
+
+        whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(user2, 500_000e18 + accruedFees);
+    }
+
+    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_useNonReliedOnForUser1(
+        uint256 timeElapsed
+    ) external whenVaultIsNotPaused whenCollateralExists whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount {
+        vm.stopPrank();
+        vm.startPrank(user2);
+        // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
+        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.mintCurrency(usdc, user2, user1, 200_000e18);
+
+        // use user1
+        vm.stopPrank();
+        vm.startPrank(user2);
+
+        // it should accrue fees
+        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
+        // it should pay off ALL borrowed amount
+        // it should update the paid fees and global accrued fees and paid fees
+        // it should pay pay back part of or all of the accrued fees
+
+        // skip time to make accrued fees and paid fees test be effective
+        timeElapsed = bound(timeElapsed, 1, TEN_YEARS);
+        skip(timeElapsed);
+
+        IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
+
+        // get expected accrued fees
+        uint256 accruedFees = (
+            (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
+        ) / HUNDRED_PERCENTAGE;
+
+        whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(user2, 500_000e18 + (accruedFees / 2));
+    }
+
+    function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_exhaustive_useNonReliedOnForUser1(
+        uint256 timeElapsed
+    ) external whenVaultIsNotPaused whenCollateralExists whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount {
+        vm.stopPrank();
+        vm.startPrank(user2);
+        // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
+        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.mintCurrency(usdc, user2, user1, 200_000e18);
+
+        // use user1
+        vm.stopPrank();
+        vm.startPrank(user2);
+
+        // it should accrue fees
+        // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+        // it should update the owner's borrowed amount, collateral borrowed amount and global debt
+        // it should pay off ALL borrowed amount
+        // it should update the paid fees and global accrued fees and paid fees
+        // it should pay pay back part of or all of the accrued fees
+
+        // skip time to make accrued fees and paid fees test be effective
+        timeElapsed = bound(timeElapsed, 1, TEN_YEARS);
+        skip(timeElapsed);
+
+        IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
+
+        // get expected accrued fees
+        uint256 accruedFees = (
+            (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
+        ) / HUNDRED_PERCENTAGE;
+
+        whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(user2, 500_000e18 + accruedFees);
+    }
+
+    function whenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees(address sender, uint256 amount)
         private
     {
         IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory initialCollateralInfo = getCollateralMapping(usdc);
         uint256 initialDebt = vault.debt();
         uint256 initialPaidFees = vault.paidFees();
-        uint256 initialUserBalance = xNGN.balanceOf(payer);
+        uint256 initialUserBalance = xNGN.balanceOf(sender);
         uint256 initialTotalSupply = xNGN.totalSupply();
 
         // make sure it's being tested for the right amount scenario/path
         assertTrue(initialUserVaultInfo.borrowedAmount < amount);
-
-        xNGN.transfer(address(vault), amount);
 
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
@@ -499,7 +455,7 @@ contract BurnCurrencyTest is BaseTest {
         emit FeesPaid(user1, amount - 500_000e18);
 
         // burn currency
-        vault.burnCurrency(usdc, user1);
+        vault.burnCurrency(usdc, user1, amount);
 
         IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
@@ -518,14 +474,14 @@ contract BurnCurrencyTest is BaseTest {
             (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * 500_000e18
         ) / HUNDRED_PERCENTAGE;
 
-        // it should accrue fees, per user, per collateral and globally
+        // it should accrue fees, per user
         assertEq(initialUserVaultInfo.accruedFees + accruedFees - fees, afterUserVaultInfo.accruedFees);
 
         // it should pay back part of or all of the borrowed amount
-        assertEq(xNGN.balanceOf(payer), initialUserBalance - amount);
+        assertEq(xNGN.balanceOf(sender), initialUserBalance - amount);
         assertEq(xNGN.totalSupply(), initialTotalSupply - (amount - fees));
 
-        // it should update global paid fees
+        // it should update vault's paid fees
         assertEq(initialPaidFees, vault.paidFees() - fees);
     }
 }

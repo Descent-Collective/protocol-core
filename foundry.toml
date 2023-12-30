@@ -14,4 +14,15 @@ optimizer_runs = 1_000_000
 [rpc_endpoints]
 base_georli = "${BASE_TESTNET_RPC_URL}"
 
+
+[fuzz]
+runs = 10000
+max_test_rejects = 0
+seed = '0x3e8'
+dictionary_weight = 40
+include_storage = true
+include_push_bytes = true
+
+
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

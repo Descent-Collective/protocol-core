@@ -11,13 +11,12 @@ contract MintCurrencyTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        usdc.transfer(address(vault), 1_000e18);
-        vault.depositCollateral(usdc, user1);
+        vault.depositCollateral(usdc, user1, 1_000e18);
 
         vm.stopPrank();
     }
 
-    function test_WhenVaultIsPaused() external useUser1 {
+    function test_WhenVaultIsPaused(ERC20 collateral, address user, uint256 amount) external useUser1 {
         // pause vault
         vm.stopPrank();
         vm.prank(owner);
@@ -27,59 +26,73 @@ contract MintCurrencyTest is BaseTest {
 
         // it should revert with custom error Paused()
         vm.expectRevert(Paused.selector);
-        vault.mintCurrency(usdc, user1, user1, 100_000e18);
+        vault.mintCurrency(collateral, user, user, amount);
     }
 
     modifier whenVaultIsNotPaused() {
         _;
     }
 
-    function test_WhenCollateralDoesNotExist() external whenVaultIsNotPaused useUser1 {
+    function test_WhenCollateralDoesNotExist(ERC20 collateral, address user, uint256 amount)
+        external
+        whenVaultIsNotPaused
+        useUser1
+    {
+        if (collateral == usdc) collateral = ERC20(address(uint160(uint256(uint160(address(usdc)))) + 1));
+
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);
 
         // call with non existing collateral
-        vault.mintCurrency(ERC20(address(11111)), user1, user1, 100_000e18);
+        vault.mintCurrency(collateral, user, user, amount);
     }
 
     modifier whenCollateralExists() {
         _;
     }
 
-    function test_WhenCallerIsNotOwnerAndNotReliedUponByOwner() external whenVaultIsNotPaused whenCollateralExists {
+    function test_WhenCallerIsNotOwnerAndNotReliedUponByOwner(address caller, address user, uint256 amount)
+        external
+        whenVaultIsNotPaused
+        whenCollateralExists
+    {
+        if (user == caller) user = address(uint160(uint256(uint160(user)) + 1));
+
         // use unrelied upon user2
-        vm.prank(user2);
+        vm.prank(caller);
 
         // it should revert with custom error NotOwnerOrReliedUpon()
         vm.expectRevert(NotOwnerOrReliedUpon.selector);
 
         // call and try to interact with user1 vault with address user1 does not rely on
-        vault.mintCurrency(usdc, user1, user1, 100_000e18);
+        vault.mintCurrency(usdc, user, user, amount);
     }
 
     modifier whenCallerIsOwnerOrReliedUponByOwner() {
         _;
     }
 
-    function test_WhenTheBorrowMakesTheVaultsCollateralRatioAboveTheLiquidationThreshold()
+    function test_WhenTheBorrowMakesTheVaultsCollateralRatioAboveTheLiquidationThreshold(uint256 amount)
         external
         whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         useUser1
     {
+        amount = bound(amount, 500_000e18 + 1, type(uint256).max / HUNDRED_PERCENTAGE);
+
         // it should revert with custom error BadCollateralRatio()
         vm.expectRevert(BadCollateralRatio.selector);
 
         // try minting more than allowed
-        vault.mintCurrency(usdc, user1, user1, 500_001e18);
+        vault.mintCurrency(usdc, user1, user1, amount);
     }
 
     modifier whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold() {
         _;
     }
 
-    function test_WhenOwnersCollateralBalanceIsBelowTheCollateralFloor()
+    function test_WhenOwnersCollateralBalanceIsBelowTheCollateralFloor(uint256 amountToWithdraw, uint256 amountToMint)
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -87,21 +100,24 @@ contract MintCurrencyTest is BaseTest {
         whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold
         useUser1
     {
+        amountToWithdraw = bound(amountToWithdraw, 900e18 + 1, 1_000e18);
+        // no need to bound amount to mint, as it won't get to debt ceiling if it reverts
+
         // user1 withdraws enough of their collateral to be below the floor
-        vault.withdrawCollateral(usdc, user1, user1, 900e18 + 1);
+        vault.withdrawCollateral(usdc, user1, user1, amountToWithdraw);
 
         // it should revert with custom error TotalUserCollateralBelowFloor()
         vm.expectRevert(TotalUserCollateralBelowFloor.selector);
 
         // try minting even the lowest of amounts, should revert
-        vault.mintCurrency(usdc, user1, user1, 1);
+        vault.mintCurrency(usdc, user1, user1, amountToMint);
     }
 
     modifier whenOwnersCollateralBalanceIsAboveOrEqualToTheCollateralFloor() {
         _;
     }
 
-    function test_WhenTheOwnersBorrowedAmountIs0()
+    function test_WhenTheOwnersBorrowedAmountIs0(uint256 amount, uint256 timeElapsed)
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -114,10 +130,10 @@ contract MintCurrencyTest is BaseTest {
         // it should emit CurrencyMinted() event with with expected indexed and unindexed parameters
         // it should update user's borrowed amount, collateral's borrowed amount and global debt
         // it should mint right amount of currency to the to address
-        WhenOwnersBorrowedAmountIsAbove0OrIs0(user1, true);
+        WhenOwnersBorrowedAmountIsAbove0OrIs0(user1, true, amount, timeElapsed);
     }
 
-    function test_WhenTheOwnersBorrowedAmountIs0_useReliedOnForUser1()
+    function test_WhenTheOwnersBorrowedAmountIs0_useReliedOnForUser1(uint256 amount, uint256 timeElapsed)
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -130,10 +146,10 @@ contract MintCurrencyTest is BaseTest {
         // it should emit CurrencyMinted() event with with expected indexed and unindexed parameters
         // it should update user's borrowed amount, collateral's borrowed amount and global debt
         // it should mint right amount of currency to the to address
-        WhenOwnersBorrowedAmountIsAbove0OrIs0(user1, true);
+        WhenOwnersBorrowedAmountIsAbove0OrIs0(user1, true, amount, timeElapsed);
     }
 
-    function test_WhenOwnersBorrowedAmountIsAbove0_useUser1()
+    function test_WhenOwnersBorrowedAmountIsAbove0_useUser1(uint256 amount, uint256 timeElapsed)
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -142,17 +158,17 @@ contract MintCurrencyTest is BaseTest {
         whenOwnersCollateralBalanceIsAboveOrEqualToTheCollateralFloor
         useUser1
     {
-        // borrow first to make total borrowed amount 0
+        // borrow first to make total borrowed amount > 0
         vault.mintCurrency(usdc, user1, user2, 1);
 
         // it should update the owners accrued fees
         // it should emit CurrencyMinted() event with with expected indexed and unindexed parameters
         // it should update user's borrowed amount, collateral's borrowed amount and global debt
         // it should mint right amount of currency to the to address
-        WhenOwnersBorrowedAmountIsAbove0OrIs0(user2, false);
+        WhenOwnersBorrowedAmountIsAbove0OrIs0(user2, false, amount, timeElapsed);
     }
 
-    function test_WhenOwnersBorrowedAmountIsAbove0_useReliedOnForUser1()
+    function test_WhenOwnersBorrowedAmountIsAbove0_useReliedOnForUser1(uint256 amount, uint256 timeElapsed)
         external
         whenVaultIsNotPaused
         whenCollateralExists
@@ -161,17 +177,25 @@ contract MintCurrencyTest is BaseTest {
         whenOwnersCollateralBalanceIsAboveOrEqualToTheCollateralFloor
         useReliedOnForUser1(user2)
     {
-        // borrow first to make total borrowed amount 0
+        // borrow first to make total borrowed amount > 0
         vault.mintCurrency(usdc, user1, user3, 100_000e18);
 
         // it should update the owners accrued fees
         // it should emit CurrencyMinted() event with with expected indexed and unindexed parameters
         // it should update user's borrowed amount, collateral's borrowed amount and global debt
         // it should mint right amount of currency to the to address
-        WhenOwnersBorrowedAmountIsAbove0OrIs0(user3, false);
+        WhenOwnersBorrowedAmountIsAbove0OrIs0(user3, false, amount, timeElapsed);
     }
 
-    function WhenOwnersBorrowedAmountIsAbove0OrIs0(address recipient, bool isCurrentBorrowedAmount0) private {
+    function WhenOwnersBorrowedAmountIsAbove0OrIs0(
+        address recipient,
+        bool isCurrentBorrowedAmount0,
+        uint256 amount,
+        uint256 timeElapsed
+    ) private {
+        amount = bound(amount, 0, 250_000e18);
+        timeElapsed = bound(timeElapsed, 0, TEN_YEARS);
+
         // cache pre balances
         uint256 userOldBalance = xNGN.balanceOf(recipient);
         uint256 oldTotalSupply = xNGN.totalSupply();
@@ -181,10 +205,7 @@ contract MintCurrencyTest is BaseTest {
         IVault.CollateralInfo memory initialCollateralInfo = getCollateralMapping(usdc);
 
         // skip time to be able to check accrued interest;
-        skip(1_000);
-
-        // amount to withdraw
-        uint256 amount = 250_000e18;
+        skip(timeElapsed);
 
         // it should emit CurrencyMinted() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
@@ -204,7 +225,7 @@ contract MintCurrencyTest is BaseTest {
         if (isCurrentBorrowedAmount0) {
             assertEq(
                 afterUserVaultInfo.lastTotalAccumulatedRate - initialUserVaultInfo.lastTotalAccumulatedRate,
-                1_000 * (oneAndHalfPercentPerSecondInterestRate + onePercentPerSecondInterestRate)
+                timeElapsed * (oneAndHalfPercentPerSecondInterestRate + onePercentPerSecondInterestRate)
             );
         } else {
             // get expected accrued fees

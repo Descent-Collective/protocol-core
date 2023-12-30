@@ -9,6 +9,7 @@ import {ErrorsAndEvents} from "./mocks/ErrorsAndEvents.sol";
 
 contract BaseTest is Test, ErrorsAndEvents {
     bytes constant UNDERFLOW_OVERFLOW_PANIC_ERROR = abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 17);
+    uint256 constant TEN_YEARS = 365 days * 10;
 
     uint256 PRECISION = 1e18;
     uint256 HUNDRED_PERCENTAGE = 100e18;
@@ -63,6 +64,34 @@ contract BaseTest is Test, ErrorsAndEvents {
         vm.stopPrank();
 
         labelAddresses();
+        allUsersApproveTokensForVault();
+    }
+
+    function allUsersApproveTokensForVault() private {
+        vm.startPrank(user1);
+        usdc.approve(address(vault), type(uint256).max);
+        xNGN.approve(address(vault), type(uint256).max);
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+        usdc.approve(address(vault), type(uint256).max);
+        xNGN.approve(address(vault), type(uint256).max);
+        vm.stopPrank();
+
+        vm.startPrank(user3);
+        usdc.approve(address(vault), type(uint256).max);
+        xNGN.approve(address(vault), type(uint256).max);
+        vm.stopPrank();
+
+        vm.startPrank(user4);
+        usdc.approve(address(vault), type(uint256).max);
+        xNGN.approve(address(vault), type(uint256).max);
+        vm.stopPrank();
+
+        vm.startPrank(user5);
+        usdc.approve(address(vault), type(uint256).max);
+        xNGN.approve(address(vault), type(uint256).max);
+        vm.stopPrank();
     }
 
     modifier useUser1() {
@@ -136,5 +165,18 @@ contract BaseTest is Test, ErrorsAndEvents {
                 (calculateCurrentTotalAccumulatedRate(usdc) - userVaultInfo.lastTotalAccumulatedRate)
                     * userVaultInfo.borrowedAmount
             ) / HUNDRED_PERCENTAGE;
+    }
+
+    /**
+     * @dev divides `_a` by `_b` and rounds the result `_c` up to the next whole number
+     *
+     * @dev if `_a` is 0, return 0 early as it will revert with underflow error when calculating divUp below
+     * @dev reverts if `_b` is 0
+     */
+    function divUp(uint256 _a, uint256 _b) internal pure returns (uint256 _c) {
+        if (_b == 0) revert();
+        if (_a == 0) return 0;
+
+        _c = 1 + ((_a - 1) / _b);
     }
 }

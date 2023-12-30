@@ -311,18 +311,20 @@ contract Vault is AccessControl, Pausable, IVault {
      *
      * @param _collateralToken contract address of the collateral to deposit
      * @param _owner owner of the vault to deposit into
+     * @param _amount amount of `_collateralToken` to deposit into `_owner`'s vault
      *
      * @dev should revert if the contract is paused
      *      should revert if the collateral does not exist
+     *      should revert if transfer from `_owner` to this contract fails based on SafeERC20.safeTransferFrom()'s expectations of a successful erc20 transferFrom call
      */
-    function depositCollateral(ERC20 _collateralToken, address _owner)
+    function depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount)
         external
         whenNotPaused
         collateralExists(_collateralToken)
     {
-        // expects token to already be transferred
-        uint256 _amount =
-            _collateralToken.balanceOf(address(this)) - collateralMapping[_collateralToken].totalDepositedCollateral;
+        emit CollateralDeposited(_owner, _amount);
+
+        // no need to accrue fees
         _depositCollateral(_collateralToken, _owner, _amount);
     }
 
@@ -352,6 +354,8 @@ contract Vault is AccessControl, Pausable, IVault {
 
         // need to accrue fees first in order to use updated fees for collateral ratio calculation below
         _accrueFees(_collateral, _vault);
+
+        emit CollateralWithdrawn(_owner, _to, _amount);
 
         _withdrawCollateral(_collateralToken, _owner, _to, _amount);
 
@@ -396,7 +400,8 @@ contract Vault is AccessControl, Pausable, IVault {
         if (_vault.borrowedAmount != 0) _accrueFees(_collateral, _vault);
         else _vault.lastTotalAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
 
-        _mintCurrency(_collateral, _vault, _owner, _to, _amount);
+        emit CurrencyMinted(_owner, _amount);
+        _mintCurrency(_collateral, _vault, _to, _amount);
 
         _revertIfCollateralRatioIsAboveLiquidationThreshold(_collateral, _vault);
     }
@@ -406,13 +411,15 @@ contract Vault is AccessControl, Pausable, IVault {
      *
      * @param _collateralToken contract address of collateral to burn/pay back the vault's currency for,
      * @param _owner owner of the vault to pay back it's loan
+     * @param _amount amount of currency to pay back / burn
      *
      * @dev we accrue fees here to enable full payment of both borrowed amount and fees in one function. This way unupdated accrued fees are accounted for too and can be paid back
      * @dev should revert if the contract is paused
      *      should revert if the collateral does not exist
+     *      should revert if the caller is not the `_owner` and not also not relied upon
      *      should revert if the amount of currency to burn / pay back is more than `borrowed amount + total accrued fees`
      */
-    function burnCurrency(ERC20 _collateralToken, address _owner)
+    function burnCurrency(ERC20 _collateralToken, address _owner, uint256 _amount)
         external
         whenNotPaused
         collateralExists(_collateralToken)
@@ -423,8 +430,7 @@ contract Vault is AccessControl, Pausable, IVault {
         // need to accrue fees first in order to use updated fees in the scenario where fees are paid too
         _accrueFees(_collateral, _vault);
 
-        uint256 _amount = CURRENCY_TOKEN.balanceOf(address(this)) - paidFees;
-        _burnCurrency(_collateral, _vault, _owner, _amount);
+        _burnCurrency(_collateral, _vault, _owner, msg.sender, _amount);
     }
 
     /**
@@ -433,14 +439,15 @@ contract Vault is AccessControl, Pausable, IVault {
      * @param _collateralToken contract address of collateral used by vault that is to be liquidate, also the token to recieved by the `_to` address after liquidation
      * @param _owner owner of the vault to liquidate
      * @param _to address to send the liquidated collateral (collateral covered) to
+     * @param _currencyAmountToPay the amount of currency tokens to pay back for `_owner`
      *
      * @dev updates fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the collateral-ratio check at the start and end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s collateral-ratio
      * @dev should revert if the contract is paused
      *      should revert if the collateral does not exist
      *      should revert if the vault is not under-water
-     *      should revert if liqudiation did not strictly improve the collateral ratio of the vault
+     *      should revert if liqudiation did not strictly imporve the collateral ratio of the vault
      */
-    function liquidate(ERC20 _collateralToken, address _owner, address _to, bool _isFullLiquidation)
+    function liquidate(ERC20 _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
         external
         whenNotPaused
         collateralExists(_collateralToken)
@@ -452,7 +459,6 @@ contract Vault is AccessControl, Pausable, IVault {
 
         VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
-        uint256 _currencyAmountToPay = CURRENCY_TOKEN.balanceOf(address(this)) - paidFees;
 
         // need to accrue fees first in order to use updated fees for collateral ratio calculation below
         _accrueFees(_collateral, _vault);
@@ -460,12 +466,13 @@ contract Vault is AccessControl, Pausable, IVault {
         uint256 _preCollateralRatio = _getCollateralRatio(_collateral, _vault);
         if (_preCollateralRatio <= _collateral.liquidationThreshold) revert PositionIsSafe();
 
-        // This is here to prevent frontrunning of full liquidation
-        // malicious owners can monitor the mempool and frontrun any attempt to liquidate their position by liquidating it
-        // themselves but partially, (by 1 wei of collateral is enough) which causes underflow when the liquidator's tx is to be executed
-        // With this, liquidators can parse in type(uint256).max to liquidate everything regardless of the current borrowed amount.
-        uint256 _totalDebt = _vault.borrowedAmount + _vault.accruedFees;
-        if (_isFullLiquidation && _currencyAmountToPay < _totalDebt) revert InsufficientCurrencyAmountToPay();
+        if (_currencyAmountToPay == type(uint256).max) {
+            // This is here to prevent frontrunning of full liquidation
+            // malicious owners can monitor the mempool and frontrun any attempt to liquidate their position by liquidating it
+            // themselves but partially, (by 1 wei of collateral is enough) which causes underflow when the liquidator's tx is to be executed
+            // With this, liquidators can parse in type(uint256).max to liquidate everything regardless of the current borrowed amount.
+            _currencyAmountToPay = _vault.borrowedAmount + _vault.accruedFees;
+        }
 
         uint256 _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
         uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / HUNDRED_PERCENTAGE;
@@ -479,10 +486,7 @@ contract Vault is AccessControl, Pausable, IVault {
         emit Liquidated(_owner, msg.sender, _currencyAmountToPay, _total);
 
         _withdrawCollateral(_collateralToken, _owner, _to, _total);
-        _burnCurrency(_collateral, _vault, _owner, _currencyAmountToPay);
-
-        // sent leftovers
-        if (_currencyAmountToPay > _totalDebt) CURRENCY_TOKEN.transfer(_to, _currencyAmountToPay - _totalDebt);
+        _burnCurrency(_collateral, _vault, _owner, msg.sender, _currencyAmountToPay);
 
         // collateral ratio must never increase or stay the same during a liquidation.
         if (_preCollateralRatio <= _getCollateralRatio(_collateral, _vault)) revert CollateralRatioNotImproved();
@@ -492,12 +496,17 @@ contract Vault is AccessControl, Pausable, IVault {
 
     /**
      * @dev deposits collateral from `_owner` into this contract and updates the vaults depositedCollateral and collateral's totalDepositedCollateral
+     * @dev reverts if SafeERC20.safeTransferFrom() fails
      */
-    function _depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount) private {
-        vaultMapping[_collateralToken][_owner].depositedCollateral += _amount;
-        collateralMapping[_collateralToken].totalDepositedCollateral += _amount;
+    function _depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount) internal {
+        // supporting fee on transfer tokens at the expense of NEVER SUPPORTING TOKENS WITH CALLBACKS
+        // a solution for supporting it can be adding a mutex but that prevents batching.
+        uint256 preBalance = _collateralToken.balanceOf(address(this));
+        SafeERC20.safeTransferFrom(_collateralToken, msg.sender, address(this), _amount);
+        uint256 difference = _collateralToken.balanceOf(address(this)) - preBalance;
 
-        emit CollateralDeposited(_owner, _amount);
+        vaultMapping[_collateralToken][_owner].depositedCollateral += difference;
+        collateralMapping[_collateralToken].totalDepositedCollateral += difference;
     }
 
     /**
@@ -505,11 +514,10 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev reverts if `_amount` is greater than the vaults depositedCollateral
      *      reverts if safeTransfer() fails
      */
-    function _withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount) private {
+    function _withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount) internal {
         vaultMapping[_collateralToken][_owner].depositedCollateral -= _amount;
         collateralMapping[_collateralToken].totalDepositedCollateral -= _amount;
 
-        emit CollateralWithdrawn(_owner, _to, _amount);
         SafeERC20.safeTransfer(_collateralToken, _to, _amount);
     }
 
@@ -517,18 +525,13 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev mints currency to `_to` and updates the vaults borrowedAmount and collateral's totalBorrowedAmount
      * @dev reverts if CURRENCY_TOKEN.mint() fails
      */
-    function _mintCurrency(
-        CollateralInfo storage _collateral,
-        VaultInfo storage _vault,
-        address _owner,
-        address _to,
-        uint256 _amount
-    ) private {
+    function _mintCurrency(CollateralInfo storage _collateral, VaultInfo storage _vault, address _to, uint256 _amount)
+        internal
+    {
         _vault.borrowedAmount += _amount;
         _collateral.totalBorrowedAmount += _amount;
         debt += _amount;
 
-        emit CurrencyMinted(_owner, _amount);
         CURRENCY_TOKEN.mint(_to, _amount);
     }
 
@@ -543,8 +546,9 @@ contract Vault is AccessControl, Pausable, IVault {
         CollateralInfo storage _collateral,
         VaultInfo storage _vault,
         address _owner,
+        address _from,
         uint256 _amount
-    ) private {
+    ) internal {
         // if _amount > _vault.borrowedAmount, subtract _amount from _vault.borrowedAmount and _vault.accruedFees else subtract from only _vault.borrowedAmount
         if (_amount <= _vault.borrowedAmount) {
             _vault.borrowedAmount -= _amount;
@@ -552,7 +556,7 @@ contract Vault is AccessControl, Pausable, IVault {
             debt -= _amount;
 
             emit CurrencyBurned(_owner, _amount);
-            CURRENCY_TOKEN.burn(address(this), _amount);
+            CURRENCY_TOKEN.burn(_from, _amount);
         } else {
             uint256 _cacheBorrowedAmount = _vault.borrowedAmount;
 
@@ -561,21 +565,23 @@ contract Vault is AccessControl, Pausable, IVault {
             debt -= _cacheBorrowedAmount;
 
             emit CurrencyBurned(_owner, _cacheBorrowedAmount);
-            CURRENCY_TOKEN.burn(address(this), _cacheBorrowedAmount);
+            CURRENCY_TOKEN.burn(_from, _cacheBorrowedAmount);
 
-            _payAccruedFees(_vault, _owner, _amount - _cacheBorrowedAmount);
+            _payAccruedFees(_vault, _owner, _from, _amount - _cacheBorrowedAmount);
         }
     }
 
     /**
      * @dev used to move `_amount` of accrued fees from accruedFees vault and global variables to the vault's and collateral's paidFees variables and then transfer the fee from the user to this contract
      * @dev reverts if `_amount` is greater than the vault's accruedFees
+     *      reverts if CURRENCY_TOKEN.transferFrom() fails
      */
-    function _payAccruedFees(VaultInfo storage _vault, address _owner, uint256 _amount) private {
+    function _payAccruedFees(VaultInfo storage _vault, address _owner, address _from, uint256 _amount) internal {
         _vault.accruedFees -= _amount;
         paidFees += _amount;
 
         emit FeesPaid(_owner, _amount);
+        CURRENCY_TOKEN.transferFrom(_from, address(this), _amount);
     }
 
     /**
@@ -607,9 +613,12 @@ contract Vault is AccessControl, Pausable, IVault {
         // else, adjust collateral to liquidity threshold (multiply by liquidity threshold fraction)
         // divide by total currency minted to get a value.
 
-        // prevent division by 0 revert below
+        // prevent division by 0 return early below
         uint256 _totalUserDebt = _vault.borrowedAmount + _vault.accruedFees;
-        if (_totalUserDebt == 0) return 0;
+        if (_vault.depositedCollateral == 0) {
+            if (_totalUserDebt > 0) return type(uint256).max;
+            else return 0;
+        }
 
         // _collateralValueInCurrency: divDown (solidity default) since _collateralValueInCurrency is denominator
         uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_collateral, _vault);
