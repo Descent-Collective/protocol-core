@@ -19,6 +19,7 @@ interface IVault {
     error CollateralDebtCeilingExceeded();
     error InsufficientCurrencyAmountToPay();
     error InvalidStabilityModule();
+    error NotFeedContract();
 
     // ------------------------------------------------ EVENTS ------------------------------------------------
     event CollateralTypeAdded(address collateralAddress);
@@ -58,6 +59,7 @@ interface IVault {
     }
 
     enum ModifiableParameters {
+        RATE,
         DEBT_CEILING,
         COLLATERAL_FLOOR_PER_POSITION,
         LIQUIDATION_BONUS,

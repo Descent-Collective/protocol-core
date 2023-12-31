@@ -5,9 +5,7 @@ withdrawCollateralTest.t.sol
     └── when collateral does not exist
     │   └── it should revert with custom error CollateralDoesNotExist()
     └── when collateral exists
-        ├── when caller is not owner and not relied upon by owner
-        │   └── it should revert with custom error NotOwnerOrReliedUpon()
-        └── when caller is owner or relied upon by owner
+        └── when caller is owner or relied upon by owner or none
             ├── when the amount to burn is less than or equal to the owner's borrowed amount
             │   ├── it should accrue fees
             │   ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters

@@ -8,9 +8,18 @@ import {ERC20Permit, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions
 contract ERC20Token is AccessControl, ERC20Permit {
     // Create a new role identifier for the minter role
     bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    uint8 immutable _decimals;
 
-    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) ERC20Permit(_symbol) {
+    constructor(string memory _name, string memory _symbol, uint8 decimals_)
+        ERC20(_name, _symbol)
+        ERC20Permit(_symbol)
+    {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _decimals = decimals_;
+    }
+
+    function decimals() public view override returns (uint8) {
+        return _decimals;
     }
 
     /**

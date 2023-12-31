@@ -4,28 +4,20 @@ pragma solidity 0.8.21;
 //  ==========  External imports    ==========
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IOSM} from "./interfaces/IOSM.sol";
-import {Vault} from "./vault.sol";
 import {IFeed} from "./interfaces/IFeed.sol";
+import {Vault, ERC20} from "./vault.sol";
+import {Pausable} from "./helpers/pausable.sol";
 
-contract Feed is IFeed, AccessControl {
-    uint256 private constant FALSE = 1;
-    uint256 private constant TRUE = 2;
-
+contract Feed is IFeed, AccessControl, Pausable {
     Vault public vault;
-    uint256 public status; // Active status
 
-    mapping(address => IOSM) public collaterals;
+    mapping(ERC20 => IOSM) public collaterals;
 
-    modifier whenNotPaused() {
-        if (status == FALSE) revert Paused();
-        _;
-    }
-
-    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function unpause() external override whenPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         status = TRUE;
     }
 
-    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function pause() external override whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         status = FALSE;
     }
 
@@ -35,19 +27,19 @@ contract Feed is IFeed, AccessControl {
         status = TRUE;
     }
 
-    function setCollateralOSM(address collateral, address oracle) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
-        collaterals[collateral] = IOSM(oracle);
+    function setCollateralOSM(ERC20 collateral, IOSM oracle) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        collaterals[collateral] = oracle;
     }
 
     // Updates the price of a collateral in the accounting
-    function updatePrice(address collateral) external whenNotPaused {
+    function updatePrice(ERC20 collateral) external whenNotPaused {
         uint256 price = collaterals[collateral].current();
         if (price == 0) revert BadPrice();
         vault.updatePrice(collateral, price);
     }
 
     // Updates the price of a collateral in the accounting
-    function mockUpdatePrice(address collateral, uint256 price) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function mockUpdatePrice(ERC20 collateral, uint256 price) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
         if (price == 0) revert BadPrice();
         vault.updatePrice(collateral, price);
     }

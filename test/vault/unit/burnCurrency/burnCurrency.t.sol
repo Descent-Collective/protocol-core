@@ -11,7 +11,7 @@ contract BurnCurrencyTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000e18);
+        vault.depositCollateral(usdc, user1, 1_000 * (10 ** usdc.decimals()));
 
         // mint max amount of xNGN allowed given my collateral deposited
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
@@ -22,7 +22,7 @@ contract BurnCurrencyTest is BaseTest {
         vm.startPrank(user2);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user2, 10_000e18);
+        vault.depositCollateral(usdc, user2, 10_000 * (10 ** usdc.decimals()));
 
         // mint max amount of xNGN allowed given my collateral deposited
         vault.mintCurrency(usdc, user2, user2, 5_000_000e18);
@@ -33,7 +33,7 @@ contract BurnCurrencyTest is BaseTest {
         vm.startPrank(user3);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user3, 10_000e18);
+        vault.depositCollateral(usdc, user3, 10_000 * (10 ** usdc.decimals()));
 
         // mint max amount of xNGN allowed given my collateral deposited
         vault.mintCurrency(usdc, user3, user3, 5_000_000e18);
@@ -63,7 +63,7 @@ contract BurnCurrencyTest is BaseTest {
         whenVaultIsNotPaused
         useUser1
     {
-        if (collateral == usdc) collateral = ERC20(address(uint160(uint256(uint160(address(usdc)))) + 1));
+        if (collateral == usdc) collateral = ERC20(mutateAddress(address(usdc)));
 
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);
@@ -185,7 +185,7 @@ contract BurnCurrencyTest is BaseTest {
     {
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
-        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.depositCollateral(usdc, user2, 1_000 * (10 ** usdc.decimals()));
         vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
         // use user1
@@ -203,7 +203,7 @@ contract BurnCurrencyTest is BaseTest {
         ) / HUNDRED_PERCENTAGE;
 
         // it should revert with underflow error
-        vm.expectRevert(UNDERFLOW_OVERFLOW_PANIC_ERROR);
+        vm.expectRevert(INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR);
         vault.burnCurrency(usdc, user1, 500_000e18 + userVaultInfo.accruedFees + 1);
     }
 
@@ -217,7 +217,7 @@ contract BurnCurrencyTest is BaseTest {
         vm.stopPrank();
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
-        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.depositCollateral(usdc, user2, 1_000 * (10 ** usdc.decimals()));
         vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
         // use user1
@@ -257,7 +257,7 @@ contract BurnCurrencyTest is BaseTest {
         vm.stopPrank();
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
-        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.depositCollateral(usdc, user2, 1_000 * (10 ** usdc.decimals()));
         vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
         // use user1
@@ -297,7 +297,7 @@ contract BurnCurrencyTest is BaseTest {
         vm.stopPrank();
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
-        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.depositCollateral(usdc, user2, 1_000 * (10 ** usdc.decimals()));
         vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
         // use user1
@@ -337,7 +337,7 @@ contract BurnCurrencyTest is BaseTest {
         vm.stopPrank();
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
-        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.depositCollateral(usdc, user2, 1_000 * (10 ** usdc.decimals()));
         vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
         // use user1
@@ -371,7 +371,7 @@ contract BurnCurrencyTest is BaseTest {
         vm.stopPrank();
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
-        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.depositCollateral(usdc, user2, 1_000 * (10 ** usdc.decimals()));
         vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
         // use user1
@@ -405,7 +405,7 @@ contract BurnCurrencyTest is BaseTest {
         vm.stopPrank();
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
-        vault.depositCollateral(usdc, user2, 1_000e18);
+        vault.depositCollateral(usdc, user2, 1_000 * (10 ** usdc.decimals()));
         vault.mintCurrency(usdc, user2, user1, 200_000e18);
 
         // use user1

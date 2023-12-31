@@ -9,9 +9,9 @@ import {IVault} from "./interfaces/IVault.sol";
 import {Currency} from "./currency.sol";
 import {Pausable} from "./helpers/pausable.sol";
 
-contract Vault is AccessControl, Pausable, IVault {
-    bytes32 private constant FEED_CONTRACT_ROLE = keccak256("FEED_CONTRACT_ROLE");
+contract Vault is IVault, AccessControl, Pausable {
     uint256 private constant PRECISION_DEGREE = 18;
+    uint256 private constant MAX_TOKEN_DECIMALS = 18;
     uint256 private constant PRECISION = 1 * (10 ** PRECISION_DEGREE);
     uint256 private constant HUNDRED_PERCENTAGE = 100 * (10 ** PRECISION_DEGREE);
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e12; // assuming the oracle returns data with 6 decimal places
@@ -19,6 +19,7 @@ contract Vault is AccessControl, Pausable, IVault {
     Currency public immutable CURRENCY_TOKEN; // stableTokenAddress
 
     address public stabilityModule; // stability module
+    address public feedContract; // feed contract address
     RateInfo public baseRateInfo; // base rate info
     uint256 public debtCeiling; // global debt ceiling
     uint256 public debt; // sum of all currency minted
@@ -62,7 +63,7 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev interactions with functions without a `whenNotPaused` or `whenPaused` modifier are unaffected
      * @dev reverts if not paused
      */
-    function unpause() external override whenPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function unpause() external override onlyRole(DEFAULT_ADMIN_ROLE) {
         status = TRUE;
     }
 
@@ -72,18 +73,18 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev interactions with functions without a `whenNotPaused` or `whenPaused` modifier are unaffected
      * @dev reverts if not paused
      */
-    function pause() external override whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function pause() external override onlyRole(DEFAULT_ADMIN_ROLE) {
         status = FALSE;
     }
 
     /**
-     * @notice updates the address allowed to perform actions requiring caller to have the `FEED_CONTRACT_ROLE` role
+     * @notice updates the feedContract address
      *
      * @dev reverts if the contract is paused
      * @dev reverts if msg.sender does not have the `DEFAULT_ADMIN_ROLE` role
      */
     function updateFeedContract(address _feedContract) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
-        _grantRole(FEED_CONTRACT_ROLE, _feedContract);
+        feedContract = _feedContract;
     }
 
     /**
@@ -119,13 +120,16 @@ contract Vault is AccessControl, Pausable, IVault {
      * @dev reverts if `_tokenAddress` is address(0) i.e eth, and `_to` is a contract that has no non reverting way to accept eth
      *      reverts if `_tokenAddress` is not `CURRENCY_TOKEN` and not `address(0) but is a contract
      */
-    function recoverToken(address _tokenAddress, address _to) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function recoverToken(address _tokenAddress, address _to) external whenNotPaused {
         if (_tokenAddress == address(CURRENCY_TOKEN)) {
+            // withdraw currency
             CURRENCY_TOKEN.transfer(_to, CURRENCY_TOKEN.balanceOf(address(this)) - paidFees);
         } else if (_tokenAddress == address(0)) {
+            // withdraw eth
             (bool success,) = _to.call{value: address(this).balance}("");
             if (!success) revert EthTransferFailed();
         } else {
+            // withdraw erc20 token that's not currency
             ERC20 _tokenContract = ERC20(_tokenAddress);
             SafeERC20.safeTransfer(
                 _tokenContract,
@@ -166,7 +170,7 @@ contract Vault is AccessControl, Pausable, IVault {
         _collateral.liquidationBonus = _liquidationBonus;
         _collateral.debtCeiling = _debtCeiling;
         _collateral.collateralFloorPerPosition = _collateralFloorPerPosition;
-        _collateral.additionalCollateralPrecision = PRECISION_DEGREE - _collateralToken.decimals();
+        _collateral.additionalCollateralPrecision = MAX_TOKEN_DECIMALS - _collateralToken.decimals();
 
         emit CollateralTypeAdded(address(_collateralToken));
     }
@@ -191,16 +195,24 @@ contract Vault is AccessControl, Pausable, IVault {
     {
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
 
-        if (_param == ModifiableParameters.DEBT_CEILING) {
+        if (_param == ModifiableParameters.RATE) {
+            /**
+             * @dev updates the last stored accumulated rate by adding accumulated rate (since _collateral.rateInfo.lastUpdateTime) to it before updating the rate, this way borrowers are charged the previous rate up until block.timestamp before being charged the new rate.
+             * @dev updates the last update time too for correct future updates to accumulate past rates correctly
+             */
+            _collateral.rateInfo.accumulatedRate +=
+                (block.timestamp - _collateral.rateInfo.lastUpdateTime) * _collateral.rateInfo.rate;
+            _collateral.rateInfo.lastUpdateTime = block.timestamp;
+            _collateral.rateInfo.rate = _data;
+        } else if (_param == ModifiableParameters.DEBT_CEILING) {
             _collateral.debtCeiling = _data;
         } else if (_param == ModifiableParameters.COLLATERAL_FLOOR_PER_POSITION) {
             _collateral.collateralFloorPerPosition = _data;
         } else if (_param == ModifiableParameters.LIQUIDATION_BONUS) {
             _collateral.liquidationBonus = _data;
-        } else if (_param == ModifiableParameters.LIQUIDATION_THRESHOLD) {
-            _collateral.liquidationThreshold = _data;
         } else {
-            revert UnrecognizedParam();
+            // (_param == ModifiableParameters.LIQUIDATION_THRESHOLD)
+            _collateral.liquidationThreshold = _data;
         }
     }
 
@@ -214,13 +226,13 @@ contract Vault is AccessControl, Pausable, IVault {
      *      should revert if the caller does not have the `FEED_CONTRACT_ROLE` role
      *      should revert if the collateral does not exist
      */
-    function updatePrice(address _collateralAddress, uint256 _price)
+    function updatePrice(ERC20 _collateralAddress, uint256 _price)
         external
         whenNotPaused
-        onlyRole(FEED_CONTRACT_ROLE)
-        collateralExists(ERC20(_collateralAddress))
+        collateralExists(_collateralAddress)
     {
-        collateralMapping[ERC20(_collateralAddress)].price = _price;
+        if (msg.sender != feedContract) revert NotFeedContract();
+        collateralMapping[_collateralAddress].price = _price;
     }
 
     /**
@@ -238,32 +250,6 @@ contract Vault is AccessControl, Pausable, IVault {
         baseRateInfo.lastUpdateTime = block.timestamp;
 
         baseRateInfo.rate = _baseRate;
-    }
-
-    /**
-     * @notice updates the collateral rate charged for borrowing this currency against a given collateral
-     *
-     * @param _collateralToken contract address of collateral token to update it's collateral rate
-     * @param _rate new collateral rate (per second), should be denominated in 1e18 where 1e18 is 100%
-     *
-     * @dev updates the last stored accumulated rate by adding accumulated rate (since _collateral.rateInfo.lastUpdateTime) to it before updating the rate, this way borrowers are charged the previous rate up until block.timestamp before being charged the new rate.
-     * @dev updates the last update time too for correct future updates to accumulate past rates correctly
-     * @dev should revert if the contract is paused
-     *      should revert if the caller does not have the `DEFAULT_ADMIN_ROLE` role
-     *      should revert if the collateral does not exist
-     */
-    function updateCollateralRate(ERC20 _collateralToken, uint256 _rate)
-        external
-        whenNotPaused
-        onlyRole(DEFAULT_ADMIN_ROLE)
-        collateralExists(_collateralToken)
-    {
-        CollateralInfo storage _collateral = collateralMapping[_collateralToken];
-        _collateral.rateInfo.accumulatedRate +=
-            (block.timestamp - _collateral.rateInfo.lastUpdateTime) * _collateral.rateInfo.rate;
-        _collateral.rateInfo.lastUpdateTime = block.timestamp;
-
-        _collateral.rateInfo.rate = _rate;
     }
 
     /**

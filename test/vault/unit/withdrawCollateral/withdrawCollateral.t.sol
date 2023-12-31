@@ -11,7 +11,7 @@ contract WithdrawCollateralTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000e18);
+        vault.depositCollateral(usdc, user1, 1_000 * (10 ** usdc.decimals()));
 
         vm.stopPrank();
     }
@@ -37,7 +37,7 @@ contract WithdrawCollateralTest is BaseTest {
         whenVaultIsNotPaused
         useUser1
     {
-        if (collateral == usdc) collateral = ERC20(address(uint160(uint256(uint160(address(usdc)))) + 1));
+        if (collateral == usdc) collateral = ERC20(mutateAddress(address(usdc)));
 
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);
@@ -55,7 +55,7 @@ contract WithdrawCollateralTest is BaseTest {
         whenVaultIsNotPaused
         whenCollateralExists
     {
-        if (user == caller) user = address(uint160(uint256(uint160(user)) + 1));
+        if (user == caller) user = mutateAddress(user);
 
         // use unrelied upon user2
         vm.prank(caller);
@@ -78,10 +78,10 @@ contract WithdrawCollateralTest is BaseTest {
         whenCallerIsOwnerOrReliedUponByOwner
         useUser1
     {
-        amount = bound(amount, 1_000e18 + 1, type(uint256).max);
+        amount = bound(amount, (1_000 * (10 ** usdc.decimals())) + 1, type(uint256).max);
 
         // it should revert with solidity panic error underflow error
-        vm.expectRevert(UNDERFLOW_OVERFLOW_PANIC_ERROR);
+        vm.expectRevert(INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR);
         vault.withdrawCollateral(usdc, user1, user1, amount);
     }
 
@@ -97,7 +97,7 @@ contract WithdrawCollateralTest is BaseTest {
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
         useUser1
     {
-        amount = bound(amount, 1, 1_000e18);
+        amount = bound(amount, 1, 1_000 * (10 ** usdc.decimals()));
 
         // mint max amount possible of currency to make withdrawing any of my collateral bad for user1 vault position
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
@@ -117,7 +117,7 @@ contract WithdrawCollateralTest is BaseTest {
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
         useReliedOnForUser1(user2)
     {
-        amount = bound(amount, 1, 1_000e18);
+        amount = bound(amount, 1, 1_000 * (10 ** usdc.decimals()));
 
         // mint max amount possible of currency to make withdrawing any of my collateral bad for user1 vault position
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
@@ -174,7 +174,7 @@ contract WithdrawCollateralTest is BaseTest {
     }
 
     function runWithdrawCollateralTestWithChecks(address recipient, uint256 amount, uint256 timeElapsed) private {
-        amount = bound(amount, 0, 500e18);
+        amount = bound(amount, 0, 500 * (10 ** usdc.decimals()));
         timeElapsed = bound(timeElapsed, 0, TEN_YEARS);
 
         // cache pre balances

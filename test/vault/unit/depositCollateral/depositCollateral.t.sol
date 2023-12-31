@@ -28,7 +28,7 @@ contract DepositCollateralTest is BaseTest {
         whenVaultIsNotPaused
         useUser1
     {
-        if (collateral == usdc) collateral = ERC20(address(uint160(uint256(uint160(address(usdc)))) + 1));
+        if (collateral == usdc) collateral = ERC20(mutateAddress(address(usdc)));
 
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);
@@ -84,20 +84,20 @@ contract DepositCollateralTest is BaseTest {
 
         // it should emit CollateralDeposited() event
         vm.expectEmit(true, false, false, true, address(vault));
-        emit CollateralDeposited(user1, 1_000e18);
+        emit CollateralDeposited(user1, 1_000 * (10 ** usdc.decimals()));
 
         // deposit 1,000 usdc into vault
-        vault.depositCollateral(usdc, user1, 1_000e18);
+        vault.depositCollateral(usdc, user1, 1_000 * (10 ** usdc.decimals()));
 
         // it should update the _owner's deposited collateral and collateral's total deposit
         IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
 
-        assertEq(afterCollateralInfo.totalDepositedCollateral, 1_000e18);
-        assertEq(afterUserVaultInfo.depositedCollateral, 1_000e18);
+        assertEq(afterCollateralInfo.totalDepositedCollateral, 1_000 * (10 ** usdc.decimals()));
+        assertEq(afterUserVaultInfo.depositedCollateral, 1_000 * (10 ** usdc.decimals()));
 
         // it should send the collateral token to the vault from the _owner
-        assertEq(usdc.balanceOf(address(vault)) - vaultOldBalance, 1_000e18);
-        assertEq(userOldBalance - usdc.balanceOf(payer), 1_000e18);
+        assertEq(usdc.balanceOf(address(vault)) - vaultOldBalance, 1_000 * (10 ** usdc.decimals()));
+        assertEq(userOldBalance - usdc.balanceOf(payer), 1_000 * (10 ** usdc.decimals()));
     }
 }

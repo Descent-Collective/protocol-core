@@ -11,7 +11,7 @@ contract MintCurrencyTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000e18);
+        vault.depositCollateral(usdc, user1, 1_000 * (10 ** usdc.decimals()));
 
         vm.stopPrank();
     }
@@ -38,7 +38,7 @@ contract MintCurrencyTest is BaseTest {
         whenVaultIsNotPaused
         useUser1
     {
-        if (collateral == usdc) collateral = ERC20(address(uint160(uint256(uint160(address(usdc)))) + 1));
+        if (collateral == usdc) collateral = ERC20(mutateAddress(address(usdc)));
 
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);
@@ -56,7 +56,7 @@ contract MintCurrencyTest is BaseTest {
         whenVaultIsNotPaused
         whenCollateralExists
     {
-        if (user == caller) user = address(uint160(uint256(uint160(user)) + 1));
+        if (user == caller) user = mutateAddress(user);
 
         // use unrelied upon user2
         vm.prank(caller);
@@ -100,7 +100,7 @@ contract MintCurrencyTest is BaseTest {
         whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold
         useUser1
     {
-        amountToWithdraw = bound(amountToWithdraw, 900e18 + 1, 1_000e18);
+        amountToWithdraw = bound(amountToWithdraw, (900 * (10 ** usdc.decimals())) + 1, 1_000 * (10 ** usdc.decimals()));
         // no need to bound amount to mint, as it won't get to debt ceiling if it reverts
 
         // user1 withdraws enough of their collateral to be below the floor
@@ -115,6 +115,51 @@ contract MintCurrencyTest is BaseTest {
 
     modifier whenOwnersCollateralBalanceIsAboveOrEqualToTheCollateralFloor() {
         _;
+    }
+
+    function test_WhenTheMintTakesTheGlobalDebtAboveTheGlobalDebtCeiling(uint256 amount)
+        external
+        whenVaultIsNotPaused
+        whenCollateralExists
+        whenCallerIsOwnerOrReliedUponByOwner
+        whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold
+        whenOwnersCollateralBalanceIsAboveOrEqualToTheCollateralFloor
+    {
+        vm.prank(owner);
+        vault.updateDebtCeiling(100e18);
+
+        vm.startPrank(user1);
+        amount = bound(amount, 100e18 + 1, type(uint256).max);
+
+        // it should revert with custom error GlobalDebtCeilingExceeded()
+        vm.expectRevert(GlobalDebtCeilingExceeded.selector);
+        // try minting even the lowest of amounts, should revert
+        vault.mintCurrency(usdc, user1, user1, amount);
+    }
+
+    modifier whenTheMintDoesNotTakeTheGlobalDebtAboveTheGlobalDebtCeiling() {
+        _;
+    }
+
+    function test_WhenTheMintTakesTheGlobalDebtAboveTheGlobalDbetCeiling(uint256 amount)
+        external
+        whenVaultIsNotPaused
+        whenCollateralExists
+        whenCallerIsOwnerOrReliedUponByOwner
+        whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold
+        whenOwnersCollateralBalanceIsAboveOrEqualToTheCollateralFloor
+        whenTheMintDoesNotTakeTheGlobalDebtAboveTheGlobalDebtCeiling
+    {
+        vm.prank(owner);
+        vault.updateCollateralData(usdc, IVault.ModifiableParameters.DEBT_CEILING, 100e18);
+
+        vm.startPrank(user1);
+        amount = bound(amount, 100e18 + 1, type(uint256).max);
+
+        // it should revert with custom error CollateralDebtCeilingExceeded()
+        vm.expectRevert(CollateralDebtCeilingExceeded.selector);
+        // try minting even the lowest of amounts, should revert
+        vault.mintCurrency(usdc, user1, user1, amount);
     }
 
     function test_WhenTheOwnersBorrowedAmountIs0(uint256 amount, uint256 timeElapsed)

@@ -3,13 +3,18 @@ pragma solidity ^0.8.13;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Vault, IVault, Currency, ERC20} from "../src/vault.sol";
-import {Feed} from "../src/feed.sol";
+import {Feed, IOSM} from "../src/feed.sol";
 import {ERC20Token} from "./mocks/ERC20Token.sol";
 import {ErrorsAndEvents} from "./mocks/ErrorsAndEvents.sol";
 
 contract BaseTest is Test, ErrorsAndEvents {
-    bytes constant UNDERFLOW_OVERFLOW_PANIC_ERROR = abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 17);
+    bytes constant INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR =
+        abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 17);
+    bytes constant ENUM_UNDERFLOW_OVERFLOW_PANIC_ERROR = abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 33);
     uint256 constant TEN_YEARS = 365 days * 10;
+    uint256 constant MAX_TOKEN_DECIMALS = 18;
+    uint256 constant FALSE = 1;
+    uint256 constant TRUE = 2;
 
     uint256 PRECISION = 1e18;
     uint256 HUNDRED_PERCENTAGE = 100e18;
@@ -42,24 +47,24 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         xNGN = new Currency("xNGN", "xNGN");
 
-        usdc = ERC20(address(new ERC20Token("Circle USD", "USDC")));
+        usdc = ERC20(address(new ERC20Token("Circle USD", "USDC", 6))); // changing the last parameter her i.e decimals and running th tests shows that it works for all token decimals <= 18
 
         vault = new Vault(xNGN, onePercentPerSecondInterestRate, type(uint256).max);
 
         feed = new Feed(vault);
 
         vault.createCollateralType(
-            usdc, oneAndHalfPercentPerSecondInterestRate, 50e18, 10e18, type(uint256).max, 100e18
+            usdc, oneAndHalfPercentPerSecondInterestRate, 50e18, 10e18, type(uint256).max, 100 * (10 ** usdc.decimals())
         );
         vault.updateFeedContract(address(feed));
-        feed.mockUpdatePrice(address(usdc), 1000e6);
+        feed.mockUpdatePrice(usdc, 1000e6);
         xNGN.setMinterRole(address(vault));
 
-        ERC20Token(address(usdc)).mint(user1, 100_000e18);
-        ERC20Token(address(usdc)).mint(user2, 100_000e18);
-        ERC20Token(address(usdc)).mint(user3, 100_000e18);
-        ERC20Token(address(usdc)).mint(user4, 100_000e18);
-        ERC20Token(address(usdc)).mint(user5, 100_000e18);
+        ERC20Token(address(usdc)).mint(user1, 100_000 * (10 ** usdc.decimals()));
+        ERC20Token(address(usdc)).mint(user2, 100_000 * (10 ** usdc.decimals()));
+        ERC20Token(address(usdc)).mint(user3, 100_000 * (10 ** usdc.decimals()));
+        ERC20Token(address(usdc)).mint(user4, 100_000 * (10 ** usdc.decimals()));
+        ERC20Token(address(usdc)).mint(user5, 100_000 * (10 ** usdc.decimals()));
 
         vm.stopPrank();
 
@@ -167,12 +172,12 @@ contract BaseTest is Test, ErrorsAndEvents {
             ) / HUNDRED_PERCENTAGE;
     }
 
-    /**
-     * @dev divides `_a` by `_b` and rounds the result `_c` up to the next whole number
-     *
-     * @dev if `_a` is 0, return 0 early as it will revert with underflow error when calculating divUp below
-     * @dev reverts if `_b` is 0
-     */
+    function mutateAddress(address addr) internal pure returns (address) {
+        unchecked {
+            return address(uint160(uint256(uint160(addr))) + 1);
+        }
+    }
+
     function divUp(uint256 _a, uint256 _b) internal pure returns (uint256 _c) {
         if (_b == 0) revert();
         if (_a == 0) return 0;

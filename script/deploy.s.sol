@@ -60,7 +60,7 @@ contract DeployScript is BaseScript {
 
         console2.log("\n  Updating price of usdc from feed");
         uint256 _price = deployConfigJson.readUint(".collaterals.USDC.price");
-        feed.mockUpdatePrice(address(usdc), _price);
+        feed.mockUpdatePrice(usdc, _price);
         console2.log("Updating price of usdc from feed done successfully to:", _price);
 
         console2.log("\n  Giving vault minter role for xNGN");
@@ -70,7 +70,7 @@ contract DeployScript is BaseScript {
 
     function getOrCreateUsdc() private returns (ERC20 usdc) {
         if (currenctChain == Chains.Localnet) {
-            usdc = ERC20(address(new ERC20Token("Circle USD", "USDC")));
+            usdc = ERC20(address(new ERC20Token("Circle USD", "USDC", 6)));
         } else {
             usdc = ERC20(getDeployConfigJson().readAddress(".collaterals.USDC.collateralAddress"));
         }

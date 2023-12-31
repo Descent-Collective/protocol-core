@@ -11,7 +11,7 @@ contract LiquidateTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000e18);
+        vault.depositCollateral(usdc, user1, 1_000 * (10 ** usdc.decimals()));
 
         // mint max amount
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
@@ -22,7 +22,7 @@ contract LiquidateTest is BaseTest {
         // deposit and mint with user 2, to be used for liquidation
         vm.stopPrank();
         vm.startPrank(user2);
-        vault.depositCollateral(usdc, user2, 10_000e18);
+        vault.depositCollateral(usdc, user2, 10_000 * (10 ** usdc.decimals()));
         vault.mintCurrency(usdc, user2, user2, 5_000_000e18);
 
         vm.stopPrank();
@@ -49,7 +49,7 @@ contract LiquidateTest is BaseTest {
         external
         whenVaultIsNotPaused
     {
-        if (collateral == usdc) collateral = ERC20(address(uint160(uint256(uint160(address(usdc)))) + 1));
+        if (collateral == usdc) collateral = ERC20(mutateAddress(address(usdc)));
 
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);
@@ -91,7 +91,7 @@ contract LiquidateTest is BaseTest {
         amount = bound(amount, 500_000e18 + accruedFees + 1, type(uint256).max - 1); // - 1 here because .max is used for un-frontrunnable full liquidation
 
         // it should revert with underflow error
-        vm.expectRevert(UNDERFLOW_OVERFLOW_PANIC_ERROR);
+        vm.expectRevert(INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR);
         vault.liquidate(usdc, user1, user2, amount);
     }
 
@@ -153,7 +153,10 @@ contract LiquidateTest is BaseTest {
 
         uint256 userAccruedFees = calculateUserCurrentAccruedFees(usdc, user1);
         uint256 totalCurrencyPaid = initialUserVaultInfo.borrowedAmount + userAccruedFees;
-        uint256 collateralToPayOut = ((totalCurrencyPaid * initialCollateralInfo.price) * 1.1e18) / (1e18 * 1e12);
+        uint256 collateralToPayOut = divUp(
+            ((totalCurrencyPaid * initialCollateralInfo.price) * 1.1e18) / (1e18 * 1e12),
+            10 ** initialCollateralInfo.additionalCollateralPrecision
+        );
         uint256 initialUser2Bal = usdc.balanceOf(user2);
 
         // it should emit Liquidated() event with with expected indexed and unindexed parameters

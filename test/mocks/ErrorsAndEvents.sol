@@ -25,4 +25,9 @@ contract ErrorsAndEvents {
     error NotEnoughCollateralToPay();
     error EthTransferFailed();
     error Paused();
+    error NotPaused();
+    error GlobalDebtCeilingExceeded();
+    error CollateralDebtCeilingExceeded();
+    error AccessControlUnauthorizedAccount(address, bytes32);
+    error NotFeedContract();
 }
