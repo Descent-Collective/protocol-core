@@ -30,4 +30,6 @@ contract ErrorsAndEvents {
     error CollateralDebtCeilingExceeded();
     error AccessControlUnauthorizedAccount(address, bytes32);
     error NotFeedContract();
+    error InvalidStabilityModule();
+    error ERC20InsufficientBalance(address, uint256, uint256);
 }

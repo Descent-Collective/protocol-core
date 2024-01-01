@@ -30,6 +30,7 @@ contract BaseTest is Test, ErrorsAndEvents {
     address user5 = vm.addr(uint256(keccak256("User5")));
     uint256 onePercentPerSecondInterestRate = uint256(1e18) / 365 days;
     uint256 oneAndHalfPercentPerSecondInterestRate = uint256(1.5e18) / 365 days;
+    address testStabilityModule = address(uint160(uint256(keccak256("stability module"))));
 
     function labelAddresses() private {
         vm.label(owner, "Owner");
@@ -40,6 +41,7 @@ contract BaseTest is Test, ErrorsAndEvents {
         vm.label(address(xNGN), "xNGN");
         vm.label(address(feed), "Feed");
         vm.label(address(usdc), "USDC");
+        vm.label(testStabilityModule, "Test stability module");
     }
 
     function setUp() public virtual {
@@ -57,6 +59,7 @@ contract BaseTest is Test, ErrorsAndEvents {
             usdc, oneAndHalfPercentPerSecondInterestRate, 50e18, 10e18, type(uint256).max, 100 * (10 ** usdc.decimals())
         );
         vault.updateFeedContract(address(feed));
+        vault.updateStabilityModule(testStabilityModule); // no implementation so set it to psuedo-random address
         feed.mockUpdatePrice(usdc, 1000e6);
         xNGN.setMinterRole(address(vault));
 

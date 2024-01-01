@@ -153,10 +153,9 @@ contract LiquidateTest is BaseTest {
 
         uint256 userAccruedFees = calculateUserCurrentAccruedFees(usdc, user1);
         uint256 totalCurrencyPaid = initialUserVaultInfo.borrowedAmount + userAccruedFees;
-        uint256 collateralToPayOut = divUp(
-            ((totalCurrencyPaid * initialCollateralInfo.price) * 1.1e18) / (1e18 * 1e12),
-            10 ** initialCollateralInfo.additionalCollateralPrecision
-        );
+        uint256 collateralToPayOut = (totalCurrencyPaid * PRECISION) / (initialCollateralInfo.price * 1e12);
+        collateralToPayOut = collateralToPayOut / (10 ** initialCollateralInfo.additionalCollateralPrecision);
+        collateralToPayOut += (collateralToPayOut * initialCollateralInfo.liquidationBonus) / HUNDRED_PERCENTAGE;
         uint256 initialUser2Bal = usdc.balanceOf(user2);
 
         // it should emit Liquidated() event with with expected indexed and unindexed parameters
@@ -229,8 +228,8 @@ contract LiquidateTest is BaseTest {
         uint256 userAccruedFees = calculateUserCurrentAccruedFees(usdc, user1);
 
         amountToLiquidate = bound(amountToLiquidate, 1e18, initialUserVaultInfo.borrowedAmount);
-        uint256 collateralToPayOut = divUp((amountToLiquidate * PRECISION), (initialCollateralInfo.price * 1e12));
-        collateralToPayOut = divUp(collateralToPayOut, 10 ** initialCollateralInfo.additionalCollateralPrecision);
+        uint256 collateralToPayOut = (amountToLiquidate * PRECISION) / (initialCollateralInfo.price * 1e12);
+        collateralToPayOut = collateralToPayOut / (10 ** initialCollateralInfo.additionalCollateralPrecision);
         collateralToPayOut += (collateralToPayOut * initialCollateralInfo.liquidationBonus) / HUNDRED_PERCENTAGE;
 
         uint256 initialUser2Bal = usdc.balanceOf(user2);
@@ -301,8 +300,8 @@ contract LiquidateTest is BaseTest {
 
         feeToPay = bound(feeToPay, 1, userAccruedFees - 1); // - 1 because we are testing for when fees are not compleetely paid
         uint256 amountToLiquidate = 500_000e18 + feeToPay;
-        uint256 collateralToPayOut = divUp((amountToLiquidate * PRECISION), (initialCollateralInfo.price * 1e12));
-        collateralToPayOut = divUp(collateralToPayOut, 10 ** initialCollateralInfo.additionalCollateralPrecision);
+        uint256 collateralToPayOut = (amountToLiquidate * PRECISION) / (initialCollateralInfo.price * 1e12);
+        collateralToPayOut = collateralToPayOut / (10 ** initialCollateralInfo.additionalCollateralPrecision);
         collateralToPayOut += (collateralToPayOut * initialCollateralInfo.liquidationBonus) / HUNDRED_PERCENTAGE;
 
         uint256 initialUser2Bal = usdc.balanceOf(user2);

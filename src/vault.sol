@@ -123,13 +123,16 @@ contract Vault is IVault, AccessControl, Pausable {
     function recoverToken(address _tokenAddress, address _to) external whenNotPaused {
         if (_tokenAddress == address(CURRENCY_TOKEN)) {
             // withdraw currency
+            // withdraw all currency that's not part of the protcol earned fees
             CURRENCY_TOKEN.transfer(_to, CURRENCY_TOKEN.balanceOf(address(this)) - paidFees);
         } else if (_tokenAddress == address(0)) {
             // withdraw eth
+            // withdraw all eth since native eth is never used or expected to be used in the contract
             (bool success,) = _to.call{value: address(this).balance}("");
             if (!success) revert EthTransferFailed();
         } else {
             // withdraw erc20 token that's not currency
+            // withdraw all erc20 token balance that's not associated with a vault
             ERC20 _tokenContract = ERC20(_tokenAddress);
             SafeERC20.safeTransfer(
                 _tokenContract,
@@ -267,7 +270,7 @@ contract Vault is IVault, AccessControl, Pausable {
 
         paidFees -= _amount;
 
-        CURRENCY_TOKEN.transfer(msg.sender, _amount);
+        CURRENCY_TOKEN.transfer(_stabilityModule, _amount);
     }
 
     /**
@@ -599,12 +602,11 @@ contract Vault is IVault, AccessControl, Pausable {
         // else, adjust collateral to liquidity threshold (multiply by liquidity threshold fraction)
         // divide by total currency minted to get a value.
 
-        // prevent division by 0 return early below
         uint256 _totalUserDebt = _vault.borrowedAmount + _vault.accruedFees;
-        if (_vault.depositedCollateral == 0) {
-            if (_totalUserDebt > 0) return type(uint256).max;
-            else return 0;
-        }
+        // if user's debt is 0 return 0
+        if (_totalUserDebt == 0) return 0;
+        // if deposited collateral is 0 return type(uint256).max. The condition check above ensures that execution only reaches here if _totalUserDebt > 0
+        if (_vault.depositedCollateral == 0) return type(uint256).max;
 
         // _collateralValueInCurrency: divDown (solidity default) since _collateralValueInCurrency is denominator
         uint256 _collateralValueInCurrency = _getCurrencyValueOfCollateral(_collateral, _vault);
@@ -639,9 +641,9 @@ contract Vault is IVault, AccessControl, Pausable {
         returns (uint256)
     {
         uint256 _collateralAmountOfCurrencyValue =
-            _divUp((_amount * PRECISION), (_collateral.price * ADDITIONAL_FEED_PRECISION));
+            (_amount * PRECISION) / (_collateral.price * ADDITIONAL_FEED_PRECISION);
 
-        return _divUp(_collateralAmountOfCurrencyValue, 10 ** _collateral.additionalCollateralPrecision);
+        return _collateralAmountOfCurrencyValue / (10 ** _collateral.additionalCollateralPrecision);
     }
 
     /**
