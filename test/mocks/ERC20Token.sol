@@ -10,10 +10,7 @@ contract ERC20Token is AccessControl, ERC20Permit {
     bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
     uint8 immutable _decimals;
 
-    constructor(string memory _name, string memory _symbol, uint8 decimals_)
-        ERC20(_name, _symbol)
-        ERC20Permit(_symbol)
-    {
+    constructor(string memory _name, string memory _symbol, uint8 decimals_) ERC20(_name, _symbol) ERC20Permit(_name) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _decimals = decimals_;
     }
