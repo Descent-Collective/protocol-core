@@ -13,7 +13,7 @@ contract Currency is AccessControl, ERC20Permit, ICurrency {
 
     bool public permit2Enabled; // if permit 2 is enabled by default or not
 
-    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) ERC20Permit(_symbol) {
+    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) ERC20Permit(_name) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         permit2Enabled = true;
     }
