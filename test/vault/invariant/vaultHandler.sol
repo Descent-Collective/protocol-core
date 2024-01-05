@@ -52,7 +52,6 @@ contract VaultHandler is Test {
         external
         setOwner(ownerIndexSeed)
         useActor(actorIndexSeed)
-        useOwnerIfCurrentActorIsNotReliedOn
     {
         amount = bound(amount, 0, usdc.balanceOf(currentActor));
         vault.depositCollateral(usdc, currentOwner, amount);
@@ -88,7 +87,6 @@ contract VaultHandler is Test {
         external
         setOwner(ownerIndexSeed)
         useActor(actorIndexSeed)
-        useOwnerIfCurrentActorIsNotReliedOn
     {
         amount = bound(amount, 0, usdc.balanceOf(currentActor));
         vault.burnCurrency(usdc, currentOwner, amount);
