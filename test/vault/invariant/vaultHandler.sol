@@ -84,5 +84,13 @@ contract VaultHandler is Test {
         }
     }
 
-    function burnCurrency() external {}
+    function burnCurrency(uint256 ownerIndexSeed, uint256 actorIndexSeed, uint256 amount)
+        external
+        setOwner(ownerIndexSeed)
+        useActor(actorIndexSeed)
+        useOwnerIfCurrentActorIsNotReliedOn
+    {
+        amount = bound(amount, 0, usdc.balanceOf(currentActor));
+        vault.burnCurrency(usdc, currentOwner, amount);
+    }
 }
