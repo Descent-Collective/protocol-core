@@ -5,9 +5,9 @@ import {Test, ERC20, IVault, Vault} from "../../base.t.sol";
 import {VaultGetters} from "./VaultGetters.sol";
 
 contract VaultHandler is Test {
-    VaultGetters vaultGetters;
-    Vault vault;
-    ERC20 usdc;
+    VaultGetters public vaultGetters;
+    Vault public vault;
+    ERC20 public usdc;
     address owner = vm.addr(uint256(keccak256("OWNER")));
     address user1 = vm.addr(uint256(keccak256("User1")));
     address user2 = vm.addr(uint256(keccak256("User2")));
@@ -15,7 +15,7 @@ contract VaultHandler is Test {
     address user4 = vm.addr(uint256(keccak256("User4")));
     address user5 = vm.addr(uint256(keccak256("User5")));
 
-    address[] internal actors;
+    address[5] public actors;
     address currentActor;
     address currentOwner; // address to be used as owner variable in the calls to be made
 
