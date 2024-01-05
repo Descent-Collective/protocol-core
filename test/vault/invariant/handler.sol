@@ -1,28 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {ERC20, IVault, Vault} from "./baseInvariant.t.sol";
-import {Vm, StdCheats, StdUtils} from "forge-std/Test.sol";
+import {BaseTest, ERC20, IVault, Vault} from "./baseInvariant.t.sol";
+import {VaultGetters} from "./VaultGetters.sol";
 
-contract VaultHandler is StdCheats, StdUtils {
-    Vault vault;
-    ERC20 usdc;
+contract VaultHandler is BaseTest {
+    VaultGetters vaultGetters;
+
     address[] internal actors;
     address currentActor;
     address currentOwner; // address to be used as owner variable in the calls to be made
 
-    address internal constant VM_ADDRESS = address(uint160(uint256(keccak256("hevm cheat code"))));
-    Vm internal constant vm = Vm(VM_ADDRESS);
-
-    address user1 = vm.addr(uint256(keccak256("User1")));
-    address user2 = vm.addr(uint256(keccak256("User2")));
-    address user3 = vm.addr(uint256(keccak256("User3")));
-    address user4 = vm.addr(uint256(keccak256("User4")));
-    address user5 = vm.addr(uint256(keccak256("User5")));
-
     constructor(Vault _vault, ERC20 _usdc) {
         vault = _vault;
         usdc = _usdc;
+        vaultGetters = new VaultGetters();
 
         actors[0] = user1;
         actors[1] = user2;
@@ -58,7 +50,18 @@ contract VaultHandler is StdCheats, StdUtils {
         vault.depositCollateral(usdc, currentOwner, amount);
     }
 
-    function withdrawCollateral() external {}
+    function withdrawCollateral(uint256 ownerIndexSeed, uint256 actorIndexSeed, address to, uint256 amount)
+        external
+        setOwner(ownerIndexSeed)
+        useActor(actorIndexSeed)
+        useOwnerIfCurrentActorIsNotReliedOn
+    {
+        int256 maxWithdrawable = vaultGetters.getMaxWithdrawable(vault, usdc, currentOwner);
+        if (maxWithdrawable >= 0) {
+            amount = bound(amount, 0, uint256(maxWithdrawable));
+            vault.withdrawCollateral(usdc, currentOwner, to, amount);
+        }
+    }
 
     function mintCurrency() external {}
 
