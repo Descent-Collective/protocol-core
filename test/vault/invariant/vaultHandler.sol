@@ -71,7 +71,18 @@ contract VaultHandler is Test {
         }
     }
 
-    function mintCurrency() external {}
+    function mintCurrency(uint256 ownerIndexSeed, uint256 actorIndexSeed, address to, uint256 amount)
+        external
+        setOwner(ownerIndexSeed)
+        useActor(actorIndexSeed)
+        useOwnerIfCurrentActorIsNotReliedOn
+    {
+        int256 maxBorrowable = vaultGetters.getMaxBorrowable(vault, usdc, currentOwner);
+        if (maxBorrowable >= 0) {
+            amount = bound(amount, 0, uint256(maxBorrowable));
+            vault.mintCurrency(usdc, currentOwner, to, amount);
+        }
+    }
 
     function burnCurrency() external {}
 }
