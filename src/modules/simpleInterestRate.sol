@@ -2,8 +2,8 @@
 pragma solidity 0.8.21;
 
 //  ==========  External imports    ==========
-import {Vault} from "./vault.sol";
-import {IRate} from "./interfaces/IRate.sol";
+import {Vault} from "../vault.sol";
+import {IRate} from "../interfaces/IRate.sol";
 
 contract SimpleInterestRate is IRate {
     /**

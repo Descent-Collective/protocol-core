@@ -3,16 +3,17 @@ pragma solidity 0.8.21;
 
 import {Vault} from "../src/vault.sol";
 import {Currency} from "../src/currency.sol";
-import {Feed} from "../src/feed.sol";
+import {Feed} from "../src/modules/feed.sol";
 
 import {BaseScript, stdJson, console2} from "./base.s.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Token} from "../test/mocks/ERC20Token.sol";
+import {SimpleInterestRate, IRate} from "../src/modules/SimpleInterestRate.sol";
 
 contract DeployScript is BaseScript {
     using stdJson for string;
 
-    function run() external broadcast returns (Currency xNGN, Vault vault, Feed feed) {
+    function run() external broadcast returns (Currency xNGN, Vault vault, Feed feed, IRate rate) {
         string memory deployConfigJson = getDeployConfigJson();
         uint256 baseRate = deployConfigJson.readUint(".baseRate");
         uint256 debtCeiling = deployConfigJson.readUint(".debtCeiling");
@@ -27,7 +28,11 @@ contract DeployScript is BaseScript {
 
         console2.log("\n  Deploying feed contract");
         feed = new Feed(vault);
-        console2.log("Vault deployed successfully at address:", address(feed));
+        console2.log("Feed deployed successfully at address:", address(feed));
+
+        console2.log("\n  Deploying rate contract");
+        rate = new SimpleInterestRate();
+        console2.log("Rate deployed successfully at address:", address(rate));
 
         console2.log("\n  Getting or deploying usdc contract");
         ERC20 usdc = getOrCreateUsdc();
@@ -57,6 +62,10 @@ contract DeployScript is BaseScript {
         console2.log("\n  Setting feed contract in vault");
         vault.updateFeedModule(address(feed));
         console2.log("Feed contract in vault set successfully");
+
+        console2.log("\n  Setting rate contract in vault");
+        vault.updateRateModule(rate);
+        console2.log("Rate contract in vault set successfully");
 
         console2.log("\n  Updating price of usdc from feed");
         uint256 _price = deployConfigJson.readUint(".collaterals.USDC.price");

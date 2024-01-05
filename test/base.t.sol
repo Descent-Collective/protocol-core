@@ -3,10 +3,10 @@ pragma solidity ^0.8.13;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {Vault, IVault, Currency, ERC20} from "../src/vault.sol";
-import {Feed, IOSM} from "../src/feed.sol";
+import {Feed, IOSM} from "../src/modules/feed.sol";
 import {ERC20Token} from "./mocks/ERC20Token.sol";
 import {ErrorsAndEvents} from "./mocks/ErrorsAndEvents.sol";
-import {IRate, SimpleInterestRate} from "../src/simpleInterestRate.sol";
+import {IRate, SimpleInterestRate} from "../src/modules/simpleInterestRate.sol";
 
 contract BaseTest is Test, ErrorsAndEvents {
     bytes constant INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR =

@@ -3,10 +3,10 @@ pragma solidity 0.8.21;
 
 //  ==========  External imports    ==========
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {IOSM} from "./interfaces/IOSM.sol";
-import {IFeed} from "./interfaces/IFeed.sol";
-import {Vault, ERC20} from "./vault.sol";
-import {Pausable} from "./helpers/pausable.sol";
+import {IOSM} from "../interfaces/IOSM.sol";
+import {IFeed} from "../interfaces/IFeed.sol";
+import {Vault, ERC20} from "../vault.sol";
+import {Pausable} from "../helpers/pausable.sol";
 
 contract Feed is IFeed, AccessControl, Pausable {
     Vault public vault;
