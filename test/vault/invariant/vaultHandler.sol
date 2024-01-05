@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20, IVault, Vault} from "./baseInvariant.t.sol";
+import {Test, ERC20, IVault, Vault} from "../../base.t.sol";
 import {VaultGetters} from "./VaultGetters.sol";
 
-contract VaultHandler is BaseTest {
+contract VaultHandler is Test {
     VaultGetters vaultGetters;
+    Vault vault;
+    ERC20 usdc;
+    address owner = vm.addr(uint256(keccak256("OWNER")));
+    address user1 = vm.addr(uint256(keccak256("User1")));
+    address user2 = vm.addr(uint256(keccak256("User2")));
+    address user3 = vm.addr(uint256(keccak256("User3")));
+    address user4 = vm.addr(uint256(keccak256("User4")));
+    address user5 = vm.addr(uint256(keccak256("User5")));
 
     address[] internal actors;
     address currentActor;
