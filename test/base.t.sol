@@ -6,6 +6,7 @@ import {Vault, IVault, Currency, ERC20} from "../src/vault.sol";
 import {Feed, IOSM} from "../src/feed.sol";
 import {ERC20Token} from "./mocks/ERC20Token.sol";
 import {ErrorsAndEvents} from "./mocks/ErrorsAndEvents.sol";
+import {IRate, SimpleInterestRate} from "../src/simpleInterestRate.sol";
 
 contract BaseTest is Test, ErrorsAndEvents {
     bytes constant INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR =
@@ -22,6 +23,7 @@ contract BaseTest is Test, ErrorsAndEvents {
     Currency xNGN;
     ERC20 usdc;
     Feed feed;
+    IRate simpleInterestRate;
     address owner = vm.addr(uint256(keccak256("OWNER")));
     address user1 = vm.addr(uint256(keccak256("User1")));
     address user2 = vm.addr(uint256(keccak256("User2")));
@@ -42,6 +44,7 @@ contract BaseTest is Test, ErrorsAndEvents {
         vm.label(address(feed), "Feed");
         vm.label(address(usdc), "USDC");
         vm.label(testStabilityModule, "Test stability module");
+        vm.label(address(simpleInterestRate), "Simple interest module");
     }
 
     function setUp() public virtual {
@@ -55,10 +58,13 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         feed = new Feed(vault);
 
+        simpleInterestRate = new SimpleInterestRate();
+
         vault.createCollateralType(
             usdc, oneAndHalfPercentPerSecondInterestRate, 50e18, 10e18, type(uint256).max, 100 * (10 ** usdc.decimals())
         );
-        vault.updateFeedContract(address(feed));
+        vault.updateFeedModule(address(feed));
+        vault.updateRateModule(simpleInterestRate);
         vault.updateStabilityModule(testStabilityModule); // no implementation so set it to psuedo-random address
         feed.mockUpdatePrice(usdc, 1000e6);
         xNGN.setMinterRole(address(vault));

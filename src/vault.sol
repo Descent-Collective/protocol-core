@@ -8,6 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IVault} from "./interfaces/IVault.sol";
 import {Currency} from "./currency.sol";
 import {Pausable} from "./helpers/pausable.sol";
+import {IRate} from "./interfaces/IRate.sol";
 
 contract Vault is IVault, AccessControl, Pausable {
     uint256 private constant PRECISION_DEGREE = 18;
@@ -18,10 +19,16 @@ contract Vault is IVault, AccessControl, Pausable {
 
     Currency public immutable CURRENCY_TOKEN; // stableTokenAddress
 
+    // Modules
     address public stabilityModule; // stability module
-    address public feedContract; // feed contract address
+    address public feedModule; // feed contract address
+    IRate public rateModule; // rate calculation module
+
+    // Global parameters
     RateInfo public baseRateInfo; // base rate info
     uint256 public debtCeiling; // global debt ceiling
+
+    // Tracking
     uint256 public debt; // sum of all currency minted
     uint256 public paidFees; // sum of all unwithdrawn paid fees
 
@@ -78,13 +85,23 @@ contract Vault is IVault, AccessControl, Pausable {
     }
 
     /**
-     * @notice updates the feedContract address
+     * @notice updates the feedModule address
      *
      * @dev reverts if the contract is paused
      * @dev reverts if msg.sender does not have the `DEFAULT_ADMIN_ROLE` role
      */
-    function updateFeedContract(address _feedContract) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
-        feedContract = _feedContract;
+    function updateFeedModule(address _feedModule) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        feedModule = _feedModule;
+    }
+
+    /**
+     * @notice updates the rateModule address
+     *
+     * @dev reverts if the contract is paused
+     * @dev reverts if msg.sender does not have the `DEFAULT_ADMIN_ROLE` role
+     */
+    function updateRateModule(IRate _rateModule) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        rateModule = _rateModule;
     }
 
     /**
@@ -203,8 +220,7 @@ contract Vault is IVault, AccessControl, Pausable {
              * @dev updates the last stored accumulated rate by adding accumulated rate (since _collateral.rateInfo.lastUpdateTime) to it before updating the rate, this way borrowers are charged the previous rate up until block.timestamp before being charged the new rate.
              * @dev updates the last update time too for correct future updates to accumulate past rates correctly
              */
-            _collateral.rateInfo.accumulatedRate +=
-                (block.timestamp - _collateral.rateInfo.lastUpdateTime) * _collateral.rateInfo.rate;
+            _collateral.rateInfo.accumulatedRate = rateModule.calculateCurrentAccumulatedRate(_collateral.rateInfo);
             _collateral.rateInfo.lastUpdateTime = block.timestamp;
             _collateral.rateInfo.rate = _data;
         } else if (_param == ModifiableParameters.DEBT_CEILING) {
@@ -234,7 +250,7 @@ contract Vault is IVault, AccessControl, Pausable {
         whenNotPaused
         collateralExists(_collateralAddress)
     {
-        if (msg.sender != feedContract) revert NotFeedContract();
+        if (msg.sender != feedModule) revert NotFeedContract();
         collateralMapping[_collateralAddress].price = _price;
     }
 
@@ -249,9 +265,8 @@ contract Vault is IVault, AccessControl, Pausable {
      *      should revert if the caller does not have the `DEFAULT_ADMIN_ROLE` role
      */
     function updateBaseRate(uint256 _baseRate) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
-        baseRateInfo.accumulatedRate += (block.timestamp - baseRateInfo.lastUpdateTime) * baseRateInfo.rate;
+        baseRateInfo.accumulatedRate = rateModule.calculateCurrentAccumulatedRate(baseRateInfo);
         baseRateInfo.lastUpdateTime = block.timestamp;
-
         baseRateInfo.rate = _baseRate;
     }
 
@@ -386,8 +401,12 @@ contract Vault is IVault, AccessControl, Pausable {
 
         // short circuit conditional to optimize all interactions after the first one.
         // need to accrue fees first in order to use updated fees for collateral ratio calculation below
-        if (_vault.borrowedAmount != 0) _accrueFees(_collateral, _vault);
-        else _vault.lastTotalAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
+        if (_vault.borrowedAmount != 0) {
+            _accrueFees(_collateral, _vault);
+        } else {
+            _vault.lastTotalAccumulatedRate =
+                rateModule.calculateCurrentTotalAccumulatedRate(baseRateInfo, _collateral.rateInfo);
+        }
 
         emit CurrencyMinted(_owner, _amount);
         _mintCurrency(_collateral, _vault, _to, _amount);
@@ -655,30 +674,14 @@ contract Vault is IVault, AccessControl, Pausable {
         view
         returns (uint256, uint256)
     {
-        uint256 _totalCurrentAccumulatedRate = _calculateCurrentTotalAccumulatedRate(_collateral);
+        uint256 _totalCurrentAccumulatedRate =
+            rateModule.calculateCurrentTotalAccumulatedRate(baseRateInfo, _collateral.rateInfo);
 
         uint256 _accruedFees = (
             (_totalCurrentAccumulatedRate - _vault.lastTotalAccumulatedRate) * _vault.borrowedAmount
         ) / HUNDRED_PERCENTAGE;
 
         return (_accruedFees, _totalCurrentAccumulatedRate);
-    }
-
-    /**
-     * @dev returns the current total accumulated rate i.e current accumulated base rate + current accumulated collateral rate of the given collateral
-     * @dev should never revert!
-     */
-    function _calculateCurrentTotalAccumulatedRate(CollateralInfo storage _collateral) private view returns (uint256) {
-        // calculates pending collateral rate and adds it to the last stored collateral rate
-        uint256 _collateralCurrentAccumulatedRate = _collateral.rateInfo.accumulatedRate
-            + (_collateral.rateInfo.rate * (block.timestamp - _collateral.rateInfo.lastUpdateTime));
-
-        // calculates pending base rate and adds it to the last stored base rate
-        uint256 _baseCurrentAccumulatedRate =
-            baseRateInfo.accumulatedRate + (baseRateInfo.rate * (block.timestamp - baseRateInfo.lastUpdateTime));
-
-        // adds together to get total rate since inception
-        return _collateralCurrentAccumulatedRate + _baseCurrentAccumulatedRate;
     }
 
     /**

@@ -55,7 +55,7 @@ contract DeployScript is BaseScript {
         console2.log("  Collateral floor per position:", _collateralFloorPerPosition);
 
         console2.log("\n  Setting feed contract in vault");
-        vault.updateFeedContract(address(feed));
+        vault.updateFeedModule(address(feed));
         console2.log("Feed contract in vault set successfully");
 
         console2.log("\n  Updating price of usdc from feed");

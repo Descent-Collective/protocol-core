@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20, IVault, ERC20Token, IOSM} from "../../../base.t.sol";
+import {BaseTest, ERC20, IVault, ERC20Token, IOSM, IRate} from "../../../base.t.sol";
 
 contract RoleBasedActionsTest is BaseTest {
     function test_pause() external {
@@ -19,7 +19,7 @@ contract RoleBasedActionsTest is BaseTest {
     function test_unpause() external {
         // only default admin can call it successfully
         vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
-        vault.pause();
+        vault.unpause();
 
         // pause it with owner
         vm.startPrank(owner);
@@ -31,22 +31,34 @@ contract RoleBasedActionsTest is BaseTest {
         assertEq(vault.status(), TRUE);
     }
 
-    function test_updateFeedContract(address newFeedContract) external {
+    function test_updateFeedModule(address newFeedModule) external {
         // only default admin can call it successfully
         vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
-        vault.pause();
+        vault.updateFeedModule(newFeedModule);
 
         // owner can change it
         vm.startPrank(owner);
-        if (vault.feedContract() == newFeedContract) newFeedContract = mutateAddress(newFeedContract);
-        vault.updateFeedContract(newFeedContract);
-        assertEq(vault.feedContract(), newFeedContract);
+        if (vault.feedModule() == newFeedModule) newFeedModule = mutateAddress(newFeedModule);
+        vault.updateFeedModule(newFeedModule);
+        assertEq(vault.feedModule(), newFeedModule);
+    }
+
+    function test_updateRateModule(IRate newRateModule) external {
+        // only default admin can call it successfully
+        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
+        vault.updateRateModule(newRateModule);
+
+        // owner can change it
+        vm.startPrank(owner);
+        if (vault.rateModule() == newRateModule) newRateModule = IRate(mutateAddress(address(newRateModule)));
+        vault.updateRateModule(newRateModule);
+        assertEq(address(vault.rateModule()), address(newRateModule));
     }
 
     function test_updateStabilityModule(address newStabilityModule) external {
         // only default admin can call it successfully
         vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
-        vault.pause();
+        vault.updateStabilityModule(newStabilityModule);
 
         // owner can change it
         vm.startPrank(owner);
@@ -58,7 +70,7 @@ contract RoleBasedActionsTest is BaseTest {
     function test_updateGlobalDebtCeiling(uint256 newDebtCeiling) external {
         // only default admin can call it successfully
         vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
-        vault.pause();
+        vault.updateDebtCeiling(newDebtCeiling);
 
         // owner can change it
         vm.startPrank(owner);
