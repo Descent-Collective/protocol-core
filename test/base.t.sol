@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.13;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test, StdInvariant, console2} from "forge-std/Test.sol";
 import {Vault, IVault, Currency, ERC20} from "../src/vault.sol";
 import {Feed, IOSM} from "../src/modules/feed.sol";
 import {ERC20Token} from "./mocks/ERC20Token.sol";
@@ -39,6 +39,8 @@ contract BaseTest is Test, ErrorsAndEvents {
         vm.label(user1, "User1");
         vm.label(user2, "User2");
         vm.label(user3, "User3");
+        vm.label(user4, "User4");
+        vm.label(user5, "User5");
         vm.label(address(vault), "Vault");
         vm.label(address(xNGN), "xNGN");
         vm.label(address(feed), "Feed");
