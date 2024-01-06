@@ -5,8 +5,10 @@ import {BaseTest, IVault, Currency} from "../../base.t.sol";
 import {VaultHandler} from "./handlers/vaultHandler.sol";
 import {ERC20Handler} from "./handlers/erc20Handler.sol";
 import {VaultGetters} from "./VaultGetters.sol";
+import {TimeManager} from "./timeManager.sol";
 
 contract BaseInvariantTest is BaseTest {
+    TimeManager timeManager;
     VaultGetters vaultGetters;
     VaultHandler vaultHandler;
     ERC20Handler usdcHandler;
@@ -18,6 +20,7 @@ contract BaseInvariantTest is BaseTest {
         vm.prank(owner);
         vault.updateCollateralData(usdc, IVault.ModifiableParameters.COLLATERAL_FLOOR_PER_POSITION, 0);
 
+        timeManager = new TimeManager();
         vaultGetters = new VaultGetters();
         vaultHandler = new VaultHandler(vault, usdc, xNGN, vaultGetters);
         usdcHandler = new ERC20Handler(Currency(address(usdc)));
