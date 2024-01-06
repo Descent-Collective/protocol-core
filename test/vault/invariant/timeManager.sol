@@ -4,9 +4,10 @@ pragma solidity 0.8.21;
 import {Test} from "forge-std/test.sol";
 
 contract TimeManager is Test {
-    uint256 time;
+    uint256 public time = block.timestamp;
 
     function skipTime(uint256 skipTimeBy) external {
-        vm.warp(time + skipTimeBy);
+        time += skipTimeBy;
+        vm.warp(time);
     }
 }
