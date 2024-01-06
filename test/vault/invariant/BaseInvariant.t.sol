@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20, IVault, Vault} from "../../base.t.sol";
+import {BaseTest, ERC20, IVault, Vault, Currency} from "../../base.t.sol";
 import {VaultHandler} from "./handlers/vaultHandler.sol";
+import {ERC20Handler} from "./handlers/erc20Handler.sol";
 
 contract BaseInvariantTest is BaseTest {
     VaultHandler vaultHandler;
+    ERC20Handler usdcHandler;
+    ERC20Handler xNGNHandler;
 
     function setUp() public override {
         super.setUp();
@@ -14,15 +17,36 @@ contract BaseInvariantTest is BaseTest {
         vault.updateCollateralData(usdc, IVault.ModifiableParameters.COLLATERAL_FLOOR_PER_POSITION, 0);
 
         vaultHandler = new VaultHandler(vault, usdc, xNGN);
+        usdcHandler = new ERC20Handler(Currency(address(usdc)));
+        xNGNHandler = new ERC20Handler(xNGN);
 
+        // target handlers
         targetContract(address(vaultHandler));
+        targetContract(address(usdcHandler));
+        targetContract(address(xNGNHandler));
 
-        bytes4[] memory selectors = new bytes4[](4);
-        selectors[0] = VaultHandler.depositCollateral.selector;
-        selectors[1] = VaultHandler.withdrawCollateral.selector;
-        selectors[2] = VaultHandler.mintCurrency.selector;
-        selectors[3] = VaultHandler.burnCurrency.selector;
-        targetSelector(FuzzSelector({addr: address(vaultHandler), selectors: selectors}));
+        bytes4[] memory vaultSelectors = new bytes4[](4);
+        vaultSelectors[0] = VaultHandler.depositCollateral.selector;
+        vaultSelectors[1] = VaultHandler.withdrawCollateral.selector;
+        vaultSelectors[2] = VaultHandler.mintCurrency.selector;
+        vaultSelectors[3] = VaultHandler.burnCurrency.selector;
+
+        bytes4[] memory xNGNSelectors = new bytes4[](4);
+        xNGNSelectors[0] = ERC20Handler.transfer.selector;
+        xNGNSelectors[1] = ERC20Handler.transferFrom.selector;
+        xNGNSelectors[2] = ERC20Handler.approve.selector;
+        xNGNSelectors[3] = ERC20Handler.burn.selector;
+
+        bytes4[] memory usdcSelectors = new bytes4[](4);
+        usdcSelectors[0] = ERC20Handler.transfer.selector;
+        usdcSelectors[1] = ERC20Handler.transferFrom.selector;
+        usdcSelectors[2] = ERC20Handler.approve.selector;
+        usdcSelectors[3] = ERC20Handler.burn.selector;
+
+        // target selectors of handlers
+        targetSelector(FuzzSelector({addr: address(vaultHandler), selectors: vaultSelectors}));
+        targetSelector(FuzzSelector({addr: address(xNGNHandler), selectors: xNGNSelectors}));
+        targetSelector(FuzzSelector({addr: address(usdcHandler), selectors: usdcSelectors}));
     }
 
     function invariant_solvency() external {
