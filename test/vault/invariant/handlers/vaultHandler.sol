@@ -163,4 +163,24 @@ contract VaultHandler is Test {
         amount = bound(amount, 0, vault.paidFees());
         vault.withdrawFees(amount);
     }
+
+    function rely(uint256 skipTimeSeed, uint256 relyUponIndexSeed, uint256 actorIndexSeed)
+        external
+        skipTime(skipTimeSeed)
+        setActor(actorIndexSeed)
+        prankCurrentActor
+    {
+        address relyUpon = actors[bound(relyUponIndexSeed, 0, actors.length - 1)];
+        vault.rely(relyUpon);
+    }
+
+    function deny(uint256 skipTimeSeed, uint256 deniedIndexSeed, uint256 actorIndexSeed)
+        external
+        skipTime(skipTimeSeed)
+        setActor(actorIndexSeed)
+        prankCurrentActor
+    {
+        address denied = actors[bound(deniedIndexSeed, 0, actors.length - 1)];
+        vault.rely(denied);
+    }
 }

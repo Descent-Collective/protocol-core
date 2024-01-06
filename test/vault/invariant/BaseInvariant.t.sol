@@ -41,13 +41,15 @@ contract BaseInvariantTest is BaseTest {
         targetContract(address(usdcHandler));
         targetContract(address(xNGNHandler));
 
-        bytes4[] memory vaultSelectors = new bytes4[](6);
+        bytes4[] memory vaultSelectors = new bytes4[](8);
         vaultSelectors[0] = VaultHandler.depositCollateral.selector;
         vaultSelectors[1] = VaultHandler.withdrawCollateral.selector;
         vaultSelectors[2] = VaultHandler.mintCurrency.selector;
         vaultSelectors[3] = VaultHandler.burnCurrency.selector;
         vaultSelectors[4] = VaultHandler.recoverToken.selector;
         vaultSelectors[5] = VaultHandler.withdrawFees.selector;
+        vaultSelectors[6] = VaultHandler.rely.selector;
+        vaultSelectors[7] = VaultHandler.deny.selector;
 
         bytes4[] memory xNGNSelectors = new bytes4[](4);
         xNGNSelectors[0] = ERC20Handler.transfer.selector;
