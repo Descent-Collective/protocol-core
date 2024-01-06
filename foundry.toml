@@ -11,6 +11,7 @@ evm_version = "paris"
 optimizer = true
 optimizer_runs = 1_000_000
 
+
 [rpc_endpoints]
 base_georli = "${BASE_TESTNET_RPC_URL}"
 
@@ -24,5 +25,9 @@ include_storage = true
 include_push_bytes = true
 
 
+[invariant]
+runs = 1000
+depth = 50
+fail_on_revert = true
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

@@ -10,24 +10,33 @@ contract BaseInvariantTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        vaultHandler = new VaultHandler(vault, usdc);
+        vm.prank(owner);
+        vault.updateCollateralData(usdc, IVault.ModifiableParameters.COLLATERAL_FLOOR_PER_POSITION, 0);
+
+        vaultHandler = new VaultHandler(vault, usdc, xNGN);
 
         targetContract(address(vaultHandler));
+
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = VaultHandler.depositCollateral.selector;
+        selectors[1] = VaultHandler.withdrawCollateral.selector;
+        selectors[2] = VaultHandler.mintCurrency.selector;
+        selectors[3] = VaultHandler.burnCurrency.selector;
+        targetSelector(FuzzSelector({addr: address(vaultHandler), selectors: selectors}));
     }
 
     function invariant_solvency() external {
         // user's deposits are equal to balance of vault
-        assertGe(usdc.balanceOf(address(vaultHandler.vault())), sumUsdcBalances());
+        assertGe(usdc.balanceOf(address(vault)), sumUsdcBalances());
 
         // xNGN total supply must be equal to all users total
     }
 
     function sumUsdcBalances() internal view returns (uint256 sum) {
-        ERC20 _usdc = vaultHandler.usdc();
-
         sum += (
-            _usdc.balanceOf(user1) + _usdc.balanceOf(user2) + _usdc.balanceOf(user3) + _usdc.balanceOf(user4)
-                + _usdc.balanceOf(user5)
+            getVaultMapping(usdc, user1).depositedCollateral + getVaultMapping(usdc, user2).depositedCollateral
+                + getVaultMapping(usdc, user3).depositedCollateral + getVaultMapping(usdc, user4).depositedCollateral
+                + getVaultMapping(usdc, user5).depositedCollateral
         );
     }
 }

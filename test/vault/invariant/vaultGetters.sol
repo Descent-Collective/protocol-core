@@ -113,7 +113,7 @@ contract VaultGetters {
 
         // adjust this to consider liquidation ratio
         uint256 _adjustedCollateralValueInCurrency =
-            (_collateralValueInCurrency * _collateral.liquidationThreshold) / PRECISION;
+            (_collateralValueInCurrency * _collateral.liquidationThreshold) / HUNDRED_PERCENTAGE;
 
         // account for accrued fees
         (uint256 _currentAccruedFees,) = _calculateAccruedFees(_vaultContract, _collateral, _vault);
@@ -271,10 +271,10 @@ contract VaultGetters {
         pure
         returns (uint256)
     {
-        uint256 _collateralAmountOfCurrencyValue =
-            (_amount * PRECISION) / (_collateral.price * ADDITIONAL_FEED_PRECISION);
-
-        return _collateralAmountOfCurrencyValue / (10 ** _collateral.additionalCollateralPrecision);
+        return _divUp(
+            (_amount * PRECISION),
+            (_collateral.price * ADDITIONAL_FEED_PRECISION * (10 ** _collateral.additionalCollateralPrecision))
+        );
     }
 
     /**

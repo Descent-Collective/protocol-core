@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {Test, ERC20, IVault, Vault} from "../../base.t.sol";
+import {Test, ERC20, IVault, Vault, console2, Currency} from "../../base.t.sol";
 import {VaultGetters} from "./VaultGetters.sol";
 
 contract VaultHandler is Test {
-    VaultGetters public vaultGetters;
-    Vault public vault;
-    ERC20 public usdc;
+    VaultGetters vaultGetters;
+    Vault vault;
+    ERC20 usdc;
+    Currency xNGN;
     address owner = vm.addr(uint256(keccak256("OWNER")));
     address user1 = vm.addr(uint256(keccak256("User1")));
     address user2 = vm.addr(uint256(keccak256("User2")));
@@ -15,14 +16,15 @@ contract VaultHandler is Test {
     address user4 = vm.addr(uint256(keccak256("User4")));
     address user5 = vm.addr(uint256(keccak256("User5")));
 
-    address[5] public actors;
+    address[5] actors;
     address currentActor;
     address currentOwner; // address to be used as owner variable in the calls to be made
 
-    constructor(Vault _vault, ERC20 _usdc) {
+    constructor(Vault _vault, ERC20 _usdc, Currency _xNGN) {
         vault = _vault;
         usdc = _usdc;
         vaultGetters = new VaultGetters();
+        xNGN = _xNGN;
 
         actors[0] = user1;
         actors[1] = user2;
@@ -31,11 +33,15 @@ contract VaultHandler is Test {
         actors[4] = user5;
     }
 
-    modifier useActor(uint256 actorIndexSeed) {
-        currentActor = actors[bound(actorIndexSeed, 0, actors.length - 1)];
+    modifier prankCurrentActor() {
         vm.startPrank(currentActor);
         _;
         vm.stopPrank();
+    }
+
+    modifier setActor(uint256 actorIndexSeed) {
+        currentActor = actors[bound(actorIndexSeed, 0, actors.length - 1)];
+        _;
     }
 
     modifier setOwner(uint256 actorIndexSeed) {
@@ -51,7 +57,8 @@ contract VaultHandler is Test {
     function depositCollateral(uint256 ownerIndexSeed, uint256 actorIndexSeed, uint256 amount)
         external
         setOwner(ownerIndexSeed)
-        useActor(actorIndexSeed)
+        setActor(actorIndexSeed)
+        prankCurrentActor
     {
         amount = bound(amount, 0, usdc.balanceOf(currentActor));
         vault.depositCollateral(usdc, currentOwner, amount);
@@ -60,9 +67,11 @@ contract VaultHandler is Test {
     function withdrawCollateral(uint256 ownerIndexSeed, uint256 actorIndexSeed, address to, uint256 amount)
         external
         setOwner(ownerIndexSeed)
-        useActor(actorIndexSeed)
+        setActor(actorIndexSeed)
         useOwnerIfCurrentActorIsNotReliedOn
+        prankCurrentActor
     {
+        to = address(uint160(uint256(keccak256(abi.encode(to)))));
         int256 maxWithdrawable = vaultGetters.getMaxWithdrawable(vault, usdc, currentOwner);
         if (maxWithdrawable >= 0) {
             amount = bound(amount, 0, uint256(maxWithdrawable));
@@ -73,22 +82,34 @@ contract VaultHandler is Test {
     function mintCurrency(uint256 ownerIndexSeed, uint256 actorIndexSeed, address to, uint256 amount)
         external
         setOwner(ownerIndexSeed)
-        useActor(actorIndexSeed)
+        setActor(actorIndexSeed)
         useOwnerIfCurrentActorIsNotReliedOn
+        prankCurrentActor
     {
-        int256 maxBorrowable = vaultGetters.getMaxBorrowable(vault, usdc, currentOwner);
-        if (maxBorrowable >= 0) {
-            amount = bound(amount, 0, uint256(maxBorrowable));
-            vault.mintCurrency(usdc, currentOwner, to, amount);
+        (uint256 depositedCollateral,,) = vaultGetters.getVault(vault, usdc, currentOwner);
+        (,,,,, uint256 collateralFloorPerPosition,) = vaultGetters.getCollateralInfo(vault, usdc);
+
+        if (depositedCollateral >= collateralFloorPerPosition) {
+            to = address(uint160(uint256(keccak256(abi.encode(to)))));
+            int256 maxBorrowable = vaultGetters.getMaxBorrowable(vault, usdc, currentOwner);
+            if (maxBorrowable > 0) {
+                amount = bound(amount, 0, uint256(maxBorrowable));
+                vault.mintCurrency(usdc, currentOwner, to, amount);
+            }
         }
     }
 
     function burnCurrency(uint256 ownerIndexSeed, uint256 actorIndexSeed, uint256 amount)
         external
         setOwner(ownerIndexSeed)
-        useActor(actorIndexSeed)
+        setActor(actorIndexSeed)
+        prankCurrentActor
     {
-        amount = bound(amount, 0, usdc.balanceOf(currentActor));
+        (, uint256 borrowedAmount, uint256 accruedFees) = vaultGetters.getVault(vault, usdc, currentOwner);
+        uint256 maxAmount = borrowedAmount + accruedFees < xNGN.balanceOf(currentActor)
+            ? borrowedAmount + accruedFees
+            : xNGN.balanceOf(currentActor);
+        amount = bound(amount, 0, maxAmount);
         vault.burnCurrency(usdc, currentOwner, amount);
     }
 }
