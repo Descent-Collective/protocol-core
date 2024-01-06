@@ -158,4 +158,9 @@ contract VaultHandler is Test {
             vault.recoverToken(address(xNGN), to);
         }
     }
+
+    function withdrawFees(uint256 skipTimeSeed, uint256 amount) external skipTime(skipTimeSeed) {
+        amount = bound(amount, 0, vault.paidFees());
+        vault.withdrawFees(amount);
+    }
 }
