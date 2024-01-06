@@ -18,6 +18,7 @@ contract BaseInvariantTest is BaseTest {
         vm.prank(owner);
         vault.updateCollateralData(usdc, IVault.ModifiableParameters.COLLATERAL_FLOOR_PER_POSITION, 0);
 
+        vaultGetters = new VaultGetters();
         vaultHandler = new VaultHandler(vault, usdc, xNGN, vaultGetters);
         usdcHandler = new ERC20Handler(Currency(address(usdc)));
         xNGNHandler = new ERC20Handler(xNGN);
@@ -75,8 +76,35 @@ contract BaseInvariantTest is BaseTest {
         );
     }
 
+    function invariant_onlyVaultWithBadCollateralRatioIsLiquidatable() external {
+        // mint usdc to address(this)
+        vm.startPrank(owner);
+        Currency(address(usdc)).mint(address(this), 1_000_000 * (10 ** usdc.decimals()));
+        vm.stopPrank();
+
+        // use address(this) to deposit so that it can borrow currency needed for liquidation below
+        usdc.approve(address(vault), type(uint256).max);
+        vault.depositCollateral(usdc, address(this), 1_000_000 * (10 ** usdc.decimals()));
+        vault.mintCurrency(usdc, address(this), address(this), 500_000e18);
+
+        if (vaultGetters.getHealthFactor(vault, usdc, user1)) vm.expectRevert(PositionIsSafe.selector);
+        vault.liquidate(usdc, user1, address(this), type(uint256).max);
+
+        if (vaultGetters.getHealthFactor(vault, usdc, user2)) vm.expectRevert(PositionIsSafe.selector);
+        vault.liquidate(usdc, user2, address(this), type(uint256).max);
+
+        if (vaultGetters.getHealthFactor(vault, usdc, user3)) vm.expectRevert(PositionIsSafe.selector);
+        vault.liquidate(usdc, user3, address(this), type(uint256).max);
+
+        if (vaultGetters.getHealthFactor(vault, usdc, user4)) vm.expectRevert(PositionIsSafe.selector);
+        vault.liquidate(usdc, user4, address(this), type(uint256).max);
+
+        if (vaultGetters.getHealthFactor(vault, usdc, user5)) vm.expectRevert(PositionIsSafe.selector);
+        vault.liquidate(usdc, user5, address(this), type(uint256).max);
+    }
+
     function _sumUsdcBalances() internal view returns (uint256 sum) {
-        sum += (
+        sum = (
             getVaultMapping(usdc, user1).depositedCollateral + getVaultMapping(usdc, user2).depositedCollateral
                 + getVaultMapping(usdc, user3).depositedCollateral + getVaultMapping(usdc, user4).depositedCollateral
                 + getVaultMapping(usdc, user5).depositedCollateral
@@ -84,7 +112,7 @@ contract BaseInvariantTest is BaseTest {
     }
 
     function _sumxNGNBalances() internal view returns (uint256 sum) {
-        sum += (
+        sum = (
             getVaultMapping(usdc, user1).borrowedAmount + getVaultMapping(usdc, user2).borrowedAmount
                 + getVaultMapping(usdc, user3).borrowedAmount + getVaultMapping(usdc, user4).borrowedAmount
                 + getVaultMapping(usdc, user5).borrowedAmount
