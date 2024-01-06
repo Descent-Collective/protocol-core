@@ -20,6 +20,12 @@ contract VaultHandler is Test {
     address currentActor;
     address currentOwner; // address to be used as owner variable in the calls to be made
 
+    // Ghost variables
+    uint256 public totalDeposits;
+    uint256 public totalWithdrawals;
+    uint256 public totalMints;
+    uint256 public totalBurns;
+
     constructor(Vault _vault, ERC20 _usdc, Currency _xNGN) {
         vault = _vault;
         usdc = _usdc;
@@ -61,6 +67,7 @@ contract VaultHandler is Test {
         prankCurrentActor
     {
         amount = bound(amount, 0, usdc.balanceOf(currentActor));
+        totalDeposits += amount;
         vault.depositCollateral(usdc, currentOwner, amount);
     }
 
@@ -75,6 +82,7 @@ contract VaultHandler is Test {
         int256 maxWithdrawable = vaultGetters.getMaxWithdrawable(vault, usdc, currentOwner);
         if (maxWithdrawable >= 0) {
             amount = bound(amount, 0, uint256(maxWithdrawable));
+            totalWithdrawals += amount;
             vault.withdrawCollateral(usdc, currentOwner, to, amount);
         }
     }
@@ -94,6 +102,7 @@ contract VaultHandler is Test {
             int256 maxBorrowable = vaultGetters.getMaxBorrowable(vault, usdc, currentOwner);
             if (maxBorrowable > 0) {
                 amount = bound(amount, 0, uint256(maxBorrowable));
+                totalMints += amount;
                 vault.mintCurrency(usdc, currentOwner, to, amount);
             }
         }
@@ -110,6 +119,7 @@ contract VaultHandler is Test {
             ? borrowedAmount + accruedFees
             : xNGN.balanceOf(currentActor);
         amount = bound(amount, 0, maxAmount);
+        totalBurns += amount;
         vault.burnCurrency(usdc, currentOwner, amount);
     }
 }

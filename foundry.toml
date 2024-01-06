@@ -29,5 +29,6 @@ include_push_bytes = true
 runs = 1000
 depth = 50
 fail_on_revert = true
+dictionary_weight = 80
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

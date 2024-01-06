@@ -37,11 +37,12 @@ contract BaseInvariantTest is BaseTest {
         xNGNSelectors[2] = ERC20Handler.approve.selector;
         xNGNSelectors[3] = ERC20Handler.burn.selector;
 
-        bytes4[] memory usdcSelectors = new bytes4[](4);
+        bytes4[] memory usdcSelectors = new bytes4[](5);
         usdcSelectors[0] = ERC20Handler.transfer.selector;
         usdcSelectors[1] = ERC20Handler.transferFrom.selector;
         usdcSelectors[2] = ERC20Handler.approve.selector;
-        usdcSelectors[3] = ERC20Handler.burn.selector;
+        usdcSelectors[3] = ERC20Handler.mint.selector;
+        usdcSelectors[4] = ERC20Handler.burn.selector;
 
         // target selectors of handlers
         targetSelector(FuzzSelector({addr: address(vaultHandler), selectors: vaultSelectors}));
@@ -49,12 +50,27 @@ contract BaseInvariantTest is BaseTest {
         targetSelector(FuzzSelector({addr: address(usdcHandler), selectors: usdcSelectors}));
     }
 
-    function invariant_solvency() external {
-        // user's deposits are equal to balance of vault
-        assertGe(usdc.balanceOf(address(vault)), sumUsdcBalances());
+    function invariant_solvencyBalances() external {
+        // user's deposits are greater than or equal to balance of vault (greater than if usdc is sent to it directly)
+        assertGe(usdc.balanceOf(address(vault)), sumUsdcBalances(), "usdc insolvent");
 
         // xNGN total supply must be equal to all users total borrowed amount
-        assertEq(xNGN.totalSupply(), sumxNGNBalances());
+        assertEq(xNGN.totalSupply(), sumxNGNBalances(), "xngn over mint");
+    }
+
+    // all inflows and outflows resolve to the balance of the contract
+    // this also checks that total withdrawals cannot be more than total deposits and that total burns cannot be more than total mints
+    function invariant_inflowsAndOutflowsAddUp() external {
+        assertGe(
+            usdc.balanceOf(address(vault)),
+            vaultHandler.totalDeposits() - vaultHandler.totalWithdrawals(),
+            "usdc inflows and outflows do not add up"
+        );
+        assertEq(
+            xNGN.totalSupply(),
+            vaultHandler.totalMints() - vaultHandler.totalBurns(),
+            "xngn inflows and outflows do not add up"
+        );
     }
 
     function sumUsdcBalances() internal view returns (uint256 sum) {
