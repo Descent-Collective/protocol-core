@@ -26,10 +26,10 @@ contract VaultHandler is Test {
     uint256 public totalMints;
     uint256 public totalBurns;
 
-    constructor(Vault _vault, ERC20 _usdc, Currency _xNGN) {
+    constructor(Vault _vault, ERC20 _usdc, Currency _xNGN, VaultGetters _vaultGetters) {
         vault = _vault;
         usdc = _usdc;
-        vaultGetters = new VaultGetters();
+        vaultGetters = _vaultGetters;
         xNGN = _xNGN;
 
         actors[0] = user1;

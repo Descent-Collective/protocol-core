@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20, IVault, Vault, Currency} from "../../base.t.sol";
+import {BaseTest, IVault, Currency} from "../../base.t.sol";
 import {VaultHandler} from "./handlers/vaultHandler.sol";
 import {ERC20Handler} from "./handlers/erc20Handler.sol";
+import {VaultGetters} from "./VaultGetters.sol";
 
 contract BaseInvariantTest is BaseTest {
+    VaultGetters vaultGetters;
     VaultHandler vaultHandler;
     ERC20Handler usdcHandler;
     ERC20Handler xNGNHandler;
@@ -16,7 +18,7 @@ contract BaseInvariantTest is BaseTest {
         vm.prank(owner);
         vault.updateCollateralData(usdc, IVault.ModifiableParameters.COLLATERAL_FLOOR_PER_POSITION, 0);
 
-        vaultHandler = new VaultHandler(vault, usdc, xNGN);
+        vaultHandler = new VaultHandler(vault, usdc, xNGN, vaultGetters);
         usdcHandler = new ERC20Handler(Currency(address(usdc)));
         xNGNHandler = new ERC20Handler(xNGN);
 
@@ -52,10 +54,10 @@ contract BaseInvariantTest is BaseTest {
 
     function invariant_solvencyBalances() external {
         // user's deposits are greater than or equal to balance of vault (greater than if usdc is sent to it directly)
-        assertGe(usdc.balanceOf(address(vault)), sumUsdcBalances(), "usdc insolvent");
+        assertGe(usdc.balanceOf(address(vault)), _sumUsdcBalances(), "usdc insolvent");
 
         // xNGN total supply must be equal to all users total borrowed amount
-        assertEq(xNGN.totalSupply(), sumxNGNBalances(), "xngn over mint");
+        assertEq(xNGN.totalSupply(), _sumxNGNBalances(), "xngn over mint");
     }
 
     // all inflows and outflows resolve to the balance of the contract
@@ -73,7 +75,7 @@ contract BaseInvariantTest is BaseTest {
         );
     }
 
-    function sumUsdcBalances() internal view returns (uint256 sum) {
+    function _sumUsdcBalances() internal view returns (uint256 sum) {
         sum += (
             getVaultMapping(usdc, user1).depositedCollateral + getVaultMapping(usdc, user2).depositedCollateral
                 + getVaultMapping(usdc, user3).depositedCollateral + getVaultMapping(usdc, user4).depositedCollateral
@@ -81,7 +83,7 @@ contract BaseInvariantTest is BaseTest {
         );
     }
 
-    function sumxNGNBalances() internal view returns (uint256 sum) {
+    function _sumxNGNBalances() internal view returns (uint256 sum) {
         sum += (
             getVaultMapping(usdc, user1).borrowedAmount + getVaultMapping(usdc, user2).borrowedAmount
                 + getVaultMapping(usdc, user3).borrowedAmount + getVaultMapping(usdc, user4).borrowedAmount
