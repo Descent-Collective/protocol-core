@@ -42,6 +42,9 @@ contract Currency is AccessControl, ERC20Permit, ICurrency {
      * @param amount amount of tokens to burn
      */
     function burn(address account, uint256 amount) external returns (bool) {
+        if (account != msg.sender) {
+            _spendAllowance(msg.sender, account, amount);
+        }
         _burn(account, amount);
         return true;
     }
