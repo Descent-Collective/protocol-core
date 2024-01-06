@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {Test, ERC20, IVault, Vault, console2, Currency} from "../../../base.t.sol";
 import {VaultGetters} from "../VaultGetters.sol";
+import {TimeManager} from "../timeManager.sol";
 
 contract VaultHandler is Test {
     VaultGetters vaultGetters;
@@ -26,7 +27,11 @@ contract VaultHandler is Test {
     uint256 public totalMints;
     uint256 public totalBurns;
 
-    constructor(Vault _vault, ERC20 _usdc, Currency _xNGN, VaultGetters _vaultGetters) {
+    TimeManager timeManager;
+
+    constructor(Vault _vault, ERC20 _usdc, Currency _xNGN, VaultGetters _vaultGetters, TimeManager _timeManager) {
+        timeManager = _timeManager;
+
         vault = _vault;
         usdc = _usdc;
         vaultGetters = _vaultGetters;
@@ -37,6 +42,12 @@ contract VaultHandler is Test {
         actors[2] = user3;
         actors[3] = user4;
         actors[4] = user5;
+    }
+
+    modifier skipTime(uint256 skipTimeSeed) {
+        uint256 skipTimeBy = bound(skipTimeSeed, 0, 1 days);
+        timeManager.skipTime(skipTimeBy);
+        _;
     }
 
     modifier prankCurrentActor() {
@@ -60,8 +71,9 @@ contract VaultHandler is Test {
         _;
     }
 
-    function depositCollateral(uint256 ownerIndexSeed, uint256 actorIndexSeed, uint256 amount)
+    function depositCollateral(uint256 skipTimeSeed, uint256 ownerIndexSeed, uint256 actorIndexSeed, uint256 amount)
         external
+        skipTime(skipTimeSeed)
         setOwner(ownerIndexSeed)
         setActor(actorIndexSeed)
         prankCurrentActor
@@ -71,8 +83,15 @@ contract VaultHandler is Test {
         vault.depositCollateral(usdc, currentOwner, amount);
     }
 
-    function withdrawCollateral(uint256 ownerIndexSeed, uint256 actorIndexSeed, address to, uint256 amount)
+    function withdrawCollateral(
+        uint256 skipTimeSeed,
+        uint256 ownerIndexSeed,
+        uint256 actorIndexSeed,
+        address to,
+        uint256 amount
+    )
         external
+        skipTime(skipTimeSeed)
         setOwner(ownerIndexSeed)
         setActor(actorIndexSeed)
         useOwnerIfCurrentActorIsNotReliedOn
@@ -87,8 +106,15 @@ contract VaultHandler is Test {
         }
     }
 
-    function mintCurrency(uint256 ownerIndexSeed, uint256 actorIndexSeed, address to, uint256 amount)
+    function mintCurrency(
+        uint256 skipTimeSeed,
+        uint256 ownerIndexSeed,
+        uint256 actorIndexSeed,
+        address to,
+        uint256 amount
+    )
         external
+        skipTime(skipTimeSeed)
         setOwner(ownerIndexSeed)
         setActor(actorIndexSeed)
         useOwnerIfCurrentActorIsNotReliedOn
@@ -108,8 +134,9 @@ contract VaultHandler is Test {
         }
     }
 
-    function burnCurrency(uint256 ownerIndexSeed, uint256 actorIndexSeed, uint256 amount)
+    function burnCurrency(uint256 skipTimeSeed, uint256 ownerIndexSeed, uint256 actorIndexSeed, uint256 amount)
         external
+        skipTime(skipTimeSeed)
         setOwner(ownerIndexSeed)
         setActor(actorIndexSeed)
         prankCurrentActor
