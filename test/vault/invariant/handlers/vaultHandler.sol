@@ -97,7 +97,7 @@ contract VaultHandler is Test {
         useOwnerIfCurrentActorIsNotReliedOn
         prankCurrentActor
     {
-        to = address(uint160(uint256(keccak256(abi.encode(to)))));
+        if (to == address(0)) to = address(uint160(uint256(keccak256(abi.encode(to)))));
         int256 maxWithdrawable = vaultGetters.getMaxWithdrawable(vault, usdc, currentOwner);
         if (maxWithdrawable >= 0) {
             amount = bound(amount, 0, uint256(maxWithdrawable));
@@ -124,7 +124,7 @@ contract VaultHandler is Test {
         (,,,,, uint256 collateralFloorPerPosition,) = vaultGetters.getCollateralInfo(vault, usdc);
 
         if (depositedCollateral >= collateralFloorPerPosition) {
-            to = address(uint160(uint256(keccak256(abi.encode(to)))));
+            if (to == address(0)) to = address(uint160(uint256(keccak256(abi.encode(to)))));
             int256 maxBorrowable = vaultGetters.getMaxBorrowable(vault, usdc, currentOwner);
             if (maxBorrowable > 0) {
                 amount = bound(amount, 0, uint256(maxBorrowable));
@@ -148,5 +148,14 @@ contract VaultHandler is Test {
         amount = bound(amount, 0, maxAmount);
         totalBurns += amount;
         vault.burnCurrency(usdc, currentOwner, amount);
+    }
+
+    function recoverToken(uint256 skipTimeSeed, bool isUsdc, address to) external skipTime(skipTimeSeed) {
+        if (to == address(0)) to = address(uint160(uint256(keccak256(abi.encode(to)))));
+        if (isUsdc) {
+            vault.recoverToken(address(usdc), to);
+        } else {
+            vault.recoverToken(address(xNGN), to);
+        }
     }
 }

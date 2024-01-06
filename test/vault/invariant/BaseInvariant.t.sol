@@ -7,6 +7,11 @@ import {ERC20Handler} from "./handlers/erc20Handler.sol";
 import {VaultGetters} from "./VaultGetters.sol";
 import {TimeManager} from "./timeManager.sol";
 
+/**
+ * INVARIANTS
+ *
+ * -
+ */
 contract BaseInvariantTest is BaseTest {
     TimeManager timeManager;
     VaultGetters vaultGetters;
@@ -36,11 +41,12 @@ contract BaseInvariantTest is BaseTest {
         targetContract(address(usdcHandler));
         targetContract(address(xNGNHandler));
 
-        bytes4[] memory vaultSelectors = new bytes4[](4);
+        bytes4[] memory vaultSelectors = new bytes4[](5);
         vaultSelectors[0] = VaultHandler.depositCollateral.selector;
         vaultSelectors[1] = VaultHandler.withdrawCollateral.selector;
         vaultSelectors[2] = VaultHandler.mintCurrency.selector;
         vaultSelectors[3] = VaultHandler.burnCurrency.selector;
+        vaultSelectors[3] = VaultHandler.recoverToken.selector;
 
         bytes4[] memory xNGNSelectors = new bytes4[](4);
         xNGNSelectors[0] = ERC20Handler.transfer.selector;
