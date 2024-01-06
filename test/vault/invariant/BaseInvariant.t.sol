@@ -46,7 +46,7 @@ contract BaseInvariantTest is BaseTest {
         vaultSelectors[1] = VaultHandler.withdrawCollateral.selector;
         vaultSelectors[2] = VaultHandler.mintCurrency.selector;
         vaultSelectors[3] = VaultHandler.burnCurrency.selector;
-        vaultSelectors[3] = VaultHandler.recoverToken.selector;
+        vaultSelectors[4] = VaultHandler.recoverToken.selector;
 
         bytes4[] memory xNGNSelectors = new bytes4[](4);
         xNGNSelectors[0] = ERC20Handler.transfer.selector;
@@ -68,8 +68,13 @@ contract BaseInvariantTest is BaseTest {
     }
 
     function invariant_solvencyBalances() external useCurrentTime {
-        // user's deposits are greater than or equal to balance of vault (greater than if usdc is sent to it directly)
-        assertGe(usdc.balanceOf(address(vault)), _sumUsdcBalances(), "usdc insolvent");
+        // empty possible donations and fees earned
+        vault.recoverToken(address(usdc), address(this));
+        vault.recoverToken(address(xNGN), address(this));
+        vault.withdrawFees(vault.paidFees());
+
+        // user's deposits is equal to balance of vault
+        assertEq(usdc.balanceOf(address(vault)), _sumUsdcBalances(), "usdc insolvent");
 
         // xNGN total supply must be equal to all users total borrowed amount
         assertEq(xNGN.totalSupply(), _sumxNGNBalances(), "xngn over mint");
@@ -78,7 +83,12 @@ contract BaseInvariantTest is BaseTest {
     // all inflows and outflows resolve to the balance of the contract
     // this also checks that total withdrawals cannot be more than total deposits and that total burns cannot be more than total mints
     function invariant_inflowsAndOutflowsAddUp() external useCurrentTime {
-        assertGe(
+        // empty possible donations and fees earned
+        vault.recoverToken(address(usdc), address(this));
+        vault.recoverToken(address(xNGN), address(this));
+        vault.withdrawFees(vault.paidFees());
+
+        assertEq(
             usdc.balanceOf(address(vault)),
             vaultHandler.totalDeposits() - vaultHandler.totalWithdrawals(),
             "usdc inflows and outflows do not add up"
