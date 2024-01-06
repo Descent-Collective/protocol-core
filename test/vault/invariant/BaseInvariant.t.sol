@@ -23,8 +23,8 @@ contract BaseInvariantTest is BaseTest {
         timeManager = new TimeManager();
         vaultGetters = new VaultGetters();
         vaultHandler = new VaultHandler(vault, usdc, xNGN, vaultGetters, timeManager);
-        usdcHandler = new ERC20Handler(Currency(address(usdc)));
-        xNGNHandler = new ERC20Handler(xNGN);
+        usdcHandler = new ERC20Handler(Currency(address(usdc)), timeManager);
+        xNGNHandler = new ERC20Handler(xNGN, timeManager);
 
         // target handlers
         targetContract(address(vaultHandler));

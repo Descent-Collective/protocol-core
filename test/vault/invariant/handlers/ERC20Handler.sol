@@ -2,6 +2,7 @@
 pragma solidity 0.8.21;
 
 import {Test, console2, Currency} from "../../../base.t.sol";
+import {TimeManager} from "../timeManager.sol";
 
 contract ERC20Handler is Test {
     Currency token;
@@ -16,7 +17,11 @@ contract ERC20Handler is Test {
     address currentActor;
     address currentOwner; // address to be used as owner variable in the calls to be made
 
-    constructor(Currency _token) {
+    TimeManager timeManager;
+
+    constructor(Currency _token, TimeManager _timeManager) {
+        timeManager = _timeManager;
+
         token = _token;
 
         actors[0] = user1;
@@ -41,6 +46,12 @@ contract ERC20Handler is Test {
         token.approve(user5, type(uint256).max);
     }
 
+    modifier skipTime(uint256 skipTimeSeed) {
+        uint256 skipTimeBy = bound(skipTimeSeed, 0, 1 days);
+        timeManager.skipTime(skipTimeBy);
+        _;
+    }
+
     modifier prankCurrentActor() {
         vm.startPrank(currentActor);
         _;
@@ -63,8 +74,9 @@ contract ERC20Handler is Test {
         }
     }
 
-    function transfer(uint256 actorIndexSeed, address to, uint256 amount)
+    function transfer(uint256 skipTimeSeed, uint256 actorIndexSeed, address to, uint256 amount)
         external
+        skipTime(skipTimeSeed)
         setActor(actorIndexSeed)
         prankCurrentActor
     {
@@ -73,8 +85,9 @@ contract ERC20Handler is Test {
         token.transfer(to, amount);
     }
 
-    function approve(uint256 actorIndexSeed, address to, uint256 amount)
+    function approve(uint256 skipTimeSeed, uint256 actorIndexSeed, address to, uint256 amount)
         external
+        skipTime(skipTimeSeed)
         setActor(actorIndexSeed)
         prankCurrentActor
     {
@@ -84,12 +97,13 @@ contract ERC20Handler is Test {
         token.approve(to, amount);
     }
 
-    function transferFrom(uint256 ownerIndexSeed, uint256 actorIndexSeed, address to, uint256 amount)
-        external
-        setOwner(ownerIndexSeed)
-        setActor(actorIndexSeed)
-        prankCurrentActor
-    {
+    function transferFrom(
+        uint256 skipTimeSeed,
+        uint256 ownerIndexSeed,
+        uint256 actorIndexSeed,
+        address to,
+        uint256 amount
+    ) external skipTime(skipTimeSeed) setOwner(ownerIndexSeed) setActor(actorIndexSeed) prankCurrentActor {
         if (to == address(0)) to = address(uint160(uint256(keccak256(abi.encode(to)))));
         amount = bound(amount, 0, token.balanceOf(currentOwner));
         useOwnerIfCurrentActorIsNotReliedOn(amount);
@@ -98,15 +112,16 @@ contract ERC20Handler is Test {
         token.transferFrom(currentOwner, to, amount);
     }
 
-    function mint(address to, uint256 amount) external {
+    function mint(uint256 skipTimeSeed, address to, uint256 amount) external skipTime(skipTimeSeed) {
         if (to == address(0)) to = address(uint160(uint256(keccak256(abi.encode(to)))));
         amount = bound(amount, 0, 1000 * (10 ** token.decimals()));
         vm.prank(owner);
         token.mint(to, amount);
     }
 
-    function burn(uint256 ownerIndexSeed, uint256 actorIndexSeed, uint256 amount)
+    function burn(uint256 skipTimeSeed, uint256 ownerIndexSeed, uint256 actorIndexSeed, uint256 amount)
         external
+        skipTime(skipTimeSeed)
         setOwner(ownerIndexSeed)
         setActor(actorIndexSeed)
         prankCurrentActor
