@@ -15,14 +15,14 @@ contract BaseInvariantTest is BaseTest {
 
         vaultHandler = new VaultHandler(vault, usdc, xNGN);
 
-        // targetContract(address(vaultHandler));
+        targetContract(address(vaultHandler));
 
-        // bytes4[] memory selectors = new bytes4[](4);
-        // selectors[0] = VaultHandler.depositCollateral.selector;
-        // selectors[1] = VaultHandler.withdrawCollateral.selector;
-        // selectors[2] = VaultHandler.mintCurrency.selector;
-        // selectors[3] = VaultHandler.burnCurrency.selector;
-        // targetSelector(FuzzSelector({addr: address(vaultHandler), selectors: selectors}));
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = VaultHandler.depositCollateral.selector;
+        selectors[1] = VaultHandler.withdrawCollateral.selector;
+        selectors[2] = VaultHandler.mintCurrency.selector;
+        selectors[3] = VaultHandler.burnCurrency.selector;
+        targetSelector(FuzzSelector({addr: address(vaultHandler), selectors: selectors}));
     }
 
     function invariant_solvency() external {
