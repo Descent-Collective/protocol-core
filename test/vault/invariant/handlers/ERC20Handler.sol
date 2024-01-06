@@ -24,6 +24,21 @@ contract ERC20Handler is Test {
         actors[2] = user3;
         actors[3] = user4;
         actors[4] = user5;
+
+        vm.prank(user1);
+        token.approve(user1, type(uint256).max);
+
+        vm.prank(user2);
+        token.approve(user2, type(uint256).max);
+
+        vm.prank(user3);
+        token.approve(user3, type(uint256).max);
+
+        vm.prank(user4);
+        token.approve(user4, type(uint256).max);
+
+        vm.prank(user5);
+        token.approve(user5, type(uint256).max);
     }
 
     modifier prankCurrentActor() {
@@ -42,11 +57,10 @@ contract ERC20Handler is Test {
         _;
     }
 
-    modifier useOwnerIfCurrentActorIsNotReliedOn() {
-        if (currentOwner != currentActor && token.allowance(currentOwner, currentActor) == 0) {
+    function useOwnerIfCurrentActorIsNotReliedOn(uint256 amount) internal {
+        if (currentOwner != currentActor && token.allowance(currentOwner, currentActor) < amount) {
             currentActor = currentOwner;
         }
-        _;
     }
 
     function transfer(uint256 actorIndexSeed, address to, uint256 amount)
@@ -64,8 +78,9 @@ contract ERC20Handler is Test {
         setActor(actorIndexSeed)
         prankCurrentActor
     {
-        if (to == address(0)) to = address(uint160(uint256(keccak256(abi.encode(to)))));
-        amount = bound(amount, 0, token.balanceOf(currentActor));
+        if (to == address(0) || to == currentActor || to.code.length > 0) {
+            to = address(uint160(uint256(keccak256(abi.encode(to)))));
+        }
         token.approve(to, amount);
     }
 
@@ -73,11 +88,13 @@ contract ERC20Handler is Test {
         external
         setOwner(ownerIndexSeed)
         setActor(actorIndexSeed)
-        useOwnerIfCurrentActorIsNotReliedOn
         prankCurrentActor
     {
         if (to == address(0)) to = address(uint160(uint256(keccak256(abi.encode(to)))));
         amount = bound(amount, 0, token.balanceOf(currentOwner));
+        useOwnerIfCurrentActorIsNotReliedOn(amount);
+        vm.stopPrank();
+        vm.startPrank(currentActor);
         token.transferFrom(currentOwner, to, amount);
     }
 
@@ -92,10 +109,12 @@ contract ERC20Handler is Test {
         external
         setOwner(ownerIndexSeed)
         setActor(actorIndexSeed)
-        useOwnerIfCurrentActorIsNotReliedOn
         prankCurrentActor
     {
         amount = bound(amount, 0, token.balanceOf(currentOwner));
+        useOwnerIfCurrentActorIsNotReliedOn(amount);
+        vm.stopPrank();
+        vm.startPrank(currentActor);
         token.burn(currentOwner, amount);
     }
 }
