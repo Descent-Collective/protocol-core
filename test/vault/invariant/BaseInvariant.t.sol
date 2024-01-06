@@ -14,6 +14,11 @@ contract BaseInvariantTest is BaseTest {
     ERC20Handler usdcHandler;
     ERC20Handler xNGNHandler;
 
+    modifier useCurrentTime() {
+        vm.warp(timeManager.time());
+        _;
+    }
+
     function setUp() public override {
         super.setUp();
 
@@ -56,7 +61,7 @@ contract BaseInvariantTest is BaseTest {
         targetSelector(FuzzSelector({addr: address(usdcHandler), selectors: usdcSelectors}));
     }
 
-    function invariant_solvencyBalances() external {
+    function invariant_solvencyBalances() external useCurrentTime {
         // user's deposits are greater than or equal to balance of vault (greater than if usdc is sent to it directly)
         assertGe(usdc.balanceOf(address(vault)), _sumUsdcBalances(), "usdc insolvent");
 
@@ -66,7 +71,7 @@ contract BaseInvariantTest is BaseTest {
 
     // all inflows and outflows resolve to the balance of the contract
     // this also checks that total withdrawals cannot be more than total deposits and that total burns cannot be more than total mints
-    function invariant_inflowsAndOutflowsAddUp() external {
+    function invariant_inflowsAndOutflowsAddUp() external useCurrentTime {
         assertGe(
             usdc.balanceOf(address(vault)),
             vaultHandler.totalDeposits() - vaultHandler.totalWithdrawals(),
@@ -79,30 +84,33 @@ contract BaseInvariantTest is BaseTest {
         );
     }
 
-    function invariant_onlyVaultWithBadCollateralRatioIsLiquidatable() external {
+    function invariant_onlyVaultWithBadCollateralRatioIsLiquidatable() external useCurrentTime {
         // mint usdc to address(this)
         vm.startPrank(owner);
         Currency(address(usdc)).mint(address(this), 1_000_000 * (10 ** usdc.decimals()));
         vm.stopPrank();
 
         // use address(this) to deposit so that it can borrow currency needed for liquidation below
+        vm.startPrank(address(this));
+
         usdc.approve(address(vault), type(uint256).max);
         vault.depositCollateral(usdc, address(this), 1_000_000 * (10 ** usdc.decimals()));
-        vault.mintCurrency(usdc, address(this), address(this), 500_000e18);
+        vault.mintCurrency(usdc, address(this), address(this), 500_000_000e18);
+        xNGN.approve(address(vault), type(uint256).max);
 
-        if (vaultGetters.getHealthFactor(vault, usdc, user1)) vm.expectRevert(PositionIsSafe.selector);
+        if (vaultGetters.getHealthFactor(vault, usdc, user1)) vm.expectRevert(IVault.PositionIsSafe.selector);
         vault.liquidate(usdc, user1, address(this), type(uint256).max);
 
-        if (vaultGetters.getHealthFactor(vault, usdc, user2)) vm.expectRevert(PositionIsSafe.selector);
+        if (vaultGetters.getHealthFactor(vault, usdc, user2)) vm.expectRevert(IVault.PositionIsSafe.selector);
         vault.liquidate(usdc, user2, address(this), type(uint256).max);
 
-        if (vaultGetters.getHealthFactor(vault, usdc, user3)) vm.expectRevert(PositionIsSafe.selector);
+        if (vaultGetters.getHealthFactor(vault, usdc, user3)) vm.expectRevert(IVault.PositionIsSafe.selector);
         vault.liquidate(usdc, user3, address(this), type(uint256).max);
 
-        if (vaultGetters.getHealthFactor(vault, usdc, user4)) vm.expectRevert(PositionIsSafe.selector);
+        if (vaultGetters.getHealthFactor(vault, usdc, user4)) vm.expectRevert(IVault.PositionIsSafe.selector);
         vault.liquidate(usdc, user4, address(this), type(uint256).max);
 
-        if (vaultGetters.getHealthFactor(vault, usdc, user5)) vm.expectRevert(PositionIsSafe.selector);
+        if (vaultGetters.getHealthFactor(vault, usdc, user5)) vm.expectRevert(IVault.PositionIsSafe.selector);
         vault.liquidate(usdc, user5, address(this), type(uint256).max);
     }
 
