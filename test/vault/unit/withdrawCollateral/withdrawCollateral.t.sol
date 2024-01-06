@@ -11,7 +11,7 @@ contract WithdrawCollateralTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000 * (10 ** usdc.decimals()));
+        vault.depositCollateral(usdc, user1, 1000 * (10 ** usdc.decimals()));
 
         vm.stopPrank();
     }
@@ -78,7 +78,7 @@ contract WithdrawCollateralTest is BaseTest {
         whenCallerIsOwnerOrReliedUponByOwner
         useUser1
     {
-        amount = bound(amount, (1_000 * (10 ** usdc.decimals())) + 1, type(uint256).max);
+        amount = bound(amount, (1000 * (10 ** usdc.decimals())) + 1, type(uint256).max);
 
         // it should revert with solidity panic error underflow error
         vm.expectRevert(INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR);
@@ -97,7 +97,7 @@ contract WithdrawCollateralTest is BaseTest {
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
         useUser1
     {
-        amount = bound(amount, 1, 1_000 * (10 ** usdc.decimals()));
+        amount = bound(amount, 1, 1000 * (10 ** usdc.decimals()));
 
         // mint max amount possible of currency to make withdrawing any of my collateral bad for user1 vault position
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
@@ -117,7 +117,7 @@ contract WithdrawCollateralTest is BaseTest {
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
         useReliedOnForUser1(user2)
     {
-        amount = bound(amount, 1, 1_000 * (10 ** usdc.decimals()));
+        amount = bound(amount, 1, 1000 * (10 ** usdc.decimals()));
 
         // mint max amount possible of currency to make withdrawing any of my collateral bad for user1 vault position
         vault.mintCurrency(usdc, user1, user1, 500_000e18);

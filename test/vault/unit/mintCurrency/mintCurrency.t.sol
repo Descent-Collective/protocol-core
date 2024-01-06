@@ -11,7 +11,7 @@ contract MintCurrencyTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000 * (10 ** usdc.decimals()));
+        vault.depositCollateral(usdc, user1, 1000 * (10 ** usdc.decimals()));
 
         vm.stopPrank();
     }
@@ -100,7 +100,7 @@ contract MintCurrencyTest is BaseTest {
         whenTheBorrowDoesNotMakeTheVaultsCollateralRatioAboveTheLiquidationThreshold
         useUser1
     {
-        amountToWithdraw = bound(amountToWithdraw, (900 * (10 ** usdc.decimals())) + 1, 1_000 * (10 ** usdc.decimals()));
+        amountToWithdraw = bound(amountToWithdraw, (900 * (10 ** usdc.decimals())) + 1, 1000 * (10 ** usdc.decimals()));
         // no need to bound amount to mint, as it won't get to debt ceiling if it reverts
 
         // user1 withdraws enough of their collateral to be below the floor

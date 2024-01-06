@@ -7,11 +7,6 @@ import {ERC20Handler} from "./handlers/erc20Handler.sol";
 import {VaultGetters} from "./VaultGetters.sol";
 import {TimeManager} from "./timeManager.sol";
 
-/**
- * INVARIANTS
- *
- * -
- */
 contract BaseInvariantTest is BaseTest {
     TimeManager timeManager;
     VaultGetters vaultGetters;
@@ -84,7 +79,8 @@ contract BaseInvariantTest is BaseTest {
     }
 
     // all inflows and outflows resolve to the balance of the contract
-    // this also checks that total withdrawals cannot be more than total deposits and that total burns cannot be more than total mints
+    // this also checks that total withdrawals cannot be more than total deposits and that total burns cannot be more
+    // than total mints
     function invariant_inflowsAndOutflowsAddUp() external useCurrentTime {
         // empty possible donations and fees earned
         vault.recoverToken(address(usdc), address(this));

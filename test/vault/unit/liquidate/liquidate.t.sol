@@ -11,7 +11,7 @@ contract LiquidateTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000 * (10 ** usdc.decimals()));
+        vault.depositCollateral(usdc, user1, 1000 * (10 ** usdc.decimals()));
 
         // mint max amount
         vault.mintCurrency(usdc, user1, user1, 500_000e18);

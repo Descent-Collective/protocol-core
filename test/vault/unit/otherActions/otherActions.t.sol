@@ -49,14 +49,14 @@ contract OtherActionsTest is BaseTest {
     function accrue_payfees_getcurrency(uint256 timeElapsed) private {
         // accrue and pay some fees
         vm.startPrank(user1);
-        vault.depositCollateral(usdc, user1, 1_000 * (10 ** usdc.decimals()));
+        vault.depositCollateral(usdc, user1, 1000 * (10 ** usdc.decimals()));
         vault.mintCurrency(usdc, user1, user1, 100_000e18);
         skip(timeElapsed);
 
         // get currency to pay fees from user2 borrowing
         vm.stopPrank();
         vm.startPrank(user2);
-        vault.depositCollateral(usdc, user2, 1_000 * (10 ** usdc.decimals()));
+        vault.depositCollateral(usdc, user2, 1000 * (10 ** usdc.decimals()));
         vault.mintCurrency(usdc, user2, user1, 100_000e18); // mint currency to user 1
         vm.stopPrank();
 

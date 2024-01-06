@@ -31,4 +31,8 @@ depth = 50
 fail_on_revert = true
 dictionary_weight = 80
 
+
+[fmt]
+number_underscore = "thousands"
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
