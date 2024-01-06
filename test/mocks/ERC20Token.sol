@@ -36,7 +36,7 @@ contract ERC20Token is AccessControl, ERC20Permit {
      */
     function burn(address account, uint256 amount) external returns (bool) {
         if (account != msg.sender) {
-            _spendAllowance(msg.sender, account, amount);
+            _spendAllowance(account, msg.sender, amount);
         }
         _burn(account, amount);
         return true;
