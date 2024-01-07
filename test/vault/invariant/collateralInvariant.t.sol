@@ -51,6 +51,9 @@ contract CollateralInvariantTest is BaseInvariantTest {
 
     function invariant_collateral_totalDepositedCollateral() external useCurrentTime {
         assertLe(getCollateralMapping(usdc).totalDepositedCollateral, usdc.balanceOf(address(vault)));
+
+        vault.recoverToken(address(usdc), address(this));
+        assertEq(getCollateralMapping(usdc).totalDepositedCollateral, usdc.balanceOf(address(vault)));
     }
 
     function invariant_collateral_totalBorrowedAmount() external useCurrentTime {

@@ -113,15 +113,14 @@ contract BaseInvariantTest is BaseTest {
         * Vault User Vault Info Variables
             * vault.depositedCollateral: 
                 - must be <= collateral.totalDepositedCollateral
-                - sum of all users own must == collateral.totalDepositedCollateral
-                - must be <= collateralToken.balanceOf(vault)
                 - after recoverToken(collateral, to) is called, it must be <= collateralToken.balanceOf(vault)
+                - sum of all users own must == collateral.totalDepositedCollateral
             * vault.borrowedAmount:
                 - must be <= collateral.totalBorrowedAmount
-                - sum of all users own must == collateral.totalBorrowedAmount
                 - must be <= CURRENCY_TOKEN.totalSupply()
                 - must be <= collateral.debtCeiling
                 - must be <= debtCeiling
+                - sum of all users own must == collateral.totalBorrowedAmount
             * vault.accruedFees:
                 - TODO:
             * vault.lastTotalAccumulatedRate:
@@ -131,20 +130,4 @@ contract BaseInvariantTest is BaseTest {
     /*** Vault Invariants                                                                                                               ***/
     /**************************************************************************************************************************************/
     // forgefmt: disable-end
-
-    function _sumUsdcBalances() internal view returns (uint256 sum) {
-        sum = (
-            getVaultMapping(usdc, user1).depositedCollateral + getVaultMapping(usdc, user2).depositedCollateral
-                + getVaultMapping(usdc, user3).depositedCollateral + getVaultMapping(usdc, user4).depositedCollateral
-                + getVaultMapping(usdc, user5).depositedCollateral
-        );
-    }
-
-    function _sumxNGNBalances() internal view returns (uint256 sum) {
-        sum = (
-            getVaultMapping(usdc, user1).borrowedAmount + getVaultMapping(usdc, user2).borrowedAmount
-                + getVaultMapping(usdc, user3).borrowedAmount + getVaultMapping(usdc, user4).borrowedAmount
-                + getVaultMapping(usdc, user5).borrowedAmount
-        );
-    }
 }
