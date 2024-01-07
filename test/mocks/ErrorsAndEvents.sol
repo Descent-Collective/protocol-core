@@ -32,4 +32,5 @@ contract ErrorsAndEvents {
     error NotFeedContract();
     error InvalidStabilityModule();
     error ERC20InsufficientBalance(address, uint256, uint256);
+    error ERC20InsufficientAllowance(address, uint256, uint256);
 }

@@ -192,7 +192,7 @@ contract BaseTest is Test, ErrorsAndEvents {
 
     function mutateAddress(address addr) internal pure returns (address) {
         unchecked {
-            return address(uint160(uint256(uint160(addr))) + 1);
+            return address(uint160(uint256(keccak256(abi.encode(addr)))));
         }
     }
 
