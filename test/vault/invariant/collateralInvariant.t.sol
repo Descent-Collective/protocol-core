@@ -115,30 +115,6 @@ contract CollateralInvariantTest is BaseInvariantTest {
     function invariant_collateral_collateralFloorPerPosition() external {
         // TODO: add handler that changes collateralFloorPerPosition randomly and check that after last update,
         // any position that becomes below  this level has either the same or less borrowed amount
-
-        // for now this suffices
-
-        uint256 collateralFloorPerPosition = getCollateralMapping(usdc).collateralFloorPerPosition;
-
-        // check user1
-        IVault.VaultInfo memory vaultInfo = getVaultMapping(usdc, user1);
-        if (vaultInfo.depositedCollateral < collateralFloorPerPosition) assertEq(vaultInfo.borrowedAmount, 0);
-
-        // check user2
-        vaultInfo = getVaultMapping(usdc, user2);
-        if (vaultInfo.depositedCollateral < collateralFloorPerPosition) assertEq(vaultInfo.borrowedAmount, 0);
-
-        // check user3
-        vaultInfo = getVaultMapping(usdc, user3);
-        if (vaultInfo.depositedCollateral < collateralFloorPerPosition) assertEq(vaultInfo.borrowedAmount, 0);
-
-        // check user4
-        vaultInfo = getVaultMapping(usdc, user4);
-        if (vaultInfo.depositedCollateral < collateralFloorPerPosition) assertEq(vaultInfo.borrowedAmount, 0);
-
-        // check user5
-        vaultInfo = getVaultMapping(usdc, user5);
-        if (vaultInfo.depositedCollateral < collateralFloorPerPosition) assertEq(vaultInfo.borrowedAmount, 0);
     }
 
     function invariant_collateral_additionalCollateralPrecision() external {

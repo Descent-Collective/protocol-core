@@ -26,8 +26,8 @@ include_push_bytes = true
 
 
 [invariant]
-runs = 100
-depth = 15
+runs = 1000
+depth = 50
 fail_on_revert = true
 dictionary_weight = 80
 

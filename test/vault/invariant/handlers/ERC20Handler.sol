@@ -47,7 +47,7 @@ contract ERC20Handler is Test {
     }
 
     modifier skipTime(uint256 skipTimeSeed) {
-        uint256 skipTimeBy = bound(skipTimeSeed, 0, 1 days);
+        uint256 skipTimeBy = bound(skipTimeSeed, 0, 365 days);
         timeManager.skipTime(skipTimeBy);
         _;
     }

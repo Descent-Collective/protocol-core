@@ -90,7 +90,7 @@ contract BaseInvariantTest is BaseTest {
             * collateral.liquidationThreshold:
                 - any vault whose collateral to debt ratio is above this should be liquidatable
             * collateral.liquidationBonus:
-                - TODO:
+                - NO INVARIANT
             * collateral.rateInfo.rate:
                 - must be > 0 to be used as input to any function
             * collateral.rateInfo.accumulatedRate:
@@ -98,7 +98,7 @@ contract BaseInvariantTest is BaseTest {
             * collateral.rateInfo.lastUpdateTime:
                 - must be > block.timeatamp
             * collateral.price:
-                - TODO:
+                - NO INVARIANT, checks are done in the Oracle security module
             * collateral.debtCeiling:
                 - must be >= CURRENCY_TOKEN.totalSupply()
             * collateral.collateralFloorPerPosition:

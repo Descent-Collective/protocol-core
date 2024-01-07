@@ -230,7 +230,7 @@ contract Vault is IVault, AccessControl, Pausable {
         } else if (_param == ModifiableParameters.LIQUIDATION_BONUS) {
             _collateral.liquidationBonus = _data;
         } else {
-            // (_param == ModifiableParameters.LIQUIDATION_THRESHOLD)
+            // if (_param == ModifiableParameters.LIQUIDATION_THRESHOLD)
             _collateral.liquidationThreshold = _data;
         }
     }
