@@ -2,8 +2,8 @@
 pragma solidity 0.8.21;
 
 import {Test, ERC20, IVault, Vault, console2, Currency} from "../../../base.t.sol";
-import {VaultGetters} from "../VaultGetters.sol";
-import {TimeManager} from "../timeManager.sol";
+import {VaultGetters} from "../helpers/vaultGetters.sol";
+import {TimeManager} from "../helpers/timeManager.sol";
 
 contract VaultHandler is Test {
     VaultGetters vaultGetters;

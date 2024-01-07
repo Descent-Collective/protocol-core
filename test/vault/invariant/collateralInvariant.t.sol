@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseInvariant} from "./baseInvariant.t.sol";
+import {BaseInvariantTest} from "./baseInvariant.t.sol";
 
 // forgefmt: disable-start
 /**************************************************************************************************************************************/
@@ -36,7 +36,7 @@ import {BaseInvariant} from "./baseInvariant.t.sol";
               must have a borrowedAmount == that vaults borrowedAmount as at time `t`. 
               It can only change if the vault's depositedCollateral becomes > collateral.collateralFloorPerPosition 
         * collateral.additionalCollateralPrecision:
-            - TODO:
+            - must always be == `18 - token.decimals()`
         
 
 /**************************************************************************************************************************************/
@@ -44,8 +44,28 @@ import {BaseInvariant} from "./baseInvariant.t.sol";
 /**************************************************************************************************************************************/
 // forgefmt: disable-end
 
-contract CollateralInvariantTest is BaseInvariant {
-    function setUp() public {
+contract CollateralInvariantTest is BaseInvariantTest {
+    function setUp() public override {
         super.setUp();
     }
+
+    function invariant_collateral_totalDepositedCollateral() external {}
+
+    function invariant_collateral_totalBorrowedAmount() external {}
+
+    function invariant_collateral_liquidationThreshold() external {}
+
+    function invariant_collateral_rateInfo_rate() external {}
+
+    function invariant_collateral_rateInfo_accumulatedRate() external {}
+
+    function invariant_collateral_rateInfo_lastUpdateTime() external {}
+
+    function invariant_collateral_price() external {}
+
+    function invariant_collateral_debtCeiling() external {}
+
+    function invariant_collateral_collateralFloorPerPosition() external {}
+
+    function invariant_collateral_additionalCollateralPrecision() external {}
 }

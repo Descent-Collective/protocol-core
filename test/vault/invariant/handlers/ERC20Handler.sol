@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 import {Test, console2, Currency} from "../../../base.t.sol";
-import {TimeManager} from "../timeManager.sol";
+import {TimeManager} from "../helpers/timeManager.sol";
 
 contract ERC20Handler is Test {
     Currency token;

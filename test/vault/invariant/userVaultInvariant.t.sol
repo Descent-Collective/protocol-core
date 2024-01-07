@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseInvariant} from "./baseInvariant.t.sol";
+import {BaseInvariantTest} from "./baseInvariant.t.sol";
 
 // forgefmt: disable-start
 /**************************************************************************************************************************************/
@@ -31,8 +31,16 @@ import {BaseInvariant} from "./baseInvariant.t.sol";
 /**************************************************************************************************************************************/
 // forgefmt: disable-end
 
-contract UserVaultInvariantTest is BaseInvariant {
-    function setUp() public {
+contract UserVaultInvariantTest is BaseInvariantTest {
+    function setUp() public override {
         super.setUp();
     }
+
+    function invariant_user_vault_depositedCollateral() external {}
+
+    function invariant_user_vault_borrowedAmount() external {}
+
+    function invariant_user_vault_accruedFees() external {}
+
+    function invariant_user_vault_lastTotalAccumulatedRate() external {}
 }

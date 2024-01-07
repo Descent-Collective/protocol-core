@@ -19,7 +19,7 @@ contract BaseInvariantTest is BaseTest {
         _;
     }
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
 
         vm.prank(owner);
@@ -110,7 +110,7 @@ contract BaseInvariantTest is BaseTest {
                 must have a borrowedAmount == that vaults borrowedAmount as at time `t`. 
                 It can only change if the vault's depositedCollateral becomes > collateral.collateralFloorPerPosition 
             * collateral.additionalCollateralPrecision:
-                - TODO:
+                - must always be == `18 - token.decimals()`
 
             
         * Vault User Vault Info Variables

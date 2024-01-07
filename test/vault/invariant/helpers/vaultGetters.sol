@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 //  ==========  External imports    ==========
-import {Vault, IVault, ERC20} from "../../../src/vault.sol";
+import {Vault, IVault, ERC20} from "../../../../src/vault.sol";
 
 contract VaultGetters {
     uint256 private constant PRECISION_DEGREE = 18;
