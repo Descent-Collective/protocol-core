@@ -4,8 +4,8 @@ pragma solidity 0.8.21;
 import {BaseTest, IVault, Currency} from "../../base.t.sol";
 import {VaultHandler} from "./handlers/vaultHandler.sol";
 import {ERC20Handler} from "./handlers/erc20Handler.sol";
-import {VaultGetters} from "./VaultGetters.sol";
-import {TimeManager} from "./timeManager.sol";
+import {VaultGetters} from "./helpers/vaultGetters.sol";
+import {TimeManager} from "./helpers/timeManager.sol";
 
 contract BaseInvariantTest is BaseTest {
     TimeManager timeManager;
@@ -65,69 +65,75 @@ contract BaseInvariantTest is BaseTest {
         targetSelector(FuzzSelector({addr: address(usdcHandler), selectors: usdcSelectors}));
     }
 
-    function invariant_solvencyBalances() external useCurrentTime {
-        // empty possible donations and fees earned
-        vault.recoverToken(address(usdc), address(this));
-        vault.recoverToken(address(xNGN), address(this));
-        vault.withdrawFees();
+    // forgefmt: disable-start
+    /**************************************************************************************************************************************/
+    /*** Invariant Tests                                                                                                                ***/
+    /***************************************************************************************************************************************
 
-        // user's deposits is equal to balance of vault
-        assertEq(usdc.balanceOf(address(vault)), _sumUsdcBalances(), "usdc insolvent");
+        * Vault Global Variables
+            * baseRateInfo.lastUpdateTime: 
+                - must be <= block.timestamp
+            * baseRateInfo.accumulatedRate: 
+                - must be >= accumulatedRate.rate
+            * debtCeiling: 
+                - must be >= CURRENCY_TOKEN.totalSupply()
+            * debt: 
+                - must be == CURRENCY_TOKEN.totalSupply()
+            * paidFees:
+                - must always be withdrawable
+            
+        * Vault Collateral Info Variables
+            * collateral.totalDepositedCollateral: 
+                - must be <= collateralToken.balanceOf(vault)
+                - after recoverToken(collateral, to) is called, it must be == collateralToken.balanceOf(vault)
+            * collateral.totalBorrowedAmount: 
+                - must be <= CURRENCY_TOKEN.totalSupply()
+                - must be <= collateral.debtCeiling
+                - must be <= debtCeiling
+            * collateral.liquidationThreshold:
+                - any vault whose collateral to debt ratio is above this should be liquidatable
+            * collateral.liquidationBonus:
+                - TODO:
+            * collateral.rateInfo.rate:
+                - must be > 0 to be used as input to any function
+            * collateral.rateInfo.accumulatedRate:
+                - must be > collateral.rateInfo.rate
+            * collateral.rateInfo.lastUpdateTime:
+                - must be > block.timeatamp
+            * collateral.price:
+                - TODO:
+            * collateral.debtCeiling:
+                - must be >= CURRENCY_TOKEN.totalSupply()
+            * collateral.collateralFloorPerPosition:
+                - At time `t` when collateral.collateralFloorPerPosition was last updated, 
+                any vault with a depositedCollateral < collateral.collateralFloorPerPosition 
+                must have a borrowedAmount == that vaults borrowedAmount as at time `t`. 
+                It can only change if the vault's depositedCollateral becomes > collateral.collateralFloorPerPosition 
+            * collateral.additionalCollateralPrecision:
+                - TODO:
 
-        // xNGN total supply must be equal to all users total borrowed amount
-        assertEq(xNGN.totalSupply(), _sumxNGNBalances(), "xngn over mint");
-    }
+            
+        * Vault User Vault Info Variables
+            * vault.depositedCollateral: 
+                - must be <= collateral.totalDepositedCollateral
+                - sum of all users own must == collateral.totalDepositedCollateral
+                - must be <= collateralToken.balanceOf(vault)
+                - after recoverToken(collateral, to) is called, it must be <= collateralToken.balanceOf(vault)
+            * vault.borrowedAmount:
+                - must be <= collateral.totalBorrowedAmount
+                - sum of all users own must == collateral.totalBorrowedAmount
+                - must be <= CURRENCY_TOKEN.totalSupply()
+                - must be <= collateral.debtCeiling
+                - must be <= debtCeiling
+            * vault.accruedFees:
+                - TODO:
+            * vault.lastTotalAccumulatedRate:
+                - must be >= `baseRateInfo.rate + collateral.rateInfo.rate`
 
-    // all inflows and outflows resolve to the balance of the contract
-    // this also checks that total withdrawals cannot be more than total deposits and that total burns cannot be more
-    // than total mints
-    function invariant_inflowsAndOutflowsAddUp() external useCurrentTime {
-        // empty possible donations and fees earned
-        vault.recoverToken(address(usdc), address(this));
-        vault.recoverToken(address(xNGN), address(this));
-        vault.withdrawFees();
-
-        assertEq(
-            usdc.balanceOf(address(vault)),
-            vaultHandler.totalDeposits() - vaultHandler.totalWithdrawals(),
-            "usdc inflows and outflows do not add up"
-        );
-        assertEq(
-            xNGN.totalSupply(),
-            vaultHandler.totalMints() - vaultHandler.totalBurns(),
-            "xngn inflows and outflows do not add up"
-        );
-    }
-
-    function invariant_onlyVaultWithBadCollateralRatioIsLiquidatable() external useCurrentTime {
-        // mint usdc to address(this)
-        vm.startPrank(owner);
-        Currency(address(usdc)).mint(address(this), 1_000_000 * (10 ** usdc.decimals()));
-        vm.stopPrank();
-
-        // use address(this) to deposit so that it can borrow currency needed for liquidation below
-        vm.startPrank(address(this));
-
-        usdc.approve(address(vault), type(uint256).max);
-        vault.depositCollateral(usdc, address(this), 1_000_000 * (10 ** usdc.decimals()));
-        vault.mintCurrency(usdc, address(this), address(this), 500_000_000e18);
-        xNGN.approve(address(vault), type(uint256).max);
-
-        if (vaultGetters.getHealthFactor(vault, usdc, user1)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, user1, address(this), type(uint256).max);
-
-        if (vaultGetters.getHealthFactor(vault, usdc, user2)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, user2, address(this), type(uint256).max);
-
-        if (vaultGetters.getHealthFactor(vault, usdc, user3)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, user3, address(this), type(uint256).max);
-
-        if (vaultGetters.getHealthFactor(vault, usdc, user4)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, user4, address(this), type(uint256).max);
-
-        if (vaultGetters.getHealthFactor(vault, usdc, user5)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, user5, address(this), type(uint256).max);
-    }
+    /**************************************************************************************************************************************/
+    /*** Vault Invariants                                                                                                               ***/
+    /**************************************************************************************************************************************/
+    // forgefmt: disable-end
 
     function _sumUsdcBalances() internal view returns (uint256 sum) {
         sum = (
