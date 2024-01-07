@@ -17,6 +17,7 @@ contract BaseTest is Test, ErrorsAndEvents {
     uint256 constant FALSE = 1;
     uint256 constant TRUE = 2;
 
+    uint256 creationBlockTimestamp = block.timestamp;
     uint256 PRECISION = 1e18;
     uint256 HUNDRED_PERCENTAGE = 100e18;
     Vault vault;
@@ -121,6 +122,12 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         vm.startPrank(relyOn);
         _;
+    }
+
+    function getBaseRateInfo() internal view returns (IVault.RateInfo memory) {
+        (uint256 rate, uint256 accumulatedRate, uint256 lastUpdateTime) = vault.baseRateInfo();
+
+        return IVault.RateInfo(rate, accumulatedRate, lastUpdateTime);
     }
 
     function getVaultMapping(ERC20 _collateralToken, address _owner) internal view returns (IVault.VaultInfo memory) {

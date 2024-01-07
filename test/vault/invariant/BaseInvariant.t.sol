@@ -80,7 +80,7 @@ contract BaseInvariantTest is BaseTest {
             * debt: 
                 - must be == CURRENCY_TOKEN.totalSupply()
             * paidFees:
-                - must always be withdrawable
+                - must always be fully withdrawable
             
         * Vault Collateral Info Variables
             * collateral.totalDepositedCollateral: 
