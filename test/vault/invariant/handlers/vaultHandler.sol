@@ -159,9 +159,8 @@ contract VaultHandler is Test {
         }
     }
 
-    function withdrawFees(uint256 skipTimeSeed, uint256 amount) external skipTime(skipTimeSeed) {
-        amount = bound(amount, 0, vault.paidFees());
-        vault.withdrawFees(amount);
+    function withdrawFees(uint256 skipTimeSeed) external skipTime(skipTimeSeed) {
+        vault.withdrawFees();
     }
 
     function rely(uint256 skipTimeSeed, uint256 relyUponIndexSeed, uint256 actorIndexSeed)

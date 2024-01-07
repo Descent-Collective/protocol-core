@@ -69,7 +69,7 @@ contract BaseInvariantTest is BaseTest {
         // empty possible donations and fees earned
         vault.recoverToken(address(usdc), address(this));
         vault.recoverToken(address(xNGN), address(this));
-        vault.withdrawFees(vault.paidFees());
+        vault.withdrawFees();
 
         // user's deposits is equal to balance of vault
         assertEq(usdc.balanceOf(address(vault)), _sumUsdcBalances(), "usdc insolvent");
@@ -85,7 +85,7 @@ contract BaseInvariantTest is BaseTest {
         // empty possible donations and fees earned
         vault.recoverToken(address(usdc), address(this));
         vault.recoverToken(address(xNGN), address(this));
-        vault.withdrawFees(vault.paidFees());
+        vault.withdrawFees();
 
         assertEq(
             usdc.balanceOf(address(vault)),

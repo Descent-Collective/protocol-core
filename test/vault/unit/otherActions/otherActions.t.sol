@@ -68,7 +68,7 @@ contract OtherActionsTest is BaseTest {
         vm.stopPrank();
     }
 
-    function test_withdrawFees(uint256 timeElapsed, uint256 amount) external {
+    function test_withdrawFees(uint256 timeElapsed) external {
         timeElapsed = bound(timeElapsed, 0, 365 days * 10);
         accrue_payfees_getcurrency(timeElapsed);
 
@@ -76,7 +76,7 @@ contract OtherActionsTest is BaseTest {
         vm.prank(owner);
         vault.pause();
         vm.expectRevert(Paused.selector);
-        vault.withdrawFees(amount);
+        vault.withdrawFees();
         // unpause back
         vm.prank(owner);
         vault.unpause();
@@ -85,26 +85,20 @@ contract OtherActionsTest is BaseTest {
         vm.prank(owner);
         vault.updateStabilityModule(address(0));
         vm.expectRevert(InvalidStabilityModule.selector);
-        vault.withdrawFees(amount);
+        vault.withdrawFees();
 
         // set back
         vm.prank(owner);
         vault.updateStabilityModule(testStabilityModule); // no implementation so set it to psuedo-random address
 
-        // should revert if amount > paidFees
-        uint256 invalidAmount = bound(amount, vault.paidFees() + 1, type(uint256).max);
-        vm.expectRevert(INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR);
-        vault.withdrawFees(invalidAmount);
-
         // should work otherwise
         uint256 initialVaultPaidFees = vault.paidFees();
         uint256 initialVaultBalance = xNGN.balanceOf(address(vault));
         uint256 initialStabilityModuleBalance = xNGN.balanceOf(testStabilityModule);
-        uint256 validAmount = bound(amount, 0, initialVaultPaidFees);
-        vault.withdrawFees(validAmount);
-        assertEq(vault.paidFees(), initialVaultPaidFees - validAmount);
-        assertEq(xNGN.balanceOf(address(vault)), initialVaultBalance - validAmount);
-        assertEq(xNGN.balanceOf(testStabilityModule), initialStabilityModuleBalance + validAmount);
+        vault.withdrawFees();
+        assertEq(vault.paidFees(), 0);
+        assertEq(xNGN.balanceOf(address(vault)), initialVaultBalance - initialVaultPaidFees);
+        assertEq(xNGN.balanceOf(testStabilityModule), initialStabilityModuleBalance + initialVaultPaidFees);
     }
 
     function test_recoverToken(uint256 timeElapsed) external {

@@ -271,21 +271,20 @@ contract Vault is IVault, AccessControl, Pausable {
     }
 
     /**
-     * @notice allows the stability module to withdraw fees that have been paid on borrowed currency
-     *
-     * @param _amount amount of fees to withdraw
+     * @notice allows the stability module to withdraw all fees that have been paid on borrowed currency
      *
      * @dev updates the paidFees for the collateral and globally then transfers the token to the caller
      * @dev should revert if the contract is paused
-     *      should revert if _amount is smaller than paidFees
+     * @dev should revert if the stabilityModule is address(0)
      */
-    function withdrawFees(uint256 _amount) external whenNotPaused {
+    function withdrawFees() external whenNotPaused {
         address _stabilityModule = stabilityModule;
         if (_stabilityModule == address(0)) revert InvalidStabilityModule();
 
-        paidFees -= _amount;
+        uint256 _paidFees = paidFees;
+        paidFees = 0;
 
-        CURRENCY_TOKEN.transfer(_stabilityModule, _amount);
+        CURRENCY_TOKEN.transfer(_stabilityModule, _paidFees);
     }
 
     /**
