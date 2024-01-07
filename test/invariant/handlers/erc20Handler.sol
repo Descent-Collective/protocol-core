@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {Test, console2, Currency} from "../../../base.t.sol";
+import {Test, console2, Currency} from "../../base.t.sol";
 import {TimeManager} from "../helpers/timeManager.sol";
 
 contract ERC20Handler is Test {

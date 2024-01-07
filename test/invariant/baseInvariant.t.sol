@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseTest, IVault, Currency} from "../../base.t.sol";
+import {BaseTest, IVault, Currency} from "../base.t.sol";
 import {VaultHandler} from "./handlers/vaultHandler.sol";
 import {ERC20Handler} from "./handlers/erc20Handler.sol";
 import {VaultGetters} from "./helpers/vaultGetters.sol";
