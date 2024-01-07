@@ -22,9 +22,6 @@ contract BaseInvariantTest is BaseTest {
     function setUp() public virtual override {
         super.setUp();
 
-        vm.prank(owner);
-        vault.updateCollateralData(usdc, IVault.ModifiableParameters.COLLATERAL_FLOOR_PER_POSITION, 0);
-
         timeManager = new TimeManager();
         vaultGetters = new VaultGetters();
         vaultHandler = new VaultHandler(vault, usdc, xNGN, vaultGetters, timeManager);
