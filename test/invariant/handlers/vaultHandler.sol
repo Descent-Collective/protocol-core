@@ -6,6 +6,7 @@ import {VaultGetters} from "../helpers/vaultGetters.sol";
 import {TimeManager} from "../helpers/timeManager.sol";
 
 contract VaultHandler is Test {
+    TimeManager timeManager;
     VaultGetters vaultGetters;
     Vault vault;
     ERC20 usdc;
@@ -16,6 +17,7 @@ contract VaultHandler is Test {
     address user3 = vm.addr(uint256(keccak256("User3")));
     address user4 = vm.addr(uint256(keccak256("User4")));
     address user5 = vm.addr(uint256(keccak256("User5")));
+    address liquidator = vm.addr(uint256(keccak256("liquidator")));
 
     address[5] actors;
     address currentActor;
@@ -26,8 +28,6 @@ contract VaultHandler is Test {
     uint256 public totalWithdrawals;
     uint256 public totalMints;
     uint256 public totalBurns;
-
-    TimeManager timeManager;
 
     constructor(Vault _vault, ERC20 _usdc, Currency _xNGN, VaultGetters _vaultGetters, TimeManager _timeManager) {
         timeManager = _timeManager;
@@ -42,6 +42,20 @@ contract VaultHandler is Test {
         actors[2] = user3;
         actors[3] = user4;
         actors[4] = user5;
+
+        // FOR LIQUIDATIONS BY LIQUIDATOR
+        // mint usdc to address(this)
+        vm.startPrank(owner);
+        Currency(address(usdc)).mint(liquidator, 100_000_000_000 * (10 ** usdc.decimals()));
+        vm.stopPrank();
+
+        // use address(this) to deposit so that it can borrow currency needed for liquidation below
+        vm.startPrank(liquidator);
+        usdc.approve(address(vault), type(uint256).max);
+        vault.depositCollateral(usdc, liquidator, 100_000_000_000 * (10 ** usdc.decimals()));
+        vault.mintCurrency(usdc, liquidator, liquidator, 500_000_000_000e18);
+        xNGN.approve(address(vault), type(uint256).max);
+        vm.stopPrank();
     }
 
     modifier skipTime(uint256 skipTimeSeed) {
@@ -121,15 +135,18 @@ contract VaultHandler is Test {
         prankCurrentActor
     {
         (uint256 depositedCollateral,,) = vaultGetters.getVault(vault, usdc, currentOwner);
-        (,,,,, uint256 collateralFloorPerPosition,) = vaultGetters.getCollateralInfo(vault, usdc);
+        (, uint256 totalBorrowedAmount,,, uint256 debtCeiling, uint256 collateralFloorPerPosition,) =
+            vaultGetters.getCollateralInfo(vault, usdc);
 
         if (depositedCollateral >= collateralFloorPerPosition) {
             if (to == address(0)) to = address(uint160(uint256(keccak256(abi.encode(to)))));
             int256 maxBorrowable = vaultGetters.getMaxBorrowable(vault, usdc, currentOwner);
             if (maxBorrowable > 0) {
                 amount = bound(amount, 0, uint256(maxBorrowable));
-                totalMints += amount;
-                vault.mintCurrency(usdc, currentOwner, to, amount);
+                if (debtCeiling >= totalBorrowedAmount + amount && vault.debtCeiling() >= vault.debt() + amount) {
+                    totalMints += amount;
+                    vault.mintCurrency(usdc, currentOwner, to, amount);
+                }
             }
         }
     }
@@ -148,6 +165,31 @@ contract VaultHandler is Test {
         amount = bound(amount, 0, maxAmount);
         totalBurns += amount;
         vault.burnCurrency(usdc, currentOwner, amount);
+    }
+
+    function liquidate(uint256 skipTimeSeed, uint256 ownerIndexSeed)
+        external
+        skipTime(skipTimeSeed)
+        setOwner(ownerIndexSeed)
+    {
+        vm.startPrank(liquidator);
+
+        if (vaultGetters.getHealthFactor(vault, usdc, user1)) vm.expectRevert(IVault.PositionIsSafe.selector);
+        vault.liquidate(usdc, user1, address(this), type(uint256).max);
+
+        if (vaultGetters.getHealthFactor(vault, usdc, user2)) vm.expectRevert(IVault.PositionIsSafe.selector);
+        vault.liquidate(usdc, user2, address(this), type(uint256).max);
+
+        if (vaultGetters.getHealthFactor(vault, usdc, user3)) vm.expectRevert(IVault.PositionIsSafe.selector);
+        vault.liquidate(usdc, user3, address(this), type(uint256).max);
+
+        if (vaultGetters.getHealthFactor(vault, usdc, user4)) vm.expectRevert(IVault.PositionIsSafe.selector);
+        vault.liquidate(usdc, user4, address(this), type(uint256).max);
+
+        if (vaultGetters.getHealthFactor(vault, usdc, user5)) vm.expectRevert(IVault.PositionIsSafe.selector);
+        vault.liquidate(usdc, user5, address(this), type(uint256).max);
+
+        vm.stopPrank();
     }
 
     function recoverToken(uint256 skipTimeSeed, bool isUsdc, address to) external skipTime(skipTimeSeed) {
@@ -181,5 +223,42 @@ contract VaultHandler is Test {
     {
         address denied = actors[bound(deniedIndexSeed, 0, actors.length - 1)];
         vault.rely(denied);
+    }
+
+    function updateBaseRate(uint256 skipTimeSeed, uint256 value) external skipTime(skipTimeSeed) {
+        value = bound(value, 0, 100e18);
+        vm.startPrank(owner);
+
+        vault.updateBaseRate(value);
+        vm.stopPrank();
+    }
+
+    function updateCollateralData(uint256 skipTimeSeed, uint256 paramIndex, uint256 value)
+        external
+        skipTime(skipTimeSeed)
+    {
+        IVault.ModifiableParameters param =
+            IVault.ModifiableParameters(uint8(bound(paramIndex, 0, uint256(type(IVault.ModifiableParameters).max))));
+
+        vm.startPrank(owner);
+        if (param == IVault.ModifiableParameters.RATE) {
+            value = bound(value, 1, 100e18);
+            vault.updateCollateralData(usdc, param, value);
+        } else if (param == IVault.ModifiableParameters.COLLATERAL_FLOOR_PER_POSITION) {
+            vault.updateCollateralData(usdc, param, value);
+        } else if (param == IVault.ModifiableParameters.LIQUIDATION_BONUS) {
+            vault.updateCollateralData(usdc, param, value);
+        } else if (param == IVault.ModifiableParameters.LIQUIDATION_THRESHOLD) {
+            value = bound(value, 10e18, 100e18); // let's not be outrageous now, shall we?
+            vault.updateCollateralData(usdc, param, value);
+        }
+        vm.stopPrank();
+    }
+
+    function updatePrice(uint256 skipTimeSeed, uint256 price) external skipTime(skipTimeSeed) {
+        price = bound(price, 100e6, 10_000e6);
+        vm.startPrank(vault.feedModule());
+        vault.updatePrice(usdc, price);
+        vm.stopPrank();
     }
 }

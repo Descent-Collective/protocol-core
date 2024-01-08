@@ -12,6 +12,7 @@ contract ERC20Handler is Test {
     address user3 = vm.addr(uint256(keccak256("User3")));
     address user4 = vm.addr(uint256(keccak256("User4")));
     address user5 = vm.addr(uint256(keccak256("User5")));
+    address liquidator = vm.addr(uint256(keccak256("liquidator")));
 
     address[5] actors;
     address currentActor;
@@ -110,6 +111,7 @@ contract ERC20Handler is Test {
         vm.stopPrank();
         vm.startPrank(currentActor);
         token.transferFrom(currentOwner, to, amount);
+        vm.stopPrank();
     }
 
     function mint(uint256 skipTimeSeed, address to, uint256 amount) external skipTime(skipTimeSeed) {
@@ -131,5 +133,6 @@ contract ERC20Handler is Test {
         vm.stopPrank();
         vm.startPrank(currentActor);
         token.burn(currentOwner, amount);
+        vm.stopPrank();
     }
 }

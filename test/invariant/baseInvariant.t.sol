@@ -28,12 +28,18 @@ contract BaseInvariantTest is BaseTest {
         usdcHandler = new ERC20Handler(Currency(address(usdc)), timeManager);
         xNGNHandler = new ERC20Handler(xNGN, timeManager);
 
+        vm.label(address(timeManager), "timeManager");
+        vm.label(address(vaultHandler), "vaultHandler");
+        vm.label(address(vaultGetters), "vaultGetters");
+        vm.label(address(usdcHandler), "usdcHandler");
+        vm.label(address(xNGNHandler), "xNGNHandler");
+
         // target handlers
         targetContract(address(vaultHandler));
         targetContract(address(usdcHandler));
         targetContract(address(xNGNHandler));
 
-        bytes4[] memory vaultSelectors = new bytes4[](8);
+        bytes4[] memory vaultSelectors = new bytes4[](12);
         vaultSelectors[0] = VaultHandler.depositCollateral.selector;
         vaultSelectors[1] = VaultHandler.withdrawCollateral.selector;
         vaultSelectors[2] = VaultHandler.mintCurrency.selector;
@@ -42,6 +48,10 @@ contract BaseInvariantTest is BaseTest {
         vaultSelectors[5] = VaultHandler.withdrawFees.selector;
         vaultSelectors[6] = VaultHandler.rely.selector;
         vaultSelectors[7] = VaultHandler.deny.selector;
+        vaultSelectors[8] = VaultHandler.updateBaseRate.selector;
+        vaultSelectors[9] = VaultHandler.updateCollateralData.selector;
+        vaultSelectors[10] = VaultHandler.updatePrice.selector;
+        vaultSelectors[11] = VaultHandler.liquidate.selector;
 
         bytes4[] memory xNGNSelectors = new bytes4[](4);
         xNGNSelectors[0] = ERC20Handler.transfer.selector;

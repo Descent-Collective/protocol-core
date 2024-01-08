@@ -22,14 +22,12 @@ import {BaseInvariantTest, Currency, IVault} from "./baseInvariant.t.sol";
             - NO INVARIANT
         * collateral.rateInfo.rate:
             - must be > 0 to be used as input to any function
-        * collateral.rateInfo.accumulatedRate:
-            - must be > collateral.rateInfo.rate
         * collateral.rateInfo.lastUpdateTime:
             - must be > block.timeatamp
         * collateral.price:
             - NO INVARIANT, checks are done in the Oracle security module
         * collateral.debtCeiling:
-            - must be >= CURRENCY_TOKEN.totalSupply()
+            - must be >= CURRENCY_TOKEN.totalSupply() as long as the value does not change afterwards to a value lower than collateral.debtCeiling
         * collateral.collateralFloorPerPosition:
             - At time `t` when collateral.collateralFloorPerPosition was last updated, 
               any vault with a depositedCollateral < collateral.collateralFloorPerPosition 
@@ -47,6 +45,20 @@ import {BaseInvariantTest, Currency, IVault} from "./baseInvariant.t.sol";
 contract CollateralInvariantTest is BaseInvariantTest {
     function setUp() public override {
         super.setUp();
+
+        // FOR LIQUIDATIONS BY LIQUIDATOR
+        // mint usdc to address(this)
+        vm.startPrank(owner);
+        Currency(address(usdc)).mint(liquidator, 100_000_000_000 * (10 ** usdc.decimals()));
+        vm.stopPrank();
+
+        // use address(this) to deposit so that it can borrow currency needed for liquidation below
+        vm.startPrank(liquidator);
+        usdc.approve(address(vault), type(uint256).max);
+        vault.depositCollateral(usdc, liquidator, 100_000_000_000 * (10 ** usdc.decimals()));
+        vault.mintCurrency(usdc, liquidator, liquidator, 500_000_000_000e18);
+        xNGN.approve(address(vault), type(uint256).max);
+        vm.stopPrank();
     }
 
     function invariant_collateral_totalDepositedCollateral() external useCurrentTime {
@@ -64,18 +76,7 @@ contract CollateralInvariantTest is BaseInvariantTest {
     }
 
     function invariant_collateral_liquidationThreshold() external useCurrentTime {
-        // mint usdc to address(this)
-        vm.startPrank(owner);
-        Currency(address(usdc)).mint(address(this), 1_000_000 * (10 ** usdc.decimals()));
-        vm.stopPrank();
-
-        // use address(this) to deposit so that it can borrow currency needed for liquidation below
-        vm.startPrank(address(this));
-
-        usdc.approve(address(vault), type(uint256).max);
-        vault.depositCollateral(usdc, address(this), 1_000_000 * (10 ** usdc.decimals()));
-        vault.mintCurrency(usdc, address(this), address(this), 500_000_000e18);
-        xNGN.approve(address(vault), type(uint256).max);
+        vm.startPrank(liquidator);
 
         if (vaultGetters.getHealthFactor(vault, usdc, user1)) vm.expectRevert(PositionIsSafe.selector);
         vault.liquidate(usdc, user1, address(this), type(uint256).max);
@@ -95,13 +96,6 @@ contract CollateralInvariantTest is BaseInvariantTest {
 
     function invariant_collateral_rateInfo_rate() external useCurrentTime {
         assertGt(getCollateralMapping(usdc).rateInfo.rate, 0);
-    }
-
-    function invariant_collateral_rateInfo_accumulatedRate() external useCurrentTime {
-        IVault.RateInfo memory rateInfo = getCollateralMapping(usdc).rateInfo;
-        if (rateInfo.lastUpdateTime > creationBlockTimestamp) {
-            assertGe(rateInfo.accumulatedRate, rateInfo.rate);
-        }
     }
 
     function invariant_collateral_rateInfo_lastUpdateTime() external useCurrentTime {

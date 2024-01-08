@@ -31,6 +31,7 @@ contract BaseTest is Test, ErrorsAndEvents {
     address user3 = vm.addr(uint256(keccak256("User3")));
     address user4 = vm.addr(uint256(keccak256("User4")));
     address user5 = vm.addr(uint256(keccak256("User5")));
+    address liquidator = vm.addr(uint256(keccak256("liquidator")));
     uint256 onePercentPerSecondInterestRate = uint256(1e18) / 365 days;
     uint256 oneAndHalfPercentPerSecondInterestRate = uint256(1.5e18) / 365 days;
     address testStabilityModule = address(uint160(uint256(keccak256("stability module"))));
@@ -42,6 +43,7 @@ contract BaseTest is Test, ErrorsAndEvents {
         vm.label(user3, "User3");
         vm.label(user4, "User4");
         vm.label(user5, "User5");
+        vm.label(liquidator, "liquidator");
         vm.label(address(vault), "Vault");
         vm.label(address(xNGN), "xNGN");
         vm.label(address(feed), "Feed");

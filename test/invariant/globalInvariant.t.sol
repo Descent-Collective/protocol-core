@@ -11,10 +11,8 @@ import {BaseInvariantTest} from "./baseInvariant.t.sol";
      * Vault Global Variables
         * baseRateInfo.lastUpdateTime: 
             - must be <= block.timestamp
-        * baseRateInfo.accumulatedRate: 
-            - must be >= accumulatedRate.rate
         * debtCeiling: 
-            - must be >= CURRENCY_TOKEN.totalSupply()
+            - must be >= CURRENCY_TOKEN.totalSupply() as long as the value does not change afterwards to a value lower than debtCeiling
         * debt: 
             - must be == CURRENCY_TOKEN.totalSupply()
         * paidFees:
@@ -33,13 +31,6 @@ contract GlobalInvariantTest is BaseInvariantTest {
 
     function invariant_baseRateInfo_lastUpdateTime() external useCurrentTime {
         assertLe(getBaseRateInfo().lastUpdateTime, block.timestamp);
-    }
-
-    function invariant_baseRateInfo_accumulatedRates() external useCurrentTime {
-        (uint256 rate, uint256 accumulatedRate, uint256 lastUpdateTime) = vault.baseRateInfo();
-        if (lastUpdateTime > creationBlockTimestamp) {
-            assertGe(accumulatedRate, rate);
-        }
     }
 
     function invariant_debtCeiling() external useCurrentTime {

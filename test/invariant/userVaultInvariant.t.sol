@@ -102,7 +102,7 @@ contract UserVaultInvariantTest is BaseInvariantTest {
         sum = (
             getVaultMapping(usdc, user1).depositedCollateral + getVaultMapping(usdc, user2).depositedCollateral
                 + getVaultMapping(usdc, user3).depositedCollateral + getVaultMapping(usdc, user4).depositedCollateral
-                + getVaultMapping(usdc, user5).depositedCollateral
+                + getVaultMapping(usdc, user5).depositedCollateral + getVaultMapping(usdc, liquidator).depositedCollateral
         );
     }
 
@@ -110,7 +110,7 @@ contract UserVaultInvariantTest is BaseInvariantTest {
         sum = (
             getVaultMapping(usdc, user1).borrowedAmount + getVaultMapping(usdc, user2).borrowedAmount
                 + getVaultMapping(usdc, user3).borrowedAmount + getVaultMapping(usdc, user4).borrowedAmount
-                + getVaultMapping(usdc, user5).borrowedAmount
+                + getVaultMapping(usdc, user5).borrowedAmount + getVaultMapping(usdc, liquidator).borrowedAmount
         );
     }
 }
