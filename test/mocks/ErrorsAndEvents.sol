@@ -25,4 +25,12 @@ contract ErrorsAndEvents {
     error NotEnoughCollateralToPay();
     error EthTransferFailed();
     error Paused();
+    error NotPaused();
+    error GlobalDebtCeilingExceeded();
+    error CollateralDebtCeilingExceeded();
+    error AccessControlUnauthorizedAccount(address, bytes32);
+    error NotFeedContract();
+    error InvalidStabilityModule();
+    error ERC20InsufficientBalance(address, uint256, uint256);
+    error ERC20InsufficientAllowance(address, uint256, uint256);
 }
