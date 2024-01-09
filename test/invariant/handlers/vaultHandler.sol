@@ -174,20 +174,8 @@ contract VaultHandler is Test {
     {
         vm.startPrank(liquidator);
 
-        if (vaultGetters.getHealthFactor(vault, usdc, user1)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, user1, address(this), type(uint256).max);
-
-        if (vaultGetters.getHealthFactor(vault, usdc, user2)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, user2, address(this), type(uint256).max);
-
-        if (vaultGetters.getHealthFactor(vault, usdc, user3)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, user3, address(this), type(uint256).max);
-
-        if (vaultGetters.getHealthFactor(vault, usdc, user4)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, user4, address(this), type(uint256).max);
-
-        if (vaultGetters.getHealthFactor(vault, usdc, user5)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, user5, address(this), type(uint256).max);
+        if (vaultGetters.getHealthFactor(vault, usdc, currentOwner)) vm.expectRevert(IVault.PositionIsSafe.selector);
+        vault.liquidate(usdc, currentOwner, address(this), type(uint256).max);
 
         vm.stopPrank();
     }

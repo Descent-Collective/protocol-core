@@ -33,6 +33,7 @@ import {BaseInvariantTest, Currency, IVault} from "./baseInvariant.t.sol";
               any vault with a depositedCollateral < collateral.collateralFloorPerPosition 
               must have a borrowedAmount == that vaults borrowedAmount as at time `t`. 
               It can only change if the vault's depositedCollateral becomes > collateral.collateralFloorPerPosition 
+            - This is tested in fuzzed unit tests
         * collateral.additionalCollateralPrecision:
             - must always be == `18 - token.decimals()`
         
@@ -104,11 +105,6 @@ contract CollateralInvariantTest is BaseInvariantTest {
 
     function invariant_collateral_debtCeiling() external {
         assertGe(getCollateralMapping(usdc).debtCeiling, xNGN.totalSupply());
-    }
-
-    function invariant_collateral_collateralFloorPerPosition() external {
-        // TODO: add handler that changes collateralFloorPerPosition randomly and check that after last update,
-        // any position that becomes below  this level has either the same or less borrowed amount
     }
 
     function invariant_collateral_additionalCollateralPrecision() external {
