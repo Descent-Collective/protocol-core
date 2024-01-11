@@ -7,8 +7,13 @@ import {Feed, IOSM} from "../src/modules/feed.sol";
 import {ERC20Token} from "./mocks/ERC20Token.sol";
 import {ErrorsAndEvents} from "./mocks/ErrorsAndEvents.sol";
 import {IRate, SimpleInterestRate} from "../src/modules/simpleInterestRate.sol";
+import {Median} from "descent-collective/oracle-module/median.sol";
+import {OSM} from "descent-collective/oracle-module/osm.sol";
+import {MessageHashUtils} from "@openzeppelin-contracts/utils/cryptography/MessageHashUtils.sol";
 
 contract BaseTest is Test, ErrorsAndEvents {
+    using MessageHashUtils for bytes32;
+
     bytes constant INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR =
         abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 17);
     bytes constant ENUM_UNDERFLOW_OVERFLOW_PANIC_ERROR = abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 33);
@@ -25,6 +30,8 @@ contract BaseTest is Test, ErrorsAndEvents {
     ERC20 usdc;
     Feed feed;
     IRate simpleInterestRate;
+    OSM osm;
+    Median median;
     address owner = vm.addr(uint256(keccak256("OWNER")));
     address user1 = vm.addr(uint256(keccak256("User1")));
     address user2 = vm.addr(uint256(keccak256("User2")));
@@ -32,6 +39,7 @@ contract BaseTest is Test, ErrorsAndEvents {
     address user4 = vm.addr(uint256(keccak256("User4")));
     address user5 = vm.addr(uint256(keccak256("User5")));
     address liquidator = vm.addr(uint256(keccak256("liquidator")));
+    address node0 = vm.addr(uint256(keccak256("Node0")));
     uint256 onePercentPerSecondInterestRate = uint256(1e18) / 365 days;
     uint256 oneAndHalfPercentPerSecondInterestRate = uint256(1.5e18) / 365 days;
     address testStabilityModule = address(uint160(uint256(keccak256("stability module"))));
@@ -44,6 +52,7 @@ contract BaseTest is Test, ErrorsAndEvents {
         vm.label(user4, "User4");
         vm.label(user5, "User5");
         vm.label(liquidator, "liquidator");
+        vm.label(node0, "node0");
         vm.label(address(vault), "Vault");
         vm.label(address(xNGN), "xNGN");
         vm.label(address(feed), "Feed");
@@ -53,6 +62,8 @@ contract BaseTest is Test, ErrorsAndEvents {
     }
 
     function setUp() public virtual {
+        vm.warp(vm.unixTime() / 100);
+
         vm.startPrank(owner);
 
         xNGN = new Currency("xNGN", "xNGN");
@@ -65,14 +76,29 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         simpleInterestRate = new SimpleInterestRate();
 
+        median = new Median(1, address(xNGN), address(usdc));
+        median.authorizeNode(node0);
+
+        osm = new OSM(median);
+
         vault.createCollateralType(
             usdc, oneAndHalfPercentPerSecondInterestRate, 50e18, 10e18, type(uint256).max, 100 * (10 ** usdc.decimals())
         );
         vault.updateFeedModule(address(feed));
         vault.updateRateModule(simpleInterestRate);
         vault.updateStabilityModule(testStabilityModule); // no implementation so set it to psuedo-random address
-        feed.mockUpdatePrice(usdc, 1000e6);
         xNGN.setMinterRole(address(vault));
+
+        // set the osm of usdc collateral
+        feed.setCollateralOSM(usdc, IOSM(address(osm)));
+        // sign and update price
+        (uint256[] memory _prices, uint256[] memory _timestamps, bytes[] memory _signatures) =
+            updateParameters(median, uint256(keccak256("Node0")), 1000e6);
+        median.update(_prices, _timestamps, _signatures);
+        // update osm to track price of median
+        osm.update();
+        // tell feed to store osm price
+        feed.updatePrice(usdc);
 
         ERC20Token(address(usdc)).mint(user1, 100_000 * (10 ** usdc.decimals()));
         ERC20Token(address(usdc)).mint(user2, 100_000 * (10 ** usdc.decimals()));
@@ -124,6 +150,28 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         vm.startPrank(relyOn);
         _;
+    }
+
+    function updateParameters(Median _median, uint256 privKey, uint256 _price)
+        private
+        view
+        returns (uint256[] memory _prices, uint256[] memory _timestamps, bytes[] memory _signatures)
+    {
+        _prices = new uint256[](1);
+        _timestamps = new uint256[](1);
+        _signatures = new bytes[](1);
+        uint8[] memory _v = new uint8[](1);
+        bytes32[] memory _r = new bytes32[](1);
+        bytes32[] memory _s = new bytes32[](1);
+
+        _prices[0] = _price;
+        _timestamps[0] = block.timestamp;
+
+        bytes32 messageDigest =
+            keccak256(abi.encode(_prices[0], _timestamps[0], _median.currencyPair())).toEthSignedMessageHash();
+        (_v[0], _r[0], _s[0]) = vm.sign(privKey, messageDigest);
+
+        _signatures[0] = abi.encodePacked(_r[0], _s[0], _v[0]);
     }
 
     function getBaseRateInfo() internal view returns (IVault.RateInfo memory) {
