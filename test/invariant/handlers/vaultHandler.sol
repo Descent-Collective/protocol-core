@@ -242,11 +242,4 @@ contract VaultHandler is Test {
         }
         vm.stopPrank();
     }
-
-    function updatePrice(uint256 skipTimeSeed, uint256 price) external skipTime(skipTimeSeed) {
-        price = bound(price, 100e6, 10_000e6);
-        vm.startPrank(vault.feedModule());
-        vault.updatePrice(usdc, price);
-        vm.stopPrank();
-    }
 }
