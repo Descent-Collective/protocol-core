@@ -4,6 +4,7 @@ pragma solidity 0.8.21;
 import {BaseTest, IVault, Currency} from "../base.t.sol";
 import {VaultHandler} from "./handlers/vaultHandler.sol";
 import {ERC20Handler} from "./handlers/erc20Handler.sol";
+import {OSMHandler} from "./handlers/osmHandler.sol";
 import {VaultGetters} from "./helpers/vaultGetters.sol";
 import {TimeManager} from "./helpers/timeManager.sol";
 
@@ -13,6 +14,7 @@ contract BaseInvariantTest is BaseTest {
     VaultHandler vaultHandler;
     ERC20Handler usdcHandler;
     ERC20Handler xNGNHandler;
+    OSMHandler osmHandler;
 
     modifier useCurrentTime() {
         vm.warp(timeManager.time());
@@ -27,12 +29,14 @@ contract BaseInvariantTest is BaseTest {
         vaultHandler = new VaultHandler(vault, usdc, xNGN, vaultGetters, timeManager);
         usdcHandler = new ERC20Handler(Currency(address(usdc)), timeManager);
         xNGNHandler = new ERC20Handler(xNGN, timeManager);
+        osmHandler = new OSMHandler(osm, timeManager);
 
         vm.label(address(timeManager), "timeManager");
         vm.label(address(vaultHandler), "vaultHandler");
         vm.label(address(vaultGetters), "vaultGetters");
         vm.label(address(usdcHandler), "usdcHandler");
         vm.label(address(xNGNHandler), "xNGNHandler");
+        vm.label(address(osmHandler), "osmHandler");
 
         // target handlers
         targetContract(address(vaultHandler));
@@ -66,10 +70,14 @@ contract BaseInvariantTest is BaseTest {
         usdcSelectors[3] = ERC20Handler.mint.selector;
         usdcSelectors[4] = ERC20Handler.burn.selector;
 
+        bytes4[] memory osmSelectors = new bytes4[](1);
+        osmSelectors[0] = OSMHandler.update.selector;
+
         // target selectors of handlers
         targetSelector(FuzzSelector({addr: address(vaultHandler), selectors: vaultSelectors}));
         targetSelector(FuzzSelector({addr: address(xNGNHandler), selectors: xNGNSelectors}));
         targetSelector(FuzzSelector({addr: address(usdcHandler), selectors: usdcSelectors}));
+        targetSelector(FuzzSelector({addr: address(osmHandler), selectors: osmSelectors}));
     }
 
     // forgefmt: disable-start
