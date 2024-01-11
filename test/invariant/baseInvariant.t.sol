@@ -5,6 +5,7 @@ import {BaseTest, IVault, Currency} from "../base.t.sol";
 import {VaultHandler} from "./handlers/vaultHandler.sol";
 import {ERC20Handler} from "./handlers/erc20Handler.sol";
 import {OSMHandler} from "./handlers/osmHandler.sol";
+import {MedianHandler} from "./handlers/medianHandler.sol";
 import {VaultGetters} from "./helpers/vaultGetters.sol";
 import {TimeManager} from "./helpers/timeManager.sol";
 
@@ -15,6 +16,7 @@ contract BaseInvariantTest is BaseTest {
     ERC20Handler usdcHandler;
     ERC20Handler xNGNHandler;
     OSMHandler osmHandler;
+    MedianHandler medianHandler;
 
     modifier useCurrentTime() {
         vm.warp(timeManager.time());
@@ -30,6 +32,7 @@ contract BaseInvariantTest is BaseTest {
         usdcHandler = new ERC20Handler(Currency(address(usdc)), timeManager);
         xNGNHandler = new ERC20Handler(xNGN, timeManager);
         osmHandler = new OSMHandler(osm, timeManager);
+        medianHandler = new MedianHandler(median, timeManager);
 
         vm.label(address(timeManager), "timeManager");
         vm.label(address(vaultHandler), "vaultHandler");
@@ -37,6 +40,7 @@ contract BaseInvariantTest is BaseTest {
         vm.label(address(usdcHandler), "usdcHandler");
         vm.label(address(xNGNHandler), "xNGNHandler");
         vm.label(address(osmHandler), "osmHandler");
+        vm.label(address(medianHandler), "medianHandler");
 
         // target handlers
         targetContract(address(vaultHandler));
@@ -73,11 +77,15 @@ contract BaseInvariantTest is BaseTest {
         bytes4[] memory osmSelectors = new bytes4[](1);
         osmSelectors[0] = OSMHandler.update.selector;
 
+        bytes4[] memory medianSelectors = new bytes4[](1);
+        medianSelectors[0] = MedianHandler.update.selector;
+
         // target selectors of handlers
         targetSelector(FuzzSelector({addr: address(vaultHandler), selectors: vaultSelectors}));
         targetSelector(FuzzSelector({addr: address(xNGNHandler), selectors: xNGNSelectors}));
         targetSelector(FuzzSelector({addr: address(usdcHandler), selectors: usdcSelectors}));
         targetSelector(FuzzSelector({addr: address(osmHandler), selectors: osmSelectors}));
+        targetSelector(FuzzSelector({addr: address(medianHandler), selectors: medianSelectors}));
     }
 
     // forgefmt: disable-start
