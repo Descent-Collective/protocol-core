@@ -23,9 +23,9 @@ import {BaseInvariantTest, Currency, IVault} from "./baseInvariant.t.sol";
         * collateral.rateInfo.rate:
             - must be > 0 to be used as input to any function
         * collateral.rateInfo.lastUpdateTime:
-            - must be > block.timeatamp
+            - must be <= block.timeatamp
         * collateral.price:
-            - NO INVARIANT, checks are done in the Oracle security module
+            - when feed.update is called, the osm current must be equal to the price
         * collateral.debtCeiling:
             - must be >= CURRENCY_TOKEN.totalSupply() as long as the value does not change afterwards to a value lower than collateral.debtCeiling
         * collateral.collateralFloorPerPosition:
@@ -101,6 +101,12 @@ contract CollateralInvariantTest is BaseInvariantTest {
 
     function invariant_collateral_rateInfo_lastUpdateTime() external useCurrentTime {
         assertLe(getCollateralMapping(usdc).rateInfo.lastUpdateTime, block.timestamp);
+    }
+
+    function invariant_collateral_price() external {
+        vm.startPrank(owner);
+        feed.updatePrice(usdc);
+        assertEq(getCollateralMapping(usdc).price, osm.current());
     }
 
     function invariant_collateral_debtCeiling() external {

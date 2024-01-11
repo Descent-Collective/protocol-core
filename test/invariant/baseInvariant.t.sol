@@ -87,7 +87,7 @@ contract BaseInvariantTest is BaseTest {
         medianSelectors[0] = MedianHandler.update.selector;
 
         bytes4[] memory feedSelectors = new bytes4[](1);
-        feedSelectors[0] = FeedHandler.update.selector;
+        feedSelectors[0] = FeedHandler.updatePrice.selector;
 
         // target selectors of handlers
         targetSelector(FuzzSelector({addr: address(vaultHandler), selectors: vaultSelectors}));

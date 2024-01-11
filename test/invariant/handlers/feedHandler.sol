@@ -21,7 +21,7 @@ contract FeedHandler is Test {
         _;
     }
 
-    function update(uint256 skipTimeSeed) external skipTime(skipTimeSeed) {
+    function updatePrice(uint256 skipTimeSeed) external skipTime(skipTimeSeed) {
         feed.updatePrice(usdc);
     }
 }

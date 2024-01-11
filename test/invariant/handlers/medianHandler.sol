@@ -3,11 +3,8 @@ pragma solidity 0.8.21;
 
 import {Test, console2, Median} from "../../base.t.sol";
 import {TimeManager} from "../helpers/timeManager.sol";
-import {MessageHashUtils} from "@openzeppelin-contracts/utils/cryptography/MessageHashUtils.sol";
 
 contract MedianHandler is Test {
-    using MessageHashUtils for bytes32;
-
     address node0 = vm.addr(uint256(keccak256("Node0")));
 
     TimeManager timeManager;
@@ -25,28 +22,12 @@ contract MedianHandler is Test {
     }
 
     function update(uint256 skipTimeSeed, uint256 price) external skipTime(skipTimeSeed) {
-        updateParameters(price);
-    }
+        price = bound(price, 100e6, 10_000e6);
+        // (uint256[] memory _prices, uint256[] memory _timestamps, bytes[] memory _signatures) = updateParameters(price);
+        // median.update(_prices, _timestamps, _signatures);
 
-    function updateParameters(uint256 _price)
-        private
-        view
-        returns (uint256[] memory _prices, uint256[] memory _timestamps, bytes[] memory _signatures)
-    {
-        _prices = new uint256[](1);
-        _timestamps = new uint256[](1);
-        _signatures = new bytes[](1);
-        uint8[] memory _v = new uint8[](1);
-        bytes32[] memory _r = new bytes32[](1);
-        bytes32[] memory _s = new bytes32[](1);
-
-        _prices[0] = _price;
-        _timestamps[0] = block.timestamp;
-
-        bytes32 messageDigest =
-            keccak256(abi.encode(_prices[0], _timestamps[0], median.currencyPair())).toEthSignedMessageHash();
-        (_v[0], _r[0], _s[0]) = vm.sign(uint256(keccak256("Node0")), messageDigest);
-
-        _signatures[0] = abi.encodePacked(_r[0], _s[0], _v[0]);
+        // doing elliptic curve operations in fuzz tests like the commented code above makes my laptop fans go brrrrrr
+        // so i just update the storage slot of the median contract where `lastPrice` is stored directly
+        vm.store(address(median), bytes32(uint256(3)), bytes32(price));
     }
 }
