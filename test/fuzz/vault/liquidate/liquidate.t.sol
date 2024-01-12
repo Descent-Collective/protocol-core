@@ -28,27 +28,7 @@ contract LiquidateTest is BaseTest {
         vm.stopPrank();
     }
 
-    function test_WhenVaultIsPaused(ERC20 collateral, address user, uint256 amount) external useUser1 {
-        // pause vault
-        vm.stopPrank();
-        vm.prank(owner);
-
-        // pause vault
-        vault.pause();
-
-        // it should revert with custom error Paused()
-        vm.expectRevert(Paused.selector);
-        vault.liquidate(collateral, user, user2, amount);
-    }
-
-    modifier whenVaultIsNotPaused() {
-        _;
-    }
-
-    function test_WhenCollateralDoesNotExist(ERC20 collateral, address user, uint256 amount)
-        external
-        whenVaultIsNotPaused
-    {
+    function test_WhenCollateralDoesNotExist(ERC20 collateral, address user, uint256 amount) external {
         if (collateral == usdc) collateral = ERC20(mutateAddress(address(usdc)));
 
         // it should revert with custom error CollateralDoesNotExist()
@@ -62,7 +42,7 @@ contract LiquidateTest is BaseTest {
         _;
     }
 
-    function test_WhenTheVaultIsSafe(uint256 amount) external whenVaultIsNotPaused whenCollateralExists useUser1 {
+    function test_WhenTheVaultIsSafe(uint256 amount) external whenCollateralExists useUser1 {
         // pay back some currency to make position safe
         vault.burnCurrency(usdc, user1, 100_000e18);
 
@@ -81,7 +61,6 @@ contract LiquidateTest is BaseTest {
 
     function test_WhenTheCurrencyAmountToBurnIsGreaterThanTheOwnersBorrowedAmountAndAccruedFees(uint256 amount)
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenTheVaultIsNotSafe
     {
@@ -101,7 +80,6 @@ contract LiquidateTest is BaseTest {
 
     function test_WhenTheVaultsCollateralRatioDoesNotImproveAfterLiquidation()
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenTheVaultIsNotSafe
         whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees
@@ -119,7 +97,6 @@ contract LiquidateTest is BaseTest {
 
     function test_WhenThe_currencyAmountToPayIsUint256Max()
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenTheVaultIsNotSafe
         whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees
@@ -130,7 +107,6 @@ contract LiquidateTest is BaseTest {
 
     function test_WhenThe_currencyAmountToPayIsNOTUint256Max_fullyCoveringFees()
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenTheVaultIsNotSafe
         whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees
@@ -209,7 +185,6 @@ contract LiquidateTest is BaseTest {
 
     function test_WhenThe_currencyAmountToPayIsNOTUint256Max_notCoveringFees(uint256 amountToLiquidate)
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenTheVaultIsNotSafe
         whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees
@@ -280,7 +255,6 @@ contract LiquidateTest is BaseTest {
 
     function test_WhenThe_currencyAmountToPayIsNOTUint256Max_partiallyCoveringFees(uint256 feeToPay)
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenTheVaultIsNotSafe
         whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees

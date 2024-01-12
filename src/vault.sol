@@ -340,15 +340,13 @@ contract Vault is IVault, AccessControl, Pausable {
      * @param _amount amount of `_collateralToken` to withdraw from `_owner`'s vault to `_to`'s address
      *
      * @dev should update fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the collateral-ratio check at the end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s collateral-ratio
-     * @dev should revert if the contract is paused
-     *      should revert if the collateral does not exist
+     * @dev should revert if the collateral does not exist
      *      should revert if the caller is not the `_owner` and not also not relied upon
      *      should revert if transfer from this contract to the `_to` address fails based on SafeERC20.safeTransfer()'s expectations of a successful erc20 transfer call
      *      should revert if the collateral ratio of `_owner` is below the liquidation threshold at the end of the function. This can happen if the position was already under-water (liquidatable) prior to the function call or if the withdrawal of `_amount` make it under-water
      */
     function withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount)
         external
-        whenNotPaused
         collateralExists(_collateralToken)
         onlyOwnerOrReliedUpon(_owner)
     {
@@ -421,14 +419,12 @@ contract Vault is IVault, AccessControl, Pausable {
      * @param _amount amount of currency to pay back / burn
      *
      * @dev we accrue fees here to enable full payment of both borrowed amount and fees in one function. This way unupdated accrued fees are accounted for too and can be paid back
-     * @dev should revert if the contract is paused
-     *      should revert if the collateral does not exist
+     * @dev should revert if the collateral does not exist
      *      should revert if the caller is not the `_owner` and not also not relied upon
      *      should revert if the amount of currency to burn / pay back is more than `borrowed amount + total accrued fees`
      */
     function burnCurrency(ERC20 _collateralToken, address _owner, uint256 _amount)
         external
-        whenNotPaused
         collateralExists(_collateralToken)
     {
         VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
@@ -449,14 +445,12 @@ contract Vault is IVault, AccessControl, Pausable {
      * @param _currencyAmountToPay the amount of currency tokens to pay back for `_owner`
      *
      * @dev updates fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the collateral-ratio check at the start and end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s collateral-ratio
-     * @dev should revert if the contract is paused
-     *      should revert if the collateral does not exist
+     * @dev should revert if the collateral does not exist
      *      should revert if the vault is not under-water
      *      should revert if liqudiation did not strictly imporve the collateral ratio of the vault
      */
     function liquidate(ERC20 _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
         external
-        whenNotPaused
         collateralExists(_collateralToken)
     {
         // get collateral ratio

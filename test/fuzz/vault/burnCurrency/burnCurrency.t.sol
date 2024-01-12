@@ -41,28 +41,7 @@ contract BurnCurrencyTest is BaseTest {
         vm.stopPrank();
     }
 
-    function test_WhenVaultIsPaused(ERC20 collateral, address user, uint256 amount) external useUser1 {
-        // pause vault
-        vm.stopPrank();
-        vm.prank(owner);
-
-        // pause vault
-        vault.pause();
-
-        // it should revert with custom error Paused()
-        vm.expectRevert(Paused.selector);
-        vault.burnCurrency(collateral, user, amount);
-    }
-
-    modifier whenVaultIsNotPaused() {
-        _;
-    }
-
-    function test_WhenCollateralDoesNotExist(ERC20 collateral, address user, uint256 amount)
-        external
-        whenVaultIsNotPaused
-        useUser1
-    {
+    function test_WhenCollateralDoesNotExist(ERC20 collateral, address user, uint256 amount) external useUser1 {
         if (collateral == usdc) collateral = ERC20(mutateAddress(address(usdc)));
 
         // it should revert with custom error CollateralDoesNotExist()
@@ -79,7 +58,7 @@ contract BurnCurrencyTest is BaseTest {
     function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_useUser1(
         uint256 amount,
         uint256 timeElapsed
-    ) external whenVaultIsNotPaused whenCollateralExists useUser1 {
+    ) external whenCollateralExists useUser1 {
         // it should accrue fees
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
         // it should update the owner's borrowed amount, collateral borrowed amount and global debt
@@ -94,7 +73,7 @@ contract BurnCurrencyTest is BaseTest {
     function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_useReliedOnForUser1(
         uint256 amount,
         uint256 timeElapsed
-    ) external whenVaultIsNotPaused whenCollateralExists useReliedOnForUser1(user2) {
+    ) external whenCollateralExists useReliedOnForUser1(user2) {
         // it should accrue fees
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
         // it should update the owner's borrowed amount, collateral borrowed amount and global debt
@@ -109,7 +88,7 @@ contract BurnCurrencyTest is BaseTest {
     function test_WhenTheAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmount_useNonReliedOnForUser1(
         uint256 amount,
         uint256 timeElapsed
-    ) external whenVaultIsNotPaused whenCollateralExists {
+    ) external whenCollateralExists {
         vm.startPrank(user2);
         // it should accrue fees
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
@@ -179,7 +158,6 @@ contract BurnCurrencyTest is BaseTest {
 
     function test_WhenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmountAndAccruedFees(uint256 timeElapsed)
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount
     {
@@ -209,7 +187,6 @@ contract BurnCurrencyTest is BaseTest {
 
     function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_useUser1(uint256 timeElapsed)
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount
         useUser1
@@ -247,13 +224,7 @@ contract BurnCurrencyTest is BaseTest {
 
     function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_exhaustive_useUser1(
         uint256 timeElapsed
-    )
-        external
-        whenVaultIsNotPaused
-        whenCollateralExists
-        whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount
-        useUser1
-    {
+    ) external whenCollateralExists whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount useUser1 {
         vm.stopPrank();
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
@@ -289,7 +260,6 @@ contract BurnCurrencyTest is BaseTest {
         uint256 timeElapsed
     )
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount
         useReliedOnForUser1(user2)
@@ -329,7 +299,6 @@ contract BurnCurrencyTest is BaseTest {
         uint256 timeElapsed
     )
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount
         useReliedOnForUser1(user2)
@@ -367,7 +336,7 @@ contract BurnCurrencyTest is BaseTest {
 
     function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_useNonReliedOnForUser1(
         uint256 timeElapsed
-    ) external whenVaultIsNotPaused whenCollateralExists whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount {
+    ) external whenCollateralExists whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount {
         vm.stopPrank();
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)
@@ -401,7 +370,7 @@ contract BurnCurrencyTest is BaseTest {
 
     function test_WhenTheAmountToBurnIsNOTGreaterThanTheOwnersBorrowedAmountAndAccruedFees_exhaustive_useNonReliedOnForUser1(
         uint256 timeElapsed
-    ) external whenVaultIsNotPaused whenCollateralExists whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount {
+    ) external whenCollateralExists whenTheAmountToBurnIsGreaterThanTheOwnersBorrowedAmount {
         vm.stopPrank();
         vm.startPrank(user2);
         // get more balance for user1 by borrowing with user2 and sending to user1 to prevent the test to revert with insufficient balance error)

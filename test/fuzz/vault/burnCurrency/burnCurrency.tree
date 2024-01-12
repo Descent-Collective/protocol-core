@@ -1,25 +1,22 @@
 withdrawCollateralTest.t.sol
-├── when vault is paused
-│   └── it should revert with custom error Paused()
-└── when vault is not paused
-    └── when collateral does not exist
-    │   └── it should revert with custom error CollateralDoesNotExist()
-    └── when collateral exists
-        └── when caller is owner or relied upon by owner or none
-            ├── when the amount to burn is less than or equal to the owner's borrowed amount
-            │   ├── it should accrue fees
-            │   ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-            │   ├── it should update the owner's borrowed amount, collateral borrowed amount and global debt 
-            │   ├── it should pay back part of or all of the borrowed amount
-            │   └── it should not pay any accrued fees
-            └── when the amount to burn is greater than the owner's borrowed amount
-                ├── when the amount to burn is greater than the owner's borrowed amount and accrued fees
-                │   └── it should revert with underflow error
-                └── when the amount to burn is NOT greater than the owner's borrowed amount and accrued fees
-                    ├── it should accrue fees
-                    ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-                    ├── it should update the owner's borrowed amount, collateral borrowed amount and global debt 
-                    ├── it should pay off ALL borrowed amount
-                    ├── it should emit FeesPaid() event with with expected indexed and unindexed parameters
-                    ├── it should update the global paid fees and collateral paid fees
-                    └── it should pay back part of or all of the accrued fees
+├── when collateral does not exist
+│   └── it should revert with custom error CollateralDoesNotExist()
+└── when collateral exists
+    └── when caller is owner or relied upon by owner or none
+        ├── when the amount to burn is less than or equal to the owner's borrowed amount
+        │   ├── it should accrue fees
+        │   ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+        │   ├── it should update the owner's borrowed amount, collateral borrowed amount and global debt 
+        │   ├── it should pay back part of or all of the borrowed amount
+        │   └── it should not pay any accrued fees
+        └── when the amount to burn is greater than the owner's borrowed amount
+            ├── when the amount to burn is greater than the owner's borrowed amount and accrued fees
+            │   └── it should revert with underflow error
+            └── when the amount to burn is NOT greater than the owner's borrowed amount and accrued fees
+                ├── it should accrue fees
+                ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+                ├── it should update the owner's borrowed amount, collateral borrowed amount and global debt 
+                ├── it should pay off ALL borrowed amount
+                ├── it should emit FeesPaid() event with with expected indexed and unindexed parameters
+                ├── it should update the global paid fees and collateral paid fees
+                └── it should pay back part of or all of the accrued fees

@@ -1,38 +1,35 @@
 liquidate.t.sol
-├── when vault is paused
-│   └── it should revert with custom error Paused()
-└── when vault is not paused
-    ├── when collateral does not exist
-    │   └── it should revert with custom error CollateralDoesNotExist()
-    └── when collateral exists
-        ├── when the vault is safe
-        │   └── it should revert with custom error PositionIsSafe()
-        └── when the vault is not safe
-            ├── when the currency amount to burn is greater than the owner's borrowed amount and accrued fees
-            │   └── it should revert with underflow error
-            └── when the currency amount to burn is less than or equal to the owner's borrowed amount and accrued fees
-                ├── when the vaults collateral ratio does not improve after liquidation
-                │   └── it should revert with custom error CollateralRatioNotImproved()
-                └── when vaults collateral ratio improves after liquidation
-                    ├── when the _currencyAmountToPay is uint256 max
-                    │   ├── it should accrue fees
-                    │   ├── it should emit Liquidated() event with with expected indexed and unindexed parameters
-                    │   ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-                    │   ├── it should emit FeesPaid() event with with expected indexed and unindexed parameters
-                    │   ├── it should update the vault's deposited collateral and collateral total deposited collateral
-                    │   ├── it should pay out a max of covered collateral + 10% and a min of 0
-                    │   ├── it should update the vault's borrowed amount, collateral borrowed amount and global debt
-                    │   ├── it should pay off all of vaults borrowed amount
-                    │   ├── it should update the global paid fees and collateral paid fees
-                    │   └── it should pay off all of vaults fees (set to be 0) and update the global accrued fees 
-                    └── when the _currencyAmountToPay is NOT uint256 max
-                        ├── it should accrue fees
-                        ├── it should emit Liquidated() event with with expected indexed and unindexed parameters
-                        ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
-                        ├── it should emit FeesPaid() event with with expected indexed and unindexed parameters
-                        ├── it should update the vault's deposited collateral and collateral total deposited collateral
-                        ├── it should pay out a max of covered collateral + 10% and a min of 0
-                        ├── it should update the vault's borrowed amount, collateral borrowed amount and global debt
-                        ├── it should pay off all of or part of the vaults borrowed amount
-                        ├── it should update the global paid fees and collateral paid fees
-                        └── it should update the vaults and global accrued fees 
+├── when collateral does not exist
+│   └── it should revert with custom error CollateralDoesNotExist()
+└── when collateral exists
+    ├── when the vault is safe
+    │   └── it should revert with custom error PositionIsSafe()
+    └── when the vault is not safe
+        ├── when the currency amount to burn is greater than the owner's borrowed amount and accrued fees
+        │   └── it should revert with underflow error
+        └── when the currency amount to burn is less than or equal to the owner's borrowed amount and accrued fees
+            ├── when the vaults collateral ratio does not improve after liquidation
+            │   └── it should revert with custom error CollateralRatioNotImproved()
+            └── when vaults collateral ratio improves after liquidation
+                ├── when the _currencyAmountToPay is uint256 max
+                │   ├── it should accrue fees
+                │   ├── it should emit Liquidated() event with with expected indexed and unindexed parameters
+                │   ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+                │   ├── it should emit FeesPaid() event with with expected indexed and unindexed parameters
+                │   ├── it should update the vault's deposited collateral and collateral total deposited collateral
+                │   ├── it should pay out a max of covered collateral + 10% and a min of 0
+                │   ├── it should update the vault's borrowed amount, collateral borrowed amount and global debt
+                │   ├── it should pay off all of vaults borrowed amount
+                │   ├── it should update the global paid fees and collateral paid fees
+                │   └── it should pay off all of vaults fees (set to be 0) and update the global accrued fees 
+                └── when the _currencyAmountToPay is NOT uint256 max
+                    ├── it should accrue fees
+                    ├── it should emit Liquidated() event with with expected indexed and unindexed parameters
+                    ├── it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
+                    ├── it should emit FeesPaid() event with with expected indexed and unindexed parameters
+                    ├── it should update the vault's deposited collateral and collateral total deposited collateral
+                    ├── it should pay out a max of covered collateral + 10% and a min of 0
+                    ├── it should update the vault's borrowed amount, collateral borrowed amount and global debt
+                    ├── it should pay off all of or part of the vaults borrowed amount
+                    ├── it should update the global paid fees and collateral paid fees
+                    └── it should update the vaults and global accrued fees 

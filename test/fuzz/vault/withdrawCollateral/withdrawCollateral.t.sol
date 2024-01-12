@@ -16,27 +16,7 @@ contract WithdrawCollateralTest is BaseTest {
         vm.stopPrank();
     }
 
-    function test_WhenVaultIsPaused(ERC20 collateral, address user, uint256 amount) external useUser1 {
-        // pause vault
-        vm.stopPrank();
-        vm.prank(owner);
-        // pause vault
-        vault.pause();
-
-        // it should revert with custom error Paused()
-        vm.expectRevert(Paused.selector);
-        vault.withdrawCollateral(collateral, user, user, amount);
-    }
-
-    modifier whenVaultIsNotPaused() {
-        _;
-    }
-
-    function test_WhenCollateralDoesNotExist(ERC20 collateral, address user, uint256 amount)
-        external
-        whenVaultIsNotPaused
-        useUser1
-    {
+    function test_WhenCollateralDoesNotExist(ERC20 collateral, address user, uint256 amount) external useUser1 {
         if (collateral == usdc) collateral = ERC20(mutateAddress(address(usdc)));
 
         // it should revert with custom error CollateralDoesNotExist()
@@ -52,7 +32,6 @@ contract WithdrawCollateralTest is BaseTest {
 
     function test_WhenCallerIsNotOwnerAndNotReliedUponByOwner(address caller, address user, uint256 amount)
         external
-        whenVaultIsNotPaused
         whenCollateralExists
     {
         if (user == caller) user = mutateAddress(user);
@@ -73,7 +52,6 @@ contract WithdrawCollateralTest is BaseTest {
 
     function test_WhenTheAmountIsGreaterThanTheBorrowersDepositedCollateral(uint256 amount)
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         useUser1
@@ -91,7 +69,6 @@ contract WithdrawCollateralTest is BaseTest {
 
     function test_WhenTheWithdrawalMakesTheVaultsCollateralRatioAboveTheLiquidationThreshold_useUser1(uint256 amount)
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
@@ -111,7 +88,6 @@ contract WithdrawCollateralTest is BaseTest {
         uint256 amount
     )
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
@@ -136,7 +112,6 @@ contract WithdrawCollateralTest is BaseTest {
         uint256 timeElapsed
     )
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
@@ -157,7 +132,6 @@ contract WithdrawCollateralTest is BaseTest {
         uint256 timeElapsed
     )
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
