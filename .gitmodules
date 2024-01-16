@@ -7,3 +7,6 @@
 [submodule "lib/oracle-module"]
 	path = lib/oracle-module
 	url = https://github.com/Descent-Collective/oracle-module
+[submodule "lib/solady"]
+	path = lib/solady
+	url = https://github.com/Vectorized/solady
