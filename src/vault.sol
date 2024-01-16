@@ -2,15 +2,16 @@
 pragma solidity 0.8.21;
 
 //  ==========  External imports    ==========
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Ownable} from "solady/auth/Ownable.sol";
+import {ERC20} from "solady/tokens/ERC20.sol";
+import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 import {IVault} from "./interfaces/IVault.sol";
 import {Currency} from "./currency.sol";
 import {Pausable} from "./helpers/pausable.sol";
+import {ERC20Token} from "./mocks/ERC20Token.sol";
 import {IRate} from "./interfaces/IRate.sol";
 
-contract Vault is IVault, AccessControl, Pausable {
+contract Vault is IVault, Ownable, Pausable {
     uint256 private constant PRECISION_DEGREE = 18;
     uint256 private constant MAX_TOKEN_DECIMALS = 18;
     uint256 private constant PRECISION = 1 * (10 ** PRECISION_DEGREE);
@@ -32,12 +33,12 @@ contract Vault is IVault, AccessControl, Pausable {
     uint256 public debt; // sum of all currency minted
     uint256 public paidFees; // sum of all unwithdrawn paid fees
 
-    mapping(ERC20 => CollateralInfo) public collateralMapping; // collateral address => collateral data
-    mapping(ERC20 => mapping(address => VaultInfo)) public vaultMapping; // collateral address => user address => vault data
+    mapping(ERC20Token => CollateralInfo) public collateralMapping; // collateral address => collateral data
+    mapping(ERC20Token => mapping(address => VaultInfo)) public vaultMapping; // collateral address => user address => vault data
     mapping(address => mapping(address => bool)) public relyMapping; // borrower -> addresss -> is allowed to take actions on borrowers vaults on their behalf
 
     constructor(Currency _currencyToken, uint256 _baseRate, uint256 _debtCeiling) {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _initializeOwner(msg.sender);
         CURRENCY_TOKEN = _currencyToken;
 
         baseRateInfo.lastUpdateTime = block.timestamp;
@@ -47,9 +48,16 @@ contract Vault is IVault, AccessControl, Pausable {
     }
 
     /**
+     * @dev override renounce ownership to be impossible
+     */
+    function renounceOwnership() public payable override onlyOwner {
+        revert();
+    }
+
+    /**
      * @dev reverts if the collateral does not exist
      */
-    modifier collateralExists(ERC20 _collateralToken) {
+    modifier collateralExists(ERC20Token _collateralToken) {
         if (collateralMapping[_collateralToken].rateInfo.rate == 0) revert CollateralDoesNotExist();
         _;
     }
@@ -70,7 +78,7 @@ contract Vault is IVault, AccessControl, Pausable {
      * @dev interactions with functions without a `whenNotPaused` or `whenPaused` modifier are unaffected
      * @dev reverts if not paused
      */
-    function unpause() external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    function unpause() external override onlyOwner {
         status = TRUE;
     }
 
@@ -80,7 +88,7 @@ contract Vault is IVault, AccessControl, Pausable {
      * @dev interactions with functions without a `whenNotPaused` or `whenPaused` modifier are unaffected
      * @dev reverts if not paused
      */
-    function pause() external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    function pause() external override onlyOwner {
         status = FALSE;
     }
 
@@ -90,7 +98,7 @@ contract Vault is IVault, AccessControl, Pausable {
      * @dev reverts if the contract is paused
      * @dev reverts if msg.sender does not have the `DEFAULT_ADMIN_ROLE` role
      */
-    function updateFeedModule(address _feedModule) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function updateFeedModule(address _feedModule) external whenNotPaused onlyOwner {
         feedModule = _feedModule;
     }
 
@@ -100,7 +108,7 @@ contract Vault is IVault, AccessControl, Pausable {
      * @dev reverts if the contract is paused
      * @dev reverts if msg.sender does not have the `DEFAULT_ADMIN_ROLE` role
      */
-    function updateRateModule(IRate _rateModule) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function updateRateModule(IRate _rateModule) external whenNotPaused onlyOwner {
         rateModule = _rateModule;
     }
 
@@ -110,7 +118,7 @@ contract Vault is IVault, AccessControl, Pausable {
      * @dev reverts if the contract is paused
      * @dev reverts if msg.sender does not have the `DEFAULT_ADMIN_ROLE` role
      */
-    function updateStabilityModule(address _stabilityModule) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function updateStabilityModule(address _stabilityModule) external whenNotPaused onlyOwner {
         stabilityModule = _stabilityModule;
     }
 
@@ -120,7 +128,7 @@ contract Vault is IVault, AccessControl, Pausable {
      * @dev reverts if the contract is paused
      * @dev reverts if msg.sender does not have the `DEFAULT_ADMIN_ROLE` role
      */
-    function updateDebtCeiling(uint256 _debtCeiling) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function updateDebtCeiling(uint256 _debtCeiling) external whenNotPaused onlyOwner {
         debtCeiling = _debtCeiling;
     }
 
@@ -150,9 +158,11 @@ contract Vault is IVault, AccessControl, Pausable {
         } else {
             // withdraw erc20 token that's not currency
             // withdraw all erc20 token balance that's not associated with a vault
-            ERC20 _tokenContract = ERC20(_tokenAddress);
-            SafeERC20.safeTransfer(
-                _tokenContract,
+            ERC20Token _tokenContract = ERC20Token(_tokenAddress);
+
+            // no need to check if it's a contract first since the balanceOf call would fail first if it isn't
+            SafeTransferLib.safeTransfer(
+                _tokenAddress,
                 _to,
                 _tokenContract.balanceOf(address(this)) - collateralMapping[_tokenContract].totalDepositedCollateral
             );
@@ -174,13 +184,13 @@ contract Vault is IVault, AccessControl, Pausable {
      *      should revert if the collateral already exists, i.e if _collateral.rateInfo.rate == 0
      */
     function createCollateralType(
-        ERC20 _collateralToken,
+        ERC20Token _collateralToken,
         uint256 _rate,
         uint256 _liquidationThreshold,
         uint256 _liquidationBonus,
         uint256 _debtCeiling,
         uint256 _collateralFloorPerPosition
-    ) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) external whenNotPaused onlyOwner {
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
         if (_collateral.rateInfo.rate != 0) revert CollateralAlreadyExists();
 
@@ -207,10 +217,10 @@ contract Vault is IVault, AccessControl, Pausable {
      *      should revert if the collateral does not exist
      *      should revert if `_param` is not a variant of ModifiableParameters enum
      */
-    function updateCollateralData(ERC20 _collateralToken, ModifiableParameters _param, uint256 _data)
+    function updateCollateralData(ERC20Token _collateralToken, ModifiableParameters _param, uint256 _data)
         external
         whenNotPaused
-        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyOwner
         collateralExists(_collateralToken)
     {
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
@@ -245,7 +255,7 @@ contract Vault is IVault, AccessControl, Pausable {
      *      should revert if the caller does not have the `FEED_CONTRACT_ROLE` role
      *      should revert if the collateral does not exist
      */
-    function updatePrice(ERC20 _collateralAddress, uint256 _price)
+    function updatePrice(ERC20Token _collateralAddress, uint256 _price)
         external
         whenNotPaused
         collateralExists(_collateralAddress)
@@ -264,7 +274,7 @@ contract Vault is IVault, AccessControl, Pausable {
      * @dev should revert if the contract is paused
      *      should revert if the caller does not have the `DEFAULT_ADMIN_ROLE` role
      */
-    function updateBaseRate(uint256 _baseRate) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    function updateBaseRate(uint256 _baseRate) external whenNotPaused onlyOwner {
         baseRateInfo.accumulatedRate = rateModule.calculateCurrentAccumulatedRate(baseRateInfo);
         baseRateInfo.lastUpdateTime = block.timestamp;
         baseRateInfo.rate = _baseRate;
@@ -320,7 +330,7 @@ contract Vault is IVault, AccessControl, Pausable {
      *      should revert if the collateral does not exist
      *      should revert if transfer from `_owner` to this contract fails based on SafeERC20.safeTransferFrom()'s expectations of a successful erc20 transferFrom call
      */
-    function depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount)
+    function depositCollateral(ERC20Token _collateralToken, address _owner, uint256 _amount)
         external
         whenNotPaused
         collateralExists(_collateralToken)
@@ -345,7 +355,7 @@ contract Vault is IVault, AccessControl, Pausable {
      *      should revert if transfer from this contract to the `_to` address fails based on SafeERC20.safeTransfer()'s expectations of a successful erc20 transfer call
      *      should revert if the collateral ratio of `_owner` is below the liquidation threshold at the end of the function. This can happen if the position was already under-water (liquidatable) prior to the function call or if the withdrawal of `_amount` make it under-water
      */
-    function withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount)
+    function withdrawCollateral(ERC20Token _collateralToken, address _owner, address _to, uint256 _amount)
         external
         collateralExists(_collateralToken)
         onlyOwnerOrReliedUpon(_owner)
@@ -380,7 +390,7 @@ contract Vault is IVault, AccessControl, Pausable {
      *      should revert if mint to the `_to` address fails
      *      should revert if the collateral ratio of `_owner` is below the liquidation threshold at the end of the function. This can happen if the position was already under-water (liquidatable) prior to the function call or if the withdrawal of `_amount` make it under-water
      */
-    function mintCurrency(ERC20 _collateralToken, address _owner, address _to, uint256 _amount)
+    function mintCurrency(ERC20Token _collateralToken, address _owner, address _to, uint256 _amount)
         external
         whenNotPaused
         collateralExists(_collateralToken)
@@ -423,7 +433,7 @@ contract Vault is IVault, AccessControl, Pausable {
      *      should revert if the caller is not the `_owner` and not also not relied upon
      *      should revert if the amount of currency to burn / pay back is more than `borrowed amount + total accrued fees`
      */
-    function burnCurrency(ERC20 _collateralToken, address _owner, uint256 _amount)
+    function burnCurrency(ERC20Token _collateralToken, address _owner, uint256 _amount)
         external
         collateralExists(_collateralToken)
     {
@@ -449,7 +459,7 @@ contract Vault is IVault, AccessControl, Pausable {
      *      should revert if the vault is not under-water
      *      should revert if liqudiation did not strictly imporve the collateral ratio of the vault
      */
-    function liquidate(ERC20 _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
+    function liquidate(ERC20Token _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
         external
         collateralExists(_collateralToken)
     {
@@ -499,11 +509,12 @@ contract Vault is IVault, AccessControl, Pausable {
      * @dev deposits collateral from `_owner` into this contract and updates the vaults depositedCollateral and collateral's totalDepositedCollateral
      * @dev reverts if SafeERC20.safeTransferFrom() fails
      */
-    function _depositCollateral(ERC20 _collateralToken, address _owner, uint256 _amount) internal {
+    function _depositCollateral(ERC20Token _collateralToken, address _owner, uint256 _amount) internal {
         // supporting fee on transfer tokens at the expense of NEVER SUPPORTING TOKENS WITH CALLBACKS
         // a solution for supporting it can be adding a mutex but that prevents batching.
         uint256 preBalance = _collateralToken.balanceOf(address(this));
-        SafeERC20.safeTransferFrom(_collateralToken, msg.sender, address(this), _amount);
+        // call to balance is checked first so if it's not a contract, it'll revert above first
+        SafeTransferLib.safeTransferFrom(address(_collateralToken), msg.sender, address(this), _amount);
         uint256 difference = _collateralToken.balanceOf(address(this)) - preBalance;
 
         vaultMapping[_collateralToken][_owner].depositedCollateral += difference;
@@ -515,11 +526,12 @@ contract Vault is IVault, AccessControl, Pausable {
      * @dev reverts if `_amount` is greater than the vaults depositedCollateral
      *      reverts if safeTransfer() fails
      */
-    function _withdrawCollateral(ERC20 _collateralToken, address _owner, address _to, uint256 _amount) internal {
+    function _withdrawCollateral(ERC20Token _collateralToken, address _owner, address _to, uint256 _amount) internal {
         vaultMapping[_collateralToken][_owner].depositedCollateral -= _amount;
         collateralMapping[_collateralToken].totalDepositedCollateral -= _amount;
 
-        SafeERC20.safeTransfer(_collateralToken, _to, _amount);
+        if (address(_collateralToken).code.length == 0) revert();
+        SafeTransferLib.safeTransfer(address(_collateralToken), _to, _amount);
     }
 
     /**

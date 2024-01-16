@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {Test, ERC20, IVault, Vault, console2, Currency} from "../../base.t.sol";
+import {Test, ERC20Token, IVault, Vault, console2, Currency} from "../../base.t.sol";
 import {VaultGetters} from "../helpers/vaultGetters.sol";
 import {TimeManager} from "../helpers/timeManager.sol";
 
@@ -9,7 +9,7 @@ contract VaultHandler is Test {
     TimeManager timeManager;
     VaultGetters vaultGetters;
     Vault vault;
-    ERC20 usdc;
+    ERC20Token usdc;
     Currency xNGN;
     address owner = vm.addr(uint256(keccak256("OWNER")));
     address user1 = vm.addr(uint256(keccak256("User1")));
@@ -29,7 +29,7 @@ contract VaultHandler is Test {
     uint256 public totalMints;
     uint256 public totalBurns;
 
-    constructor(Vault _vault, ERC20 _usdc, Currency _xNGN, VaultGetters _vaultGetters, TimeManager _timeManager) {
+    constructor(Vault _vault, ERC20Token _usdc, Currency _xNGN, VaultGetters _vaultGetters, TimeManager _timeManager) {
         timeManager = _timeManager;
 
         vault = _vault;

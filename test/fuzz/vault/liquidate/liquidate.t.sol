@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20, IVault} from "../../../base.t.sol";
+import {BaseTest, ERC20Token, IVault} from "../../../base.t.sol";
 
 contract LiquidateTest is BaseTest {
     function setUp() public override {
@@ -28,8 +28,8 @@ contract LiquidateTest is BaseTest {
         vm.stopPrank();
     }
 
-    function test_WhenCollateralDoesNotExist(ERC20 collateral, address user, uint256 amount) external {
-        if (collateral == usdc) collateral = ERC20(mutateAddress(address(usdc)));
+    function test_WhenCollateralDoesNotExist(ERC20Token collateral, address user, uint256 amount) external {
+        if (collateral == usdc) collateral = ERC20Token(mutateAddress(address(usdc)));
 
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);

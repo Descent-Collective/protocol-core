@@ -2,7 +2,7 @@
 pragma solidity 0.8.21;
 
 //  ==========  External imports    ==========
-import {Vault, IVault, ERC20} from "../../../src/vault.sol";
+import {Vault, IVault, ERC20Token} from "../../../src/vault.sol";
 
 contract VaultGetters {
     uint256 private constant PRECISION_DEGREE = 18;
@@ -10,7 +10,7 @@ contract VaultGetters {
     uint256 private constant HUNDRED_PERCENTAGE = 100 * (10 ** PRECISION_DEGREE);
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e12;
 
-    function _getVaultMapping(Vault _vaultContract, ERC20 _collateralToken, address _owner)
+    function _getVaultMapping(Vault _vaultContract, ERC20Token _collateralToken, address _owner)
         private
         view
         returns (IVault.VaultInfo memory)
@@ -27,7 +27,7 @@ contract VaultGetters {
         return IVault.RateInfo(rate, accumulatedRate, lastUpdateTime);
     }
 
-    function _getCollateralMapping(Vault _vaultContract, ERC20 _collateralToken)
+    function _getCollateralMapping(Vault _vaultContract, ERC20Token _collateralToken)
         private
         view
         returns (IVault.CollateralInfo memory)
@@ -62,7 +62,7 @@ contract VaultGetters {
     /**
      * @dev returns health factor (if a vault is liquidatable or not) of a vault
      */
-    function getHealthFactor(Vault _vaultContract, ERC20 _collateralToken, address _owner)
+    function getHealthFactor(Vault _vaultContract, ERC20Token _collateralToken, address _owner)
         external
         view
         returns (bool)
@@ -80,7 +80,7 @@ contract VaultGetters {
     /**
      * @dev returns the collateral ratio of a vault
      */
-    function getCollateralRatio(Vault _vaultContract, ERC20 _collateralToken, address _owner)
+    function getCollateralRatio(Vault _vaultContract, ERC20Token _collateralToken, address _owner)
         external
         view
         returns (uint256)
@@ -97,7 +97,7 @@ contract VaultGetters {
      * @dev returns the max amount of currency a vault owner can mint for that vault without the tx reverting due to the vault's health factor falling below the min health factor
      * @dev if it's a negative number then the vault is below the min health factor already and paying back the additive inverse of the result will pay back both borrowed amount and interest accrued
      */
-    function getMaxBorrowable(Vault _vaultContract, ERC20 _collateralToken, address _owner)
+    function getMaxBorrowable(Vault _vaultContract, ERC20Token _collateralToken, address _owner)
         external
         view
         returns (int256)
@@ -139,7 +139,7 @@ contract VaultGetters {
      * @dev if it's a negative number then the vault is below the min health factor already and depositing the additive inverse will put the position at the min health factor saving it from liquidation.
      * @dev the recommended way to do this is to burn/pay back the additive inverse of the result of `getMaxBorrowable()` that way interest would not accrue after payment.
      */
-    function getMaxWithdrawable(Vault _vaultContract, ERC20 _collateralToken, address _owner)
+    function getMaxWithdrawable(Vault _vaultContract, ERC20Token _collateralToken, address _owner)
         external
         view
         returns (int256)
@@ -168,7 +168,7 @@ contract VaultGetters {
      * @dev returns a vault's relevant info i.e the depositedCollateral, borrowedAmount, and updated accruedFees
      * @dev recommended to read the accrued fees from here as it'll be updated before being returned.
      */
-    function getVault(Vault _vaultContract, ERC20 _collateralToken, address _owner)
+    function getVault(Vault _vaultContract, ERC20Token _collateralToken, address _owner)
         external
         view
         returns (uint256, uint256, uint256)
@@ -185,7 +185,7 @@ contract VaultGetters {
     /**
      * @dev returns a the relevant info for a collateral
      */
-    function getCollateralInfo(Vault _vaultContract, ERC20 _collateralToken)
+    function getCollateralInfo(Vault _vaultContract, ERC20Token _collateralToken)
         external
         view
         returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256)

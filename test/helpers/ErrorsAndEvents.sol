@@ -28,9 +28,10 @@ contract ErrorsAndEvents {
     error NotPaused();
     error GlobalDebtCeilingExceeded();
     error CollateralDebtCeilingExceeded();
-    error AccessControlUnauthorizedAccount(address, bytes32);
+    error Unauthorized();
     error NotFeedContract();
     error InvalidStabilityModule();
     error ERC20InsufficientBalance(address, uint256, uint256);
     error ERC20InsufficientAllowance(address, uint256, uint256);
+    error NotMinter();
 }

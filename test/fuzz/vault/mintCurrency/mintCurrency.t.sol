@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20, IVault} from "../../../base.t.sol";
+import {BaseTest, ERC20Token, IVault} from "../../../base.t.sol";
 
 contract MintCurrencyTest is BaseTest {
     function setUp() public override {
@@ -16,7 +16,7 @@ contract MintCurrencyTest is BaseTest {
         vm.stopPrank();
     }
 
-    function test_WhenVaultIsPaused(ERC20 collateral, address user, uint256 amount) external useUser1 {
+    function test_WhenVaultIsPaused(ERC20Token collateral, address user, uint256 amount) external useUser1 {
         // pause vault
         vm.stopPrank();
         vm.prank(owner);
@@ -33,12 +33,12 @@ contract MintCurrencyTest is BaseTest {
         _;
     }
 
-    function test_WhenCollateralDoesNotExist(ERC20 collateral, address user, uint256 amount)
+    function test_WhenCollateralDoesNotExist(ERC20Token collateral, address user, uint256 amount)
         external
         whenVaultIsNotPaused
         useUser1
     {
-        if (collateral == usdc) collateral = ERC20(mutateAddress(address(usdc)));
+        if (collateral == usdc) collateral = ERC20Token(mutateAddress(address(usdc)));
 
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);

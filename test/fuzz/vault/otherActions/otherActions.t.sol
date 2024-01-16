@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20, IVault, ERC20Token, IOSM} from "../../../base.t.sol";
+import {BaseTest, IVault, ERC20Token, IOSM} from "../../../base.t.sol";
 
 contract OtherActionsTest is BaseTest {
     function test_rely(address caller, address reliedUpon, bool alreadyReliedUpon) external {
@@ -138,7 +138,7 @@ contract OtherActionsTest is BaseTest {
         assertEq(initialPaidFees, xNGN.balanceOf(address(vault)));
         assertEq(xNGN.balanceOf(address(this)), initialThisXNGNBalance + (initialVaultXNGNBalance - initialPaidFees));
 
-        // should never revert if it recovers an erc20 token
+        // should never revert if it recovers an ERC20Token token
         vault.recoverToken(address(usdc), address(this));
         assertEq(initialPaidFees, vault.paidFees());
         assertEq(initialPaidFees, xNGN.balanceOf(address(vault)));

@@ -2,21 +2,31 @@
 pragma solidity 0.8.21;
 
 //  ==========  External imports    ==========
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {ERC20Permit, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {Ownable} from "solady/auth/Ownable.sol";
+import {ERC20} from "solady/tokens/ERC20.sol";
 
-contract ERC20Token is AccessControl, ERC20Permit {
-    // Create a new role identifier for the minter role
-    bytes32 constant MINTER_ROLE = keccak256("MINTER_ROLE");
+contract ERC20Token is Ownable, ERC20 {
+    string _name;
+    string _symbol;
     uint8 immutable _decimals;
 
-    constructor(string memory _name, string memory _symbol, uint8 decimals_) ERC20(_name, _symbol) ERC20Permit(_name) {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    constructor(string memory name_, string memory symbol_, uint8 decimals_) {
+        _initializeOwner(msg.sender);
         _decimals = decimals_;
+        _name = name_;
+        _symbol = symbol_;
     }
 
     function decimals() public view override returns (uint8) {
         return _decimals;
+    }
+
+    function name() public view override returns (string memory) {
+        return _name;
+    }
+
+    function symbol() public view override returns (string memory) {
+        return _symbol;
     }
 
     /**
@@ -24,7 +34,7 @@ contract ERC20Token is AccessControl, ERC20Permit {
      * @param account address to send the minted tokens to
      * @param amount amount of tokens to mint
      */
-    function mint(address account, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) returns (bool) {
+    function mint(address account, uint256 amount) external onlyOwner returns (bool) {
         _mint(account, amount);
         return true;
     }

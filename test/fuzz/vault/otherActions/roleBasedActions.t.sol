@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20, IVault, ERC20Token, IOSM, IRate} from "../../../base.t.sol";
+import {BaseTest, IVault, ERC20Token, IOSM, IRate} from "../../../base.t.sol";
 
 contract RoleBasedActionsTest is BaseTest {
     function test_pause() external {
         // only default admin can call it successfully
-        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
+        vm.expectRevert(Unauthorized.selector);
         vault.pause();
 
         // pause works if called by owner
@@ -18,7 +18,7 @@ contract RoleBasedActionsTest is BaseTest {
 
     function test_unpause() external {
         // only default admin can call it successfully
-        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
+        vm.expectRevert(Unauthorized.selector);
         vault.unpause();
 
         // pause it with owner
@@ -33,7 +33,7 @@ contract RoleBasedActionsTest is BaseTest {
 
     function test_updateFeedModule(address newFeedModule) external {
         // only default admin can call it successfully
-        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
+        vm.expectRevert(Unauthorized.selector);
         vault.updateFeedModule(newFeedModule);
 
         // owner can change it
@@ -45,7 +45,7 @@ contract RoleBasedActionsTest is BaseTest {
 
     function test_updateRateModule(IRate newRateModule) external {
         // only default admin can call it successfully
-        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
+        vm.expectRevert(Unauthorized.selector);
         vault.updateRateModule(newRateModule);
 
         // owner can change it
@@ -57,7 +57,7 @@ contract RoleBasedActionsTest is BaseTest {
 
     function test_updateStabilityModule(address newStabilityModule) external {
         // only default admin can call it successfully
-        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
+        vm.expectRevert(Unauthorized.selector);
         vault.updateStabilityModule(newStabilityModule);
 
         // owner can change it
@@ -69,7 +69,7 @@ contract RoleBasedActionsTest is BaseTest {
 
     function test_updateGlobalDebtCeiling(uint256 newDebtCeiling) external {
         // only default admin can call it successfully
-        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
+        vm.expectRevert(Unauthorized.selector);
         vault.updateDebtCeiling(newDebtCeiling);
 
         // owner can change it
@@ -89,10 +89,10 @@ contract RoleBasedActionsTest is BaseTest {
         uint256 debtCeiling,
         uint256 collateralFloorPerPosition
     ) external {
-        ERC20 collateralToken = ERC20(address(new ERC20Token("Tether USD", "USDT", 6)));
+        ERC20Token collateralToken = ERC20Token(address(new ERC20Token("Tether USD", "USDT", 6)));
 
         // only default admin can call it successfully
-        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
+        vm.expectRevert(Unauthorized.selector);
         vault.createCollateralType(
             collateralToken, rate, liquidationThreshold, liquidationBonus, debtCeiling, collateralFloorPerPosition
         );
@@ -114,7 +114,7 @@ contract RoleBasedActionsTest is BaseTest {
         );
 
         {
-            ERC20 tokenToTry = ERC20(address(1111));
+            ERC20Token tokenToTry = ERC20Token(address(1111));
             // only works with address with code deployed to it and calling `decimals()` return a valid value that can be decode into a uint256
 
             // does not work for eoa
@@ -125,21 +125,21 @@ contract RoleBasedActionsTest is BaseTest {
             );
 
             // does not work for contract with no function sig for decimals
-            tokenToTry = ERC20(address(new BadCollateralNoFuncSigForDecimals()));
+            tokenToTry = ERC20Token(address(new BadCollateralNoFuncSigForDecimals()));
             vm.expectRevert(new bytes(0));
             vault.createCollateralType(
                 tokenToTry, rate, liquidationThreshold, liquidationBonus, debtCeiling, collateralFloorPerPosition
             );
 
             // does not work for contract that returns nothing
-            tokenToTry = ERC20(address(new BadCollateralReturnsNothing()));
+            tokenToTry = ERC20Token(address(new BadCollateralReturnsNothing()));
             vm.expectRevert(new bytes(0));
             vault.createCollateralType(
                 tokenToTry, rate, liquidationThreshold, liquidationBonus, debtCeiling, collateralFloorPerPosition
             );
 
             // does not work for contract that returns less data than expected
-            tokenToTry = ERC20(address(new BadCollateralReturnsLittleData()));
+            tokenToTry = ERC20Token(address(new BadCollateralReturnsLittleData()));
             vm.expectRevert(new bytes(0));
             vault.createCollateralType(
                 tokenToTry, rate, liquidationThreshold, liquidationBonus, debtCeiling, collateralFloorPerPosition
@@ -164,7 +164,7 @@ contract RoleBasedActionsTest is BaseTest {
         assertEq(collateralInfo.additionalCollateralPrecision, MAX_TOKEN_DECIMALS - collateralToken.decimals());
     }
 
-    function test_updateCollateralData(ERC20 nonExistentCollateral, uint8 param, uint256 data, uint256 timeElapsed)
+    function test_updateCollateralData(ERC20Token nonExistentCollateral, uint8 param, uint256 data, uint256 timeElapsed)
         external
     {
         IVault.ModifiableParameters validParam = IVault.ModifiableParameters(uint8(bound(param, 0, 4)));
@@ -172,7 +172,7 @@ contract RoleBasedActionsTest is BaseTest {
         skip(timeElapsed);
 
         // only default admin can call it successfully
-        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
+        vm.expectRevert(Unauthorized.selector);
         vault.updateCollateralData(usdc, validParam, data);
 
         // only callable when unpaused
@@ -184,7 +184,9 @@ contract RoleBasedActionsTest is BaseTest {
         vault.unpause();
 
         // if collateral does not exist, revert
-        if (nonExistentCollateral == usdc) nonExistentCollateral = ERC20(mutateAddress(address(nonExistentCollateral)));
+        if (nonExistentCollateral == usdc) {
+            nonExistentCollateral = ERC20Token(mutateAddress(address(nonExistentCollateral)));
+        }
         vm.expectRevert(CollateralDoesNotExist.selector);
         vault.updateCollateralData(nonExistentCollateral, validParam, data);
 
@@ -254,8 +256,10 @@ contract RoleBasedActionsTest is BaseTest {
         }
     }
 
-    function test_updatePrice(ERC20 unsupportedCollateral, uint256 price) external {
-        if (unsupportedCollateral == usdc) unsupportedCollateral = ERC20(mutateAddress(address(unsupportedCollateral)));
+    function test_updatePrice(ERC20Token unsupportedCollateral, uint256 price) external {
+        if (unsupportedCollateral == usdc) {
+            unsupportedCollateral = ERC20Token(mutateAddress(address(unsupportedCollateral)));
+        }
 
         // deploy a mock oracle security module and set it to be the OSM of feed contract
         IOSM mockOsm = new MockOSM();
@@ -280,7 +284,7 @@ contract RoleBasedActionsTest is BaseTest {
         timeElapsed = bound(timeElapsed, 0, 365 days * 10);
 
         // only default admin can call it successfully
-        vm.expectRevert(abi.encodeWithSelector(AccessControlUnauthorizedAccount.selector, address(this), bytes32(0x00)));
+        vm.expectRevert(Unauthorized.selector);
         vault.updateBaseRate(newBaseRate);
 
         // owner can change it

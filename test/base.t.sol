@@ -2,17 +2,17 @@
 pragma solidity ^0.8.13;
 
 import {Test, StdInvariant, console2} from "forge-std/Test.sol";
-import {Vault, IVault, Currency, ERC20} from "../src/vault.sol";
+import {Vault, IVault, Currency} from "../src/vault.sol";
 import {Feed, IOSM} from "../src/modules/feed.sol";
-import {ERC20Token} from "./mocks/ERC20Token.sol";
-import {ErrorsAndEvents} from "./mocks/ErrorsAndEvents.sol";
+import {ERC20Token} from "../src/mocks/ERC20Token.sol";
+import {ErrorsAndEvents} from "./helpers/ErrorsAndEvents.sol";
 import {IRate, SimpleInterestRate} from "../src/modules/simpleInterestRate.sol";
 import {Median} from "descent-collective/oracle-module/median.sol";
 import {OSM} from "descent-collective/oracle-module/osm.sol";
-import {MessageHashUtils} from "@openzeppelin-contracts/utils/cryptography/MessageHashUtils.sol";
+import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
 
 contract BaseTest is Test, ErrorsAndEvents {
-    using MessageHashUtils for bytes32;
+    using SignatureCheckerLib for bytes32;
 
     bytes constant INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR =
         abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 17);
@@ -27,7 +27,7 @@ contract BaseTest is Test, ErrorsAndEvents {
     uint256 HUNDRED_PERCENTAGE = 100e18;
     Vault vault;
     Currency xNGN;
-    ERC20 usdc;
+    ERC20Token usdc;
     Feed feed;
     IRate simpleInterestRate;
     OSM osm;
@@ -68,7 +68,7 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         xNGN = new Currency("xNGN", "xNGN");
 
-        usdc = ERC20(address(new ERC20Token("Circle USD", "USDC", 6))); // changing the last parameter her i.e decimals and running th tests shows that it works for all token decimals <= 18
+        usdc = new ERC20Token("Circle USD", "USDC", 6); // changing the last parameter her i.e decimals and running th tests shows that it works for all token decimals <= 18
 
         vault = new Vault(xNGN, onePercentPerSecondInterestRate, type(uint256).max);
 
@@ -87,7 +87,7 @@ contract BaseTest is Test, ErrorsAndEvents {
         vault.updateFeedModule(address(feed));
         vault.updateRateModule(simpleInterestRate);
         vault.updateStabilityModule(testStabilityModule); // no implementation so set it to psuedo-random address
-        xNGN.setMinterRole(address(vault));
+        xNGN.setMinterRole(address(vault), true);
 
         // set the osm of usdc collateral
         feed.setCollateralOSM(usdc, IOSM(address(osm)));
@@ -180,14 +180,18 @@ contract BaseTest is Test, ErrorsAndEvents {
         return IVault.RateInfo(rate, accumulatedRate, lastUpdateTime);
     }
 
-    function getVaultMapping(ERC20 _collateralToken, address _owner) internal view returns (IVault.VaultInfo memory) {
+    function getVaultMapping(ERC20Token _collateralToken, address _owner)
+        internal
+        view
+        returns (IVault.VaultInfo memory)
+    {
         (uint256 depositedCollateral, uint256 borrowedAmount, uint256 accruedFees, uint256 lastTotalAccumulatedRate) =
             vault.vaultMapping(_collateralToken, _owner);
 
         return IVault.VaultInfo(depositedCollateral, borrowedAmount, accruedFees, lastTotalAccumulatedRate);
     }
 
-    function getCollateralMapping(ERC20 _collateralToken) internal view returns (IVault.CollateralInfo memory) {
+    function getCollateralMapping(ERC20Token _collateralToken) internal view returns (IVault.CollateralInfo memory) {
         (
             uint256 totalDepositedCollateral,
             uint256 totalBorrowedAmount,
@@ -213,7 +217,7 @@ contract BaseTest is Test, ErrorsAndEvents {
         );
     }
 
-    function calculateCurrentTotalAccumulatedRate(ERC20 _collateralToken) internal view returns (uint256) {
+    function calculateCurrentTotalAccumulatedRate(ERC20Token _collateralToken) internal view returns (uint256) {
         IVault.CollateralInfo memory _collateral = getCollateralMapping(_collateralToken);
         // calculates pending collateral rate and adds it to the last stored collateral rate
         uint256 _collateralCurrentAccumulatedRate = _collateral.rateInfo.accumulatedRate
@@ -227,7 +231,7 @@ contract BaseTest is Test, ErrorsAndEvents {
         return _collateralCurrentAccumulatedRate + _baseCurrentAccumulatedRate;
     }
 
-    function calculateUserCurrentAccruedFees(ERC20 _collateralToken, address _owner)
+    function calculateUserCurrentAccruedFees(ERC20Token _collateralToken, address _owner)
         internal
         view
         returns (uint256 accruedFees)

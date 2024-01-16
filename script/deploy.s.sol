@@ -6,8 +6,7 @@ import {Currency} from "../src/currency.sol";
 import {Feed} from "../src/modules/feed.sol";
 
 import {BaseScript, stdJson, console2} from "./base.s.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Token} from "../test/mocks/ERC20Token.sol";
+import {ERC20Token} from "../src/mocks/ERC20Token.sol";
 import {SimpleInterestRate, IRate} from "../src/modules/SimpleInterestRate.sol";
 
 contract DeployScript is BaseScript {
@@ -35,7 +34,7 @@ contract DeployScript is BaseScript {
         console2.log("Rate deployed successfully at address:", address(rate));
 
         console2.log("\n  Getting or deploying usdc contract");
-        ERC20 usdc = getOrCreateUsdc();
+        ERC20Token usdc = getOrCreateUsdc();
         console2.log("Usdc gotten or deployed successfully at address:", address(usdc));
 
         console2.log("\n  Creating collateral type");
@@ -73,15 +72,15 @@ contract DeployScript is BaseScript {
         console2.log("Updating price of usdc from feed done successfully to:", _price);
 
         console2.log("\n  Giving vault minter role for xNGN");
-        xNGN.setMinterRole(address(vault));
+        xNGN.setMinterRole(address(vault), true);
         console2.log("Vault given miinter role for xnGN successfully");
     }
 
-    function getOrCreateUsdc() private returns (ERC20 usdc) {
+    function getOrCreateUsdc() private returns (ERC20Token usdc) {
         if (currenctChain == Chains.Localnet) {
-            usdc = ERC20(address(new ERC20Token("Circle USD", "USDC", 6)));
+            usdc = new ERC20Token("Circle USD", "USDC", 6);
         } else {
-            usdc = ERC20(getDeployConfigJson().readAddress(".collaterals.USDC.collateralAddress"));
+            usdc = ERC20Token(getDeployConfigJson().readAddress(".collaterals.USDC.collateralAddress"));
         }
     }
 }
