@@ -490,9 +490,8 @@ contract Vault is IVault, Ownable, Pausable {
         uint256 _total = _collateralAmountCovered + _bonus;
 
         // To make liquidations always possible, if _vault.depositedCollateral not enough to pay bonus, give out highest possible bonus
-        if (_total > _vault.depositedCollateral) {
-            _total = _vault.depositedCollateral;
-        }
+        // For situations where the user's vault is insolvent, this would be called by the system stability module after a debt auction is used to raise the currency
+        if (_total > _vault.depositedCollateral) _total = _vault.depositedCollateral;
 
         emit Liquidated(_owner, msg.sender, _currencyAmountToPay, _total);
 
@@ -511,7 +510,7 @@ contract Vault is IVault, Ownable, Pausable {
      */
     function _depositCollateral(ERC20Token _collateralToken, address _owner, uint256 _amount) internal {
         // supporting fee on transfer tokens at the expense of NEVER SUPPORTING TOKENS WITH CALLBACKS
-        // a solution for supporting it can be adding a mutex but that prevents batching.
+        // a solution for supporting it can be adding a mutex
         uint256 preBalance = _collateralToken.balanceOf(address(this));
         // call to balance is checked first so if it's not a contract, it'll revert above first
         SafeTransferLib.safeTransferFrom(address(_collateralToken), msg.sender, address(this), _amount);
