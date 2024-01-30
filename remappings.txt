@@ -1,2 +1,3 @@
-@openzeppelin/contracts=lib/openzeppelin-contracts/contracts
+solady/=lib/solady/src/
 forge-std/=lib/forge-std/src/
+descent-collective/oracle-module/=lib/oracle-module/src/

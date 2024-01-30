@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {BaseTest, ERC20, IVault} from "../../../base.t.sol";
+import {BaseTest, ERC20Token, IVault} from "../../../base.t.sol";
 
 contract WithdrawCollateralTest is BaseTest {
     function setUp() public override {
@@ -11,109 +11,107 @@ contract WithdrawCollateralTest is BaseTest {
         vm.startPrank(user1);
 
         // deposit amount to be used when testing
-        vault.depositCollateral(usdc, user1, 1_000e18);
+        vault.depositCollateral(usdc, user1, 1000 * (10 ** usdc.decimals()));
 
         vm.stopPrank();
     }
 
-    function test_WhenVaultIsPaused() external useUser1 {
-        // pause vault
-        vm.stopPrank();
-        vm.prank(owner);
-        // pause vault
-        vault.pause();
+    function test_WhenCollateralDoesNotExist(ERC20Token collateral, address user, uint256 amount) external useUser1 {
+        if (collateral == usdc) collateral = ERC20Token(mutateAddress(address(usdc)));
 
-        // it should revert with custom error Paused()
-        vm.expectRevert(Paused.selector);
-        vault.withdrawCollateral(usdc, user1, user1, 1_000e18);
-    }
-
-    modifier whenVaultIsNotPaused() {
-        _;
-    }
-
-    function test_WhenCollateralDoesNotExist() external whenVaultIsNotPaused useUser1 {
         // it should revert with custom error CollateralDoesNotExist()
         vm.expectRevert(CollateralDoesNotExist.selector);
 
         // call with non existing collateral
-        vault.withdrawCollateral(ERC20(vm.addr(11111)), user1, user1, 1_000e18);
+        vault.withdrawCollateral(collateral, user, user, amount);
     }
 
     modifier whenCollateralExists() {
         _;
     }
 
-    function test_WhenCallerIsNotOwnerAndNotReliedUponByOwner() external whenVaultIsNotPaused whenCollateralExists {
+    function test_WhenCallerIsNotOwnerAndNotReliedUponByOwner(address caller, address user, uint256 amount)
+        external
+        whenCollateralExists
+    {
+        if (user == caller) user = mutateAddress(user);
+
         // use unrelied upon user2
-        vm.prank(user2);
+        vm.prank(caller);
 
         // it should revert with custom error NotOwnerOrReliedUpon()
         vm.expectRevert(NotOwnerOrReliedUpon.selector);
 
         // call and try to interact with user1 vault with address user1 does not rely on
-        vault.withdrawCollateral(usdc, user1, user1, 1_000e18);
+        vault.withdrawCollateral(usdc, user, user, amount);
     }
 
     modifier whenCallerIsOwnerOrReliedUponByOwner() {
         _;
     }
 
-    function test_WhenTheAmountIsGreaterThanTheBorrowersDepositedCollateral()
+    function test_WhenTheAmountIsGreaterThanTheBorrowersDepositedCollateral(uint256 amount)
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         useUser1
     {
+        amount = bound(amount, (1000 * (10 ** usdc.decimals())) + 1, type(uint256).max);
+
         // it should revert with solidity panic error underflow error
-        vm.expectRevert(UNDERFLOW_OVERFLOW_PANIC_ERROR);
-        vault.withdrawCollateral(usdc, user1, user1, 1_000e18 + 1);
+        vm.expectRevert(INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR);
+        vault.withdrawCollateral(usdc, user1, user1, amount);
     }
 
     modifier whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral() {
         _;
     }
 
-    function test_WhenTheWithdrawalMakesTheVaultsCollateralRatioBelowTheLiquidationThreshold_useUser1()
+    function test_WhenTheWithdrawalMakesTheVaultsCollateralRatioAboveTheLiquidationThreshold_useUser1(uint256 amount)
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
         useUser1
     {
+        amount = bound(amount, 1, 1000 * (10 ** usdc.decimals()));
+
         // mint max amount possible of currency to make withdrawing any of my collateral bad for user1 vault position
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
 
         // it should revert with custom error BadCollateralRatio()
         vm.expectRevert(BadCollateralRatio.selector);
-        vault.withdrawCollateral(usdc, user1, user1, 1);
+        vault.withdrawCollateral(usdc, user1, user1, amount);
     }
 
-    function test_WhenTheWithdrawalMakesTheVaultsCollateralRatioBelowTheLiquidationThreshold_useReliedOnForUser1()
+    function test_WhenTheWithdrawalMakesTheVaultsCollateralRatioAboveTheLiquidationThreshold_useReliedOnForUser1(
+        uint256 amount
+    )
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
         useReliedOnForUser1(user2)
     {
+        amount = bound(amount, 1, 1000 * (10 ** usdc.decimals()));
+
         // mint max amount possible of currency to make withdrawing any of my collateral bad for user1 vault position
         vault.mintCurrency(usdc, user1, user1, 500_000e18);
 
         // it should revert with custom error BadCollateralRatio()
         vm.expectRevert(BadCollateralRatio.selector);
-        vault.withdrawCollateral(usdc, user1, user1, 1);
+        vault.withdrawCollateral(usdc, user1, user1, amount);
     }
 
     modifier whenTheWithdrawalDoesNotMakeTheVaultsCollateralRatioBelowTheLiquidationThreshold() {
         _;
     }
 
-    function test_WhenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral_useUser1()
+    function test_WhenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral_useUser1(
+        uint256 amount,
+        uint256 timeElapsed
+    )
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
@@ -126,12 +124,14 @@ contract WithdrawCollateralTest is BaseTest {
         // it should update the _owner's deposited collateral and collateral's total deposit
         // it should send the collateral token to the to address from the vault
 
-        runWithdrawCollateralTestWithChecks(user2);
+        runWithdrawCollateralTestWithChecks(user2, amount, timeElapsed);
     }
 
-    function test_WhenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral_useReliedOnForUser1()
+    function test_WhenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral_useReliedOnForUser1(
+        uint256 amount,
+        uint256 timeElapsed
+    )
         external
-        whenVaultIsNotPaused
         whenCollateralExists
         whenCallerIsOwnerOrReliedUponByOwner
         whenTheAmountIsLessThanOrEqualToTheBorrowersDepositedCollateral
@@ -144,10 +144,13 @@ contract WithdrawCollateralTest is BaseTest {
         // it should update the _owner's deposited collateral and collateral's total deposit
         // it should send the collateral token to the to address from the vault
 
-        runWithdrawCollateralTestWithChecks(user3);
+        runWithdrawCollateralTestWithChecks(user3, amount, timeElapsed);
     }
 
-    function runWithdrawCollateralTestWithChecks(address recipient) private {
+    function runWithdrawCollateralTestWithChecks(address recipient, uint256 amount, uint256 timeElapsed) private {
+        amount = bound(amount, 0, 500 * (10 ** usdc.decimals()));
+        timeElapsed = bound(timeElapsed, 0, TEN_YEARS);
+
         // cache pre balances
         uint256 userOldBalance = usdc.balanceOf(recipient);
         uint256 vaultOldBalance = usdc.balanceOf(address(vault));
@@ -155,18 +158,13 @@ contract WithdrawCollateralTest is BaseTest {
         // cache pre storage vars and old accrued fees
         IVault.VaultInfo memory initialUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory initialCollateralInfo = getCollateralMapping(usdc);
-        uint256 initialAccruedFees = vault.accruedFees();
 
         // take a loan of xNGN to be able to calculate fees acrrual
         uint256 amountMinted = 100_000e18;
         vault.mintCurrency(usdc, user1, user1, amountMinted);
 
         // skip time to be able to check accrued interest
-        uint256 timeElapsed = 1_000;
         skip(timeElapsed);
-
-        // amount to withdraw
-        uint256 amount = 500e18;
 
         // it should emit CollateralWithdrawn() event with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
@@ -182,11 +180,10 @@ contract WithdrawCollateralTest is BaseTest {
         // get expected accrued fees
         uint256 accruedFees = (
             (calculateCurrentTotalAccumulatedRate(usdc) - initialUserVaultInfo.lastTotalAccumulatedRate) * amountMinted
-        ) / PRECISION;
+        ) / HUNDRED_PERCENTAGE;
 
         // it should update accrued fees for the user's position
         assertEq(initialUserVaultInfo.accruedFees + accruedFees, afterUserVaultInfo.accruedFees);
-        assertEq(initialAccruedFees + accruedFees, vault.accruedFees());
 
         // it should update the storage vars correctly
         assertEq(afterCollateralInfo.totalDepositedCollateral, initialCollateralInfo.totalDepositedCollateral - amount);

@@ -37,9 +37,9 @@ abstract contract BaseScript is Script {
             (broadcaster,) = deriveRememberKey({mnemonic: mnemonic, index: uint32(walletIndex)});
         }
 
-        if (block.chainid == 31337) {
+        if (block.chainid == 31_337) {
             currenctChain = Chains.Localnet;
-        } else if (block.chainid == 84531) {
+        } else if (block.chainid == 84_531) {
             currenctChain = Chains.BaseTestnet;
         } else {
             revert("Unsupported chain for deployment");

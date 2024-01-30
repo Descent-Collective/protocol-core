@@ -15,6 +15,11 @@ interface IVault {
     error CollateralRatioNotImproved();
     error NotEnoughCollateralToPay();
     error EthTransferFailed();
+    error GlobalDebtCeilingExceeded();
+    error CollateralDebtCeilingExceeded();
+    error InsufficientCurrencyAmountToPay();
+    error InvalidStabilityModule();
+    error NotFeedContract();
 
     // ------------------------------------------------ EVENTS ------------------------------------------------
     event CollateralTypeAdded(address collateralAddress);
@@ -29,23 +34,21 @@ interface IVault {
 
     // ------------------------------------------------ CUSTOM TYPES ------------------------------------------------
     struct RateInfo {
-        uint256 rate; // collateral rate
-        uint256 accumulatedRate; // Fees rate relative to PRECISION (i.e 1e18), 1% would be (((1e18 * onePercentPerAnnum) / 100) / 365 days), 0.1% would be (((0.1e18 * onePercentPerAnnum) / 100) / 365 days), 0.25% would be (((0.25e18 * onePercentPerAnnum) / 100) / 365 days)
+        uint256 rate; // interest rate per second
+        uint256 accumulatedRate; // Fees rate relative to PRECISION (i.e 1e18), 1% would be 1e18 / 365 days, 0.1% would be 0.1e18 / 365 days), 0.25% would be 0.25e18 / 365 days
         uint256 lastUpdateTime; // lastUpdateTime of accumulated rate
     }
 
     struct CollateralInfo {
         uint256 totalDepositedCollateral; // total deposited collateral
         uint256 totalBorrowedAmount; // total borrowed amount
-        uint256 liquidationThreshold; // denotes how many times more collateral value is expected relative to the PRECISION (i.e 1e18). E.g liquidationThreshold of 0.5e18 means 2x/200% more collateral since 100 / 50 is 2. 150% will be 0.66e18
-        uint256 liquidationBonus; // bonus given to liquidator relative to PRECISION. 10% would be 0.1e18
+        uint256 liquidationThreshold; // denotes how many times more collateral value is expected relative to the PRECISION (i.e 1e18). E.g liquidationThreshold of 50e18 means 2x/200% more collateral since 100 / 50 is 2. 150% will be 66.666...67e18
+        uint256 liquidationBonus; // bonus given to liquidator relative to PRECISION. 10% would be 10e18
         RateInfo rateInfo;
-        uint256 paidFees; // total unwithdrawn paid fees
         uint256 price; // Price with precision of 6 decimal places
         uint256 debtCeiling; // Debt Ceiling
         uint256 collateralFloorPerPosition; // Debt floor per position to always make liquidations profitable after gas fees
         uint256 additionalCollateralPrecision; // precision scaler. basically `18 - decimal of token`
-        bool exists; // if collateral type exists
     }
 
     struct VaultInfo {
@@ -56,6 +59,7 @@ interface IVault {
     }
 
     enum ModifiableParameters {
+        RATE,
         DEBT_CEILING,
         COLLATERAL_FLOOR_PER_POSITION,
         LIQUIDATION_BONUS,

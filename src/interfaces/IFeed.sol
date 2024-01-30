@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
+import {ERC20Token} from "../vault.sol";
+import {IOSM} from "../interfaces/IOSM.sol";
+
 interface IFeed {
-    error Paused();
+    error BadPrice();
 
     event Read(address collateral, uint256 price);
 
-    function updatePrice(address collateral) external;
+    function updatePrice(ERC20Token _collateral) external;
 
-    function setPriceOracleContract(address oracle, address collateral) external;
+    function setCollateralOSM(ERC20Token _collateral, IOSM _oracle) external;
 }
