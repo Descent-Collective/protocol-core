@@ -47,3 +47,28 @@ Solidity compiler: [0.8.21]
 ## Changes
 - Fix wrong calculation of withdrawable collateral
 - Fix typos
+
+
+# Sepolia Version 0.1.0
+
+## Compiler settings
+
+Solidity compiler: [0.8.21]
+
+### contracts
+- Vault Contract: `0x18196CCaA8C2844c82B40a8bDCa27349C7466280`
+- Currency Contract(xNGN):    `0x5d0583Ef20884C0b175046d515Ec227200C12C89`
+- Feed Contract     `0x970066EE55DF2134D1b52451afb49034AE5Fa29a`
+- Rate Contract     `0x774843f6Baa4AAE62F026a8aF3c1C6FF3e55Ca39`
+
+## Changes
+- Use 18 decimlas for rate and liquidation threshold
+- Abstract the rate calculation to a different contract to make it modular
+- Add global debt ceiling and add check for global and collateral debt ceiling when minting, also update deploy script and tests
+- Enable users to be able to repay and withdraw during paused
+- Added invariant tests and fix noticed bugs
+- Added fuzzed unit test for currency contract
+- Integrate the OSM, Median and Feed into the invariant tests
+- Replace open zeppelin with solady.
+- Use rounding down for liquidation reward calculation
+- Added invariant tests and fix noticed bugs
