@@ -49,7 +49,7 @@ Solidity compiler: [0.8.21]
 - Fix typos
 
 
-# Sepolia Version 0.1.0
+# Sepolia Version 0.2.0
 
 ## Compiler settings
 
