@@ -7,7 +7,7 @@ import {Feed} from "../src/modules/feed.sol";
 
 import {BaseScript, stdJson, console2} from "./base.s.sol";
 import {ERC20Token} from "../src/mocks/ERC20Token.sol";
-import {SimpleInterestRate, IRate} from "../src/modules/SimpleInterestRate.sol";
+import {SimpleInterestRate, IRate} from "../src/modules/rate.sol";
 
 contract DeployScript is BaseScript {
     using stdJson for string;

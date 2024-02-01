@@ -58,7 +58,9 @@ contract Vault is IVault, Ownable, Pausable {
      * @dev reverts if the collateral does not exist
      */
     modifier collateralExists(ERC20Token _collateralToken) {
-        if (collateralMapping[_collateralToken].rateInfo.rate == 0) revert CollateralDoesNotExist();
+        if (collateralMapping[_collateralToken].rateInfo.rate == 0) {
+            revert CollateralDoesNotExist();
+        }
         _;
     }
 
@@ -68,7 +70,9 @@ contract Vault is IVault, Ownable, Pausable {
      * @dev reverts if the msg.sender is not `_owner` and is also not allowed to interact with `_owner`'s vault
      */
     modifier onlyOwnerOrReliedUpon(address _owner) {
-        if (_owner != msg.sender && !relyMapping[_owner][msg.sender]) revert NotOwnerOrReliedUpon();
+        if (_owner != msg.sender && !relyMapping[_owner][msg.sender]) {
+            revert NotOwnerOrReliedUpon();
+        }
         _;
     }
 
@@ -400,11 +404,15 @@ contract Vault is IVault, Ownable, Pausable {
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
 
         // to prevent positions too little in value to incentivize liquidation, assert a floor for collateral possible to borrow against
-        if (_collateral.collateralFloorPerPosition > _vault.depositedCollateral) revert TotalUserCollateralBelowFloor();
+        if (_collateral.collateralFloorPerPosition > _vault.depositedCollateral) {
+            revert TotalUserCollateralBelowFloor();
+        }
 
         // check that global and collateral debt ceilings are not exceedded
         if (debt + _amount > debtCeiling) revert GlobalDebtCeilingExceeded();
-        if (_collateral.totalBorrowedAmount + _amount > _collateral.debtCeiling) revert CollateralDebtCeilingExceeded();
+        if (_collateral.totalBorrowedAmount + _amount > _collateral.debtCeiling) {
+            revert CollateralDebtCeilingExceeded();
+        }
 
         // short circuit conditional to optimize all interactions after the first one.
         // need to accrue fees first in order to use updated fees for collateral ratio calculation below
@@ -475,7 +483,9 @@ contract Vault is IVault, Ownable, Pausable {
         _accrueFees(_collateral, _vault);
 
         uint256 _preCollateralRatio = _getCollateralRatio(_collateral, _vault);
-        if (_preCollateralRatio <= _collateral.liquidationThreshold) revert PositionIsSafe();
+        if (_preCollateralRatio <= _collateral.liquidationThreshold) {
+            revert PositionIsSafe();
+        }
 
         if (_currencyAmountToPay == type(uint256).max) {
             // This is here to prevent frontrunning of full liquidation
@@ -491,7 +501,9 @@ contract Vault is IVault, Ownable, Pausable {
 
         // To make liquidations always possible, if _vault.depositedCollateral not enough to pay bonus, give out highest possible bonus
         // For situations where the user's vault is insolvent, this would be called by the system stability module after a debt auction is used to raise the currency
-        if (_total > _vault.depositedCollateral) _total = _vault.depositedCollateral;
+        if (_total > _vault.depositedCollateral) {
+            _total = _vault.depositedCollateral;
+        }
 
         emit Liquidated(_owner, msg.sender, _currencyAmountToPay, _total);
 
@@ -499,7 +511,9 @@ contract Vault is IVault, Ownable, Pausable {
         _burnCurrency(_collateral, _vault, _owner, msg.sender, _currencyAmountToPay);
 
         // collateral ratio must never increase or stay the same during a liquidation.
-        if (_preCollateralRatio <= _getCollateralRatio(_collateral, _vault)) revert CollateralRatioNotImproved();
+        if (_preCollateralRatio <= _getCollateralRatio(_collateral, _vault)) {
+            revert CollateralRatioNotImproved();
+        }
     }
 
     // ------------------------------------------------ INTERNAL FUNCTIONS ------------------------------------------------

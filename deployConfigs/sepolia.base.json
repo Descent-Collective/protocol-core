@@ -1,0 +1,16 @@
+{
+    "name": "Base Sepolia Testnet Deployment Config",
+    "baseRate": "31709791983",
+    "debtCeiling": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+    "collaterals": {
+        "USDC": {
+            "collateralAddress": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+            "collateralRate": "47564687975",
+            "liquidationThreshold": "75000000000000000000",
+            "liquidationBonus": "10000000000000000000",
+            "debtCeiling": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+            "collateralFloorPerPosition": "0",
+            "price": "1100"
+        }
+    }
+}
