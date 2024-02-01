@@ -12,3 +12,4 @@ FOUNDRY_PROFILE=optimized forge build
 cp out/vault.sol/Vault.json $abis
 cp out/currency.sol/Currency.json $abis
 cp out/feed.sol/Feed.json $abis
+cp out/rate.sol/SimpleInterestRate.json $abis

@@ -1,0 +1,1098 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "rate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "accumulatedRate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastUpdateTime",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IVault.RateInfo",
+          "name": "_rateInfo",
+          "type": "tuple"
+        }
+      ],
+      "name": "calculateCurrentAccumulatedRate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "rate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "accumulatedRate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastUpdateTime",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IVault.RateInfo",
+          "name": "_baseRateInfo",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "rate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "accumulatedRate",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastUpdateTime",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IVault.RateInfo",
+          "name": "_collateralRateInfo",
+          "type": "tuple"
+        }
+      ],
+      "name": "calculateCurrentTotalAccumulatedRate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x608060405234801561001057600080fd5b506101a0806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c8063cf5696cb1461003b578063d14a27fd14610060575b600080fd5b61004e6100493660046100e3565b610073565b60405190815260200160405180910390f35b61004e61006e366004610118565b61009a565b600061007e8361009a565b6100878361009a565b6100919190610163565b90505b92915050565b6000806100ab604084013542610176565b6100b6908435610189565b6100c4906020850135610163565b9392505050565b6000606082840312156100dd57600080fd5b50919050565b60008060c083850312156100f657600080fd5b61010084846100cb565b915061010f84606085016100cb565b90509250929050565b60006060828403121561012a57600080fd5b61009183836100cb565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b8082018082111561009457610094610134565b8181038181111561009457610094610134565b80820281158282048414176100945761009461013456",
+    "sourceMap": "192:1050:37:-:0;;;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c8063cf5696cb1461003b578063d14a27fd14610060575b600080fd5b61004e6100493660046100e3565b610073565b60405190815260200160405180910390f35b61004e61006e366004610118565b61009a565b600061007e8361009a565b6100878361009a565b6100919190610163565b90505b92915050565b6000806100ab604084013542610176565b6100b6908435610189565b6100c4906020850135610163565b9392505050565b6000606082840312156100dd57600080fd5b50919050565b60008060c083850312156100f657600080fd5b61010084846100cb565b915061010f84606085016100cb565b90509250929050565b60006060828403121561012a57600080fd5b61009183836100cb565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b8082018082111561009457610094610134565b8181038181111561009457610094610134565b80820281158282048414176100945761009461013456",
+    "sourceMap": "192:1050:37:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;435:368;;;;;;:::i;:::-;;:::i;:::-;;;697:25:60;;;685:2;670:18;435:368:37;;;;;;;809:431;;;;;;:::i;:::-;;:::i;435:368::-;610:7;750:46;782:13;750:31;:46::i;:::-;695:52;727:19;695:31;:52::i;:::-;:101;;;;:::i;:::-;688:108;;435:368;;;;;:::o;809:431::-;906:7;;1089:42;1107:24;;;;1089:15;:42;:::i;:::-;1071:61;;:14;;:61;:::i;:::-;1042:91;;:25;;;;:91;:::i;:::-;996:137;809:431;-1:-1:-1;;;809:431:37:o;14:156:60:-;75:5;120:2;111:6;106:3;102:16;98:25;95:45;;;136:1;133;126:12;95:45;-1:-1:-1;158:6:60;14:156;-1:-1:-1;14:156:60:o;175:371::-;301:6;309;362:3;350:9;341:7;337:23;333:33;330:53;;;379:1;376;369:12;330:53;402:55;449:7;438:9;402:55;:::i;:::-;392:65;;476:64;532:7;527:2;516:9;512:18;476:64;:::i;:::-;466:74;;175:371;;;;;:::o;733:241::-;821:6;874:2;862:9;853:7;849:23;845:32;842:52;;;890:1;887;880:12;842:52;913:55;960:7;949:9;913:55;:::i;979:184::-;1031:77;1028:1;1021:88;1128:4;1125:1;1118:15;1152:4;1149:1;1142:15;1168:125;1233:9;;;1254:10;;;1251:36;;;1267:18;;:::i;1298:128::-;1365:9;;;1386:11;;;1383:37;;;1400:18;;:::i;1431:168::-;1504:9;;;1535;;1552:15;;;1546:22;;1532:37;1522:71;;1573:18;;:::i",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "calculateCurrentAccumulatedRate((uint256,uint256,uint256))": "d14a27fd",
+    "calculateCurrentTotalAccumulatedRate((uint256,uint256,uint256),(uint256,uint256,uint256))": "cf5696cb"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.21+commit.d9974bed\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"rate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"accumulatedRate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"lastUpdateTime\",\"type\":\"uint256\"}],\"internalType\":\"struct IVault.RateInfo\",\"name\":\"_rateInfo\",\"type\":\"tuple\"}],\"name\":\"calculateCurrentAccumulatedRate\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"rate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"accumulatedRate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"lastUpdateTime\",\"type\":\"uint256\"}],\"internalType\":\"struct IVault.RateInfo\",\"name\":\"_baseRateInfo\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"rate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"accumulatedRate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"lastUpdateTime\",\"type\":\"uint256\"}],\"internalType\":\"struct IVault.RateInfo\",\"name\":\"_collateralRateInfo\",\"type\":\"tuple\"}],\"name\":\"calculateCurrentTotalAccumulatedRate\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"calculateCurrentTotalAccumulatedRate((uint256,uint256,uint256),(uint256,uint256,uint256))\":{\"details\":\"returns the current total accumulated rate i.e current accumulated base rate + current accumulated collateral rate of the given collateralshould never revert!\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/modules/rate.sol\":\"SimpleInterestRate\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"appendCBOR\":false,\"bytecodeHash\":\"none\"},\"optimizer\":{\"enabled\":true,\"runs\":1000000},\"remappings\":[\":@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/\",\":descent-collective/oracle-module/=lib/oracle-module/src/\",\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/\",\":oracle-module/=lib/oracle-module/\",\":solady/=lib/solady/src/\"]},\"sources\":{\"lib/solady/src/auth/Ownable.sol\":{\"keccak256\":\"0xc208cdd9de02bbf4b5edad18b88e23a2be7ff56d2287d5649329dc7cda64b9a3\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e8fba079cc7230c617f7493a2e97873f88e59a53a5018fcb2e2b6ac42d8aa5a3\",\"dweb:/ipfs/QmTXg8GSt8hsK2cZhbPFrund1mrwVdkLQmEPoQaFy4fhjs\"]},\"lib/solady/src/tokens/ERC20.sol\":{\"keccak256\":\"0xb4a3f9ba8a05107f7370de42cff57f3ad26dafd438712c11531a5892de2f59e0\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f0a9ca06e3cf6dea1f9a4c5599581573b7d81cd64dc3afb582f325ccf5fdd6dc\",\"dweb:/ipfs/Qmb9r5dDceNF4W8S5u6i85RsNTgE5XG9HbTXkyS25ad3C6\"]},\"lib/solady/src/utils/SafeTransferLib.sol\":{\"keccak256\":\"0xf98506fade18a92e3d8d0a0ca0bdaeaa099d7620aac2a9d76b5f3d0bcd10691c\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://a3495c9d108bc69951a12c5ce9f05851cc921f0bb69e2505756e79f3ddab4e1a\",\"dweb:/ipfs/QmT3XwbmdbQCxw7iNcF7DoiypDd5vs2ETFWirXqmJ86Meg\"]},\"src/currency.sol\":{\"keccak256\":\"0xc266e97010a71e6ac755dce3e51a5a5844663b355e20ab40bf2020fd9308369b\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://d2660220b8a14c6d06351765dd7accec03e350e7fa9ae960c1505bea1e5d8d2d\",\"dweb:/ipfs/QmdYdPSnQC2nym38Fca4vRLKU4A78AQkgYasdg3TaRLGNY\"]},\"src/helpers/pausable.sol\":{\"keccak256\":\"0x8acce52dcd450c73da0f77d9539962826da23aca05aa7d0c7568614e89aed997\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://35e2f674e01c0d6107f31d1c32bb2780d442420b7d26636f560a4eb1007f4a8b\",\"dweb:/ipfs/QmWwVLUGiJq6Q3fK6Zhx4pc6kaqC73pkZ1ntfVA3QCHTpd\"]},\"src/interfaces/ICurrency.sol\":{\"keccak256\":\"0x3b7adace3df08c34906612358d435ffff3b90b5eec0eae34b6335cc8dcd0e7ed\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://370c80ec5636bd95342256d4116f703e633e6b0467ee530397e9b5cada37f998\",\"dweb:/ipfs/QmPQ5KY37JpfuSAXpJ16kBXAQVJcE253cfjYGcBEcMLERz\"]},\"src/interfaces/IRate.sol\":{\"keccak256\":\"0x166dc423b74b60302197a27fb64557ee8ef6bafe416deb08fe7ecf94f0ede1d1\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://123ef521857e33b10b6f92b743831b26dd5100e57271353bf5c1882fc41c6a2e\",\"dweb:/ipfs/QmdK5y8SntLHAVoNRq6isddmNYunrpv1JxAxyEgRiHdAAj\"]},\"src/interfaces/IVault.sol\":{\"keccak256\":\"0x5684f59679e090ebe583d31fda6d8882469436e71670a4873151793675c7c6c4\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://b265c21b1ff01a8c5cf9b1120feb6b5419a96a0e2a6d1ff4bdd89934c7869c9c\",\"dweb:/ipfs/QmdbCgiYE763cAHZ6nevhf7EzF8BzEkfwsbw4qWuxBkm8f\"]},\"src/mocks/ERC20Token.sol\":{\"keccak256\":\"0x62b878fb4dde1f455866e0c1290cc50714805d02c2848a4a9bb33c5dfbc8464d\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://7af3f5638d366abfbca3186813449259a33ed43e7c13ec983d389d73df1ad204\",\"dweb:/ipfs/QmeMdoEVTGqdcgSicTTcmycSQjToT7Sn5ZTgZdVFH9E6HA\"]},\"src/modules/rate.sol\":{\"keccak256\":\"0x7f69dc8f51e49e7db89919bd89696244c23e0e04130463af3aac2f65130f4165\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://45158c44dae0ab6cee1e96a3c77118ea2f66088aa40dd13cb01f384805dd1c0f\",\"dweb:/ipfs/QmZAy4PEfgSFf4EgdX2hVXA9KcuUHrqefdttziZyeNtfnC\"]},\"src/vault.sol\":{\"keccak256\":\"0x377a877ac854164da4e6b2491e2dba44d75cb56216e6b2456fa6b815565ac5e5\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://a0a67817c649b3f65de4971c5346ea93b7432ac2f4e0013e5fb681e488aa1b58\",\"dweb:/ipfs/Qmbvcgn3AoTEahq9qgfuiL81zkZKLVQRbMhMeeqTMiiuKv\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.21+commit.d9974bed"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "struct IVault.RateInfo",
+              "name": "_rateInfo",
+              "type": "tuple",
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "rate",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "accumulatedRate",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "lastUpdateTime",
+                  "type": "uint256"
+                }
+              ]
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "calculateCurrentAccumulatedRate",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ]
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "struct IVault.RateInfo",
+              "name": "_baseRateInfo",
+              "type": "tuple",
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "rate",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "accumulatedRate",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "lastUpdateTime",
+                  "type": "uint256"
+                }
+              ]
+            },
+            {
+              "internalType": "struct IVault.RateInfo",
+              "name": "_collateralRateInfo",
+              "type": "tuple",
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "rate",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "accumulatedRate",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "lastUpdateTime",
+                  "type": "uint256"
+                }
+              ]
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "calculateCurrentTotalAccumulatedRate",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {
+          "calculateCurrentTotalAccumulatedRate((uint256,uint256,uint256),(uint256,uint256,uint256))": {
+            "details": "returns the current total accumulated rate i.e current accumulated base rate + current accumulated collateral rate of the given collateralshould never revert!"
+          }
+        },
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+        "descent-collective/oracle-module/=lib/oracle-module/src/",
+        "ds-test/=lib/forge-std/lib/ds-test/src/",
+        "erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/",
+        "forge-std/=lib/forge-std/src/",
+        "openzeppelin-contracts/=lib/openzeppelin-contracts/",
+        "oracle-module/=lib/oracle-module/",
+        "solady/=lib/solady/src/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 1000000
+      },
+      "metadata": {
+        "bytecodeHash": "none",
+        "appendCBOR": false
+      },
+      "compilationTarget": {
+        "src/modules/rate.sol": "SimpleInterestRate"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "lib/solady/src/auth/Ownable.sol": {
+        "keccak256": "0xc208cdd9de02bbf4b5edad18b88e23a2be7ff56d2287d5649329dc7cda64b9a3",
+        "urls": [
+          "bzz-raw://e8fba079cc7230c617f7493a2e97873f88e59a53a5018fcb2e2b6ac42d8aa5a3",
+          "dweb:/ipfs/QmTXg8GSt8hsK2cZhbPFrund1mrwVdkLQmEPoQaFy4fhjs"
+        ],
+        "license": "MIT"
+      },
+      "lib/solady/src/tokens/ERC20.sol": {
+        "keccak256": "0xb4a3f9ba8a05107f7370de42cff57f3ad26dafd438712c11531a5892de2f59e0",
+        "urls": [
+          "bzz-raw://f0a9ca06e3cf6dea1f9a4c5599581573b7d81cd64dc3afb582f325ccf5fdd6dc",
+          "dweb:/ipfs/Qmb9r5dDceNF4W8S5u6i85RsNTgE5XG9HbTXkyS25ad3C6"
+        ],
+        "license": "MIT"
+      },
+      "lib/solady/src/utils/SafeTransferLib.sol": {
+        "keccak256": "0xf98506fade18a92e3d8d0a0ca0bdaeaa099d7620aac2a9d76b5f3d0bcd10691c",
+        "urls": [
+          "bzz-raw://a3495c9d108bc69951a12c5ce9f05851cc921f0bb69e2505756e79f3ddab4e1a",
+          "dweb:/ipfs/QmT3XwbmdbQCxw7iNcF7DoiypDd5vs2ETFWirXqmJ86Meg"
+        ],
+        "license": "MIT"
+      },
+      "src/currency.sol": {
+        "keccak256": "0xc266e97010a71e6ac755dce3e51a5a5844663b355e20ab40bf2020fd9308369b",
+        "urls": [
+          "bzz-raw://d2660220b8a14c6d06351765dd7accec03e350e7fa9ae960c1505bea1e5d8d2d",
+          "dweb:/ipfs/QmdYdPSnQC2nym38Fca4vRLKU4A78AQkgYasdg3TaRLGNY"
+        ],
+        "license": "GPL-3.0"
+      },
+      "src/helpers/pausable.sol": {
+        "keccak256": "0x8acce52dcd450c73da0f77d9539962826da23aca05aa7d0c7568614e89aed997",
+        "urls": [
+          "bzz-raw://35e2f674e01c0d6107f31d1c32bb2780d442420b7d26636f560a4eb1007f4a8b",
+          "dweb:/ipfs/QmWwVLUGiJq6Q3fK6Zhx4pc6kaqC73pkZ1ntfVA3QCHTpd"
+        ],
+        "license": "GPL-3.0"
+      },
+      "src/interfaces/ICurrency.sol": {
+        "keccak256": "0x3b7adace3df08c34906612358d435ffff3b90b5eec0eae34b6335cc8dcd0e7ed",
+        "urls": [
+          "bzz-raw://370c80ec5636bd95342256d4116f703e633e6b0467ee530397e9b5cada37f998",
+          "dweb:/ipfs/QmPQ5KY37JpfuSAXpJ16kBXAQVJcE253cfjYGcBEcMLERz"
+        ],
+        "license": "GPL-3.0"
+      },
+      "src/interfaces/IRate.sol": {
+        "keccak256": "0x166dc423b74b60302197a27fb64557ee8ef6bafe416deb08fe7ecf94f0ede1d1",
+        "urls": [
+          "bzz-raw://123ef521857e33b10b6f92b743831b26dd5100e57271353bf5c1882fc41c6a2e",
+          "dweb:/ipfs/QmdK5y8SntLHAVoNRq6isddmNYunrpv1JxAxyEgRiHdAAj"
+        ],
+        "license": "GPL-3.0"
+      },
+      "src/interfaces/IVault.sol": {
+        "keccak256": "0x5684f59679e090ebe583d31fda6d8882469436e71670a4873151793675c7c6c4",
+        "urls": [
+          "bzz-raw://b265c21b1ff01a8c5cf9b1120feb6b5419a96a0e2a6d1ff4bdd89934c7869c9c",
+          "dweb:/ipfs/QmdbCgiYE763cAHZ6nevhf7EzF8BzEkfwsbw4qWuxBkm8f"
+        ],
+        "license": "GPL-3.0"
+      },
+      "src/mocks/ERC20Token.sol": {
+        "keccak256": "0x62b878fb4dde1f455866e0c1290cc50714805d02c2848a4a9bb33c5dfbc8464d",
+        "urls": [
+          "bzz-raw://7af3f5638d366abfbca3186813449259a33ed43e7c13ec983d389d73df1ad204",
+          "dweb:/ipfs/QmeMdoEVTGqdcgSicTTcmycSQjToT7Sn5ZTgZdVFH9E6HA"
+        ],
+        "license": "GPL-3.0"
+      },
+      "src/modules/rate.sol": {
+        "keccak256": "0x7f69dc8f51e49e7db89919bd89696244c23e0e04130463af3aac2f65130f4165",
+        "urls": [
+          "bzz-raw://45158c44dae0ab6cee1e96a3c77118ea2f66088aa40dd13cb01f384805dd1c0f",
+          "dweb:/ipfs/QmZAy4PEfgSFf4EgdX2hVXA9KcuUHrqefdttziZyeNtfnC"
+        ],
+        "license": "GPL-3.0"
+      },
+      "src/vault.sol": {
+        "keccak256": "0x377a877ac854164da4e6b2491e2dba44d75cb56216e6b2456fa6b815565ac5e5",
+        "urls": [
+          "bzz-raw://a0a67817c649b3f65de4971c5346ea93b7432ac2f4e0013e5fb681e488aa1b58",
+          "dweb:/ipfs/Qmbvcgn3AoTEahq9qgfuiL81zkZKLVQRbMhMeeqTMiiuKv"
+        ],
+        "license": "GPL-3.0"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "src/modules/rate.sol",
+    "id": 46649,
+    "exportedSymbols": {
+      "IRate": [
+        46191
+      ],
+      "SimpleInterestRate": [
+        46648
+      ],
+      "Vault": [
+        48280
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "36:1207:37",
+    "nodes": [
+      {
+        "id": 46593,
+        "nodeType": "PragmaDirective",
+        "src": "36:23:37",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".21"
+        ]
+      },
+      {
+        "id": 46595,
+        "nodeType": "ImportDirective",
+        "src": "108:35:37",
+        "nodes": [],
+        "absolutePath": "src/vault.sol",
+        "file": "../vault.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 46649,
+        "sourceUnit": 48281,
+        "symbolAliases": [
+          {
+            "foreign": {
+              "id": 46594,
+              "name": "Vault",
+              "nodeType": "Identifier",
+              "overloadedDeclarations": [],
+              "referencedDeclaration": 48280,
+              "src": "116:5:37",
+              "typeDescriptions": {}
+            },
+            "nameLocation": "-1:-1:-1"
+          }
+        ],
+        "unitAlias": ""
+      },
+      {
+        "id": 46597,
+        "nodeType": "ImportDirective",
+        "src": "144:46:37",
+        "nodes": [],
+        "absolutePath": "src/interfaces/IRate.sol",
+        "file": "../interfaces/IRate.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 46649,
+        "sourceUnit": 46192,
+        "symbolAliases": [
+          {
+            "foreign": {
+              "id": 46596,
+              "name": "IRate",
+              "nodeType": "Identifier",
+              "overloadedDeclarations": [],
+              "referencedDeclaration": 46191,
+              "src": "152:5:37",
+              "typeDescriptions": {}
+            },
+            "nameLocation": "-1:-1:-1"
+          }
+        ],
+        "unitAlias": ""
+      },
+      {
+        "id": 46648,
+        "nodeType": "ContractDefinition",
+        "src": "192:1050:37",
+        "nodes": [
+          {
+            "id": 46620,
+            "nodeType": "FunctionDefinition",
+            "src": "435:368:37",
+            "nodes": [],
+            "body": {
+              "id": 46619,
+              "nodeType": "Block",
+              "src": "619:184:37",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "commonType": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    },
+                    "id": 46617,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftExpression": {
+                      "arguments": [
+                        {
+                          "id": 46612,
+                          "name": "_collateralRateInfo",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 46606,
+                          "src": "727:19:37",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_RateInfo_$46280_calldata_ptr",
+                            "typeString": "struct IVault.RateInfo calldata"
+                          }
+                        }
+                      ],
+                      "expression": {
+                        "argumentTypes": [
+                          {
+                            "typeIdentifier": "t_struct$_RateInfo_$46280_calldata_ptr",
+                            "typeString": "struct IVault.RateInfo calldata"
+                          }
+                        ],
+                        "id": 46611,
+                        "name": "calculateCurrentAccumulatedRate",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 46647,
+                        "src": "695:31:37",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_view$_t_struct$_RateInfo_$46280_calldata_ptr_$returns$_t_uint256_$",
+                          "typeString": "function (struct IVault.RateInfo calldata) view returns (uint256)"
+                        }
+                      },
+                      "id": 46613,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "695:52:37",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "nodeType": "BinaryOperation",
+                    "operator": "+",
+                    "rightExpression": {
+                      "arguments": [
+                        {
+                          "id": 46615,
+                          "name": "_baseRateInfo",
+                          "nodeType": "Identifier",
+                          "overloadedDeclarations": [],
+                          "referencedDeclaration": 46603,
+                          "src": "782:13:37",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_struct$_RateInfo_$46280_calldata_ptr",
+                            "typeString": "struct IVault.RateInfo calldata"
+                          }
+                        }
+                      ],
+                      "expression": {
+                        "argumentTypes": [
+                          {
+                            "typeIdentifier": "t_struct$_RateInfo_$46280_calldata_ptr",
+                            "typeString": "struct IVault.RateInfo calldata"
+                          }
+                        ],
+                        "id": 46614,
+                        "name": "calculateCurrentAccumulatedRate",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 46647,
+                        "src": "750:31:37",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_function_internal_view$_t_struct$_RateInfo_$46280_calldata_ptr_$returns$_t_uint256_$",
+                          "typeString": "function (struct IVault.RateInfo calldata) view returns (uint256)"
+                        }
+                      },
+                      "id": 46616,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "kind": "functionCall",
+                      "lValueRequested": false,
+                      "nameLocations": [],
+                      "names": [],
+                      "nodeType": "FunctionCall",
+                      "src": "750:46:37",
+                      "tryCall": false,
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "src": "695:101:37",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "functionReturnParameters": 46610,
+                  "id": 46618,
+                  "nodeType": "Return",
+                  "src": "688:108:37"
+                }
+              ]
+            },
+            "baseFunctions": [
+              46182
+            ],
+            "documentation": {
+              "id": 46600,
+              "nodeType": "StructuredDocumentation",
+              "src": "235:195:37",
+              "text": " @dev returns the current total accumulated rate i.e current accumulated base rate + current accumulated collateral rate of the given collateral\n @dev should never revert!"
+            },
+            "functionSelector": "cf5696cb",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "calculateCurrentTotalAccumulatedRate",
+            "nameLocation": "444:36:37",
+            "parameters": {
+              "id": 46607,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 46603,
+                  "mutability": "mutable",
+                  "name": "_baseRateInfo",
+                  "nameLocation": "514:13:37",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 46620,
+                  "src": "490:37:37",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_RateInfo_$46280_calldata_ptr",
+                    "typeString": "struct IVault.RateInfo"
+                  },
+                  "typeName": {
+                    "id": 46602,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 46601,
+                      "name": "Vault.RateInfo",
+                      "nameLocations": [
+                        "490:5:37",
+                        "496:8:37"
+                      ],
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 46280,
+                      "src": "490:14:37"
+                    },
+                    "referencedDeclaration": 46280,
+                    "src": "490:14:37",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_RateInfo_$46280_storage_ptr",
+                      "typeString": "struct IVault.RateInfo"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 46606,
+                  "mutability": "mutable",
+                  "name": "_collateralRateInfo",
+                  "nameLocation": "561:19:37",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 46620,
+                  "src": "537:43:37",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_RateInfo_$46280_calldata_ptr",
+                    "typeString": "struct IVault.RateInfo"
+                  },
+                  "typeName": {
+                    "id": 46605,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 46604,
+                      "name": "Vault.RateInfo",
+                      "nameLocations": [
+                        "537:5:37",
+                        "543:8:37"
+                      ],
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 46280,
+                      "src": "537:14:37"
+                    },
+                    "referencedDeclaration": 46280,
+                    "src": "537:14:37",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_RateInfo_$46280_storage_ptr",
+                      "typeString": "struct IVault.RateInfo"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "480:106:37"
+            },
+            "returnParameters": {
+              "id": 46610,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 46609,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 46620,
+                  "src": "610:7:37",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 46608,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "610:7:37",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "609:9:37"
+            },
+            "scope": 46648,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 46647,
+            "nodeType": "FunctionDefinition",
+            "src": "809:431:37",
+            "nodes": [],
+            "body": {
+              "id": 46646,
+              "nodeType": "Block",
+              "src": "915:325:37",
+              "nodes": [],
+              "statements": [
+                {
+                  "assignments": [
+                    46629
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 46629,
+                      "mutability": "mutable",
+                      "name": "_currentAccumulatedRate",
+                      "nameLocation": "1004:23:37",
+                      "nodeType": "VariableDeclaration",
+                      "scope": 46646,
+                      "src": "996:31:37",
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      },
+                      "typeName": {
+                        "id": 46628,
+                        "name": "uint256",
+                        "nodeType": "ElementaryTypeName",
+                        "src": "996:7:37",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      },
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 46643,
+                  "initialValue": {
+                    "commonType": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    },
+                    "id": 46642,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftExpression": {
+                      "expression": {
+                        "id": 46630,
+                        "name": "_rateInfo",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 46623,
+                        "src": "1042:9:37",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_struct$_RateInfo_$46280_calldata_ptr",
+                          "typeString": "struct IVault.RateInfo calldata"
+                        }
+                      },
+                      "id": 46631,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "memberLocation": "1052:15:37",
+                      "memberName": "accumulatedRate",
+                      "nodeType": "MemberAccess",
+                      "referencedDeclaration": 46277,
+                      "src": "1042:25:37",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "nodeType": "BinaryOperation",
+                    "operator": "+",
+                    "rightExpression": {
+                      "components": [
+                        {
+                          "commonType": {
+                            "typeIdentifier": "t_uint256",
+                            "typeString": "uint256"
+                          },
+                          "id": 46640,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "leftExpression": {
+                            "expression": {
+                              "id": 46632,
+                              "name": "_rateInfo",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": 46623,
+                              "src": "1071:9:37",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_struct$_RateInfo_$46280_calldata_ptr",
+                                "typeString": "struct IVault.RateInfo calldata"
+                              }
+                            },
+                            "id": 46633,
+                            "isConstant": false,
+                            "isLValue": false,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "memberLocation": "1081:4:37",
+                            "memberName": "rate",
+                            "nodeType": "MemberAccess",
+                            "referencedDeclaration": 46275,
+                            "src": "1071:14:37",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint256",
+                              "typeString": "uint256"
+                            }
+                          },
+                          "nodeType": "BinaryOperation",
+                          "operator": "*",
+                          "rightExpression": {
+                            "components": [
+                              {
+                                "commonType": {
+                                  "typeIdentifier": "t_uint256",
+                                  "typeString": "uint256"
+                                },
+                                "id": 46638,
+                                "isConstant": false,
+                                "isLValue": false,
+                                "isPure": false,
+                                "lValueRequested": false,
+                                "leftExpression": {
+                                  "expression": {
+                                    "id": 46634,
+                                    "name": "block",
+                                    "nodeType": "Identifier",
+                                    "overloadedDeclarations": [],
+                                    "referencedDeclaration": -4,
+                                    "src": "1089:5:37",
+                                    "typeDescriptions": {
+                                      "typeIdentifier": "t_magic_block",
+                                      "typeString": "block"
+                                    }
+                                  },
+                                  "id": 46635,
+                                  "isConstant": false,
+                                  "isLValue": false,
+                                  "isPure": false,
+                                  "lValueRequested": false,
+                                  "memberLocation": "1095:9:37",
+                                  "memberName": "timestamp",
+                                  "nodeType": "MemberAccess",
+                                  "src": "1089:15:37",
+                                  "typeDescriptions": {
+                                    "typeIdentifier": "t_uint256",
+                                    "typeString": "uint256"
+                                  }
+                                },
+                                "nodeType": "BinaryOperation",
+                                "operator": "-",
+                                "rightExpression": {
+                                  "expression": {
+                                    "id": 46636,
+                                    "name": "_rateInfo",
+                                    "nodeType": "Identifier",
+                                    "overloadedDeclarations": [],
+                                    "referencedDeclaration": 46623,
+                                    "src": "1107:9:37",
+                                    "typeDescriptions": {
+                                      "typeIdentifier": "t_struct$_RateInfo_$46280_calldata_ptr",
+                                      "typeString": "struct IVault.RateInfo calldata"
+                                    }
+                                  },
+                                  "id": 46637,
+                                  "isConstant": false,
+                                  "isLValue": false,
+                                  "isPure": false,
+                                  "lValueRequested": false,
+                                  "memberLocation": "1117:14:37",
+                                  "memberName": "lastUpdateTime",
+                                  "nodeType": "MemberAccess",
+                                  "referencedDeclaration": 46279,
+                                  "src": "1107:24:37",
+                                  "typeDescriptions": {
+                                    "typeIdentifier": "t_uint256",
+                                    "typeString": "uint256"
+                                  }
+                                },
+                                "src": "1089:42:37",
+                                "typeDescriptions": {
+                                  "typeIdentifier": "t_uint256",
+                                  "typeString": "uint256"
+                                }
+                              }
+                            ],
+                            "id": 46639,
+                            "isConstant": false,
+                            "isInlineArray": false,
+                            "isLValue": false,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "nodeType": "TupleExpression",
+                            "src": "1088:44:37",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_uint256",
+                              "typeString": "uint256"
+                            }
+                          },
+                          "src": "1071:61:37",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_uint256",
+                            "typeString": "uint256"
+                          }
+                        }
+                      ],
+                      "id": 46641,
+                      "isConstant": false,
+                      "isInlineArray": false,
+                      "isLValue": false,
+                      "isPure": false,
+                      "lValueRequested": false,
+                      "nodeType": "TupleExpression",
+                      "src": "1070:63:37",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "src": "1042:91:37",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "996:137:37"
+                },
+                {
+                  "expression": {
+                    "id": 46644,
+                    "name": "_currentAccumulatedRate",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "referencedDeclaration": 46629,
+                    "src": "1210:23:37",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "functionReturnParameters": 46627,
+                  "id": 46645,
+                  "nodeType": "Return",
+                  "src": "1203:30:37"
+                }
+              ]
+            },
+            "baseFunctions": [
+              46190
+            ],
+            "functionSelector": "d14a27fd",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "calculateCurrentAccumulatedRate",
+            "nameLocation": "818:31:37",
+            "parameters": {
+              "id": 46624,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 46623,
+                  "mutability": "mutable",
+                  "name": "_rateInfo",
+                  "nameLocation": "874:9:37",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 46647,
+                  "src": "850:33:37",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_RateInfo_$46280_calldata_ptr",
+                    "typeString": "struct IVault.RateInfo"
+                  },
+                  "typeName": {
+                    "id": 46622,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 46621,
+                      "name": "Vault.RateInfo",
+                      "nameLocations": [
+                        "850:5:37",
+                        "856:8:37"
+                      ],
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 46280,
+                      "src": "850:14:37"
+                    },
+                    "referencedDeclaration": 46280,
+                    "src": "850:14:37",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_RateInfo_$46280_storage_ptr",
+                      "typeString": "struct IVault.RateInfo"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "849:35:37"
+            },
+            "returnParameters": {
+              "id": 46627,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 46626,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 46647,
+                  "src": "906:7:37",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 46625,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "906:7:37",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "905:9:37"
+            },
+            "scope": 46648,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [
+          {
+            "baseName": {
+              "id": 46598,
+              "name": "IRate",
+              "nameLocations": [
+                "223:5:37"
+              ],
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 46191,
+              "src": "223:5:37"
+            },
+            "id": 46599,
+            "nodeType": "InheritanceSpecifier",
+            "src": "223:5:37"
+          }
+        ],
+        "canonicalName": "SimpleInterestRate",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "linearizedBaseContracts": [
+          46648,
+          46191
+        ],
+        "name": "SimpleInterestRate",
+        "nameLocation": "201:18:37",
+        "scope": 46649,
+        "usedErrors": [],
+        "usedEvents": []
+      }
+    ],
+    "license": "GPL-3.0"
+  },
+  "id": 37
+}
