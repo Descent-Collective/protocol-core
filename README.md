@@ -10,6 +10,15 @@
 | Currency Contract (xNGN) | 0xee2bDAE7896910c49BeA25106B9f8e9f4B671c82 |
 | Feed Contract            | 0x970066EE55DF2134D1b52451afb49034AE5Fa29a |
 
+#### Base Sepolia
+
+| Contract Name            | Addresses                                  |
+| ------------------------ | ------------------------------------------ |
+| Vault Contract           | 0x18196CCaA8C2844c82B40a8bDCa27349C7466280 |
+| Currency Contract (xNGN) | 0x5d0583Ef20884C0b175046d515Ec227200C12C89 |
+| Feed Contract            | 0x94D80B2EA3cda86bF350DD7860e1171701F284c8 |
+| Rate Contract            | 0x774843f6Baa4AAE62F026a8aF3c1C6FF3e55Ca39 |
+
 To install libraries needed, run:
 
 ```zsh

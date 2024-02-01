@@ -6,7 +6,7 @@ import {Vault, IVault, Currency} from "../src/vault.sol";
 import {Feed, IOSM} from "../src/modules/feed.sol";
 import {ERC20Token} from "../src/mocks/ERC20Token.sol";
 import {ErrorsAndEvents} from "./helpers/ErrorsAndEvents.sol";
-import {IRate, SimpleInterestRate} from "../src/modules/simpleInterestRate.sol";
+import {IRate, SimpleInterestRate} from "../src/modules/rate.sol";
 import {Median} from "descent-collective/oracle-module/median.sol";
 import {OSM} from "descent-collective/oracle-module/osm.sol";
 import {SignatureCheckerLib} from "solady/utils/SignatureCheckerLib.sol";
@@ -16,7 +16,8 @@ contract BaseTest is Test, ErrorsAndEvents {
 
     bytes constant INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR =
         abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 17);
-    bytes constant ENUM_UNDERFLOW_OVERFLOW_PANIC_ERROR = abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 33);
+    bytes constant ENUM_UNDERFLOW_OVERFLOW_PANIC_ERROR =
+        abi.encodeWithSelector(bytes4(keccak256("Panic(uint256)")), 33);
     uint256 constant TEN_YEARS = 365 days * 10;
     uint256 constant MAX_TOKEN_DECIMALS = 18;
     uint256 constant FALSE = 1;
@@ -42,7 +43,8 @@ contract BaseTest is Test, ErrorsAndEvents {
     address node0 = vm.addr(uint256(keccak256("Node0")));
     uint256 onePercentPerSecondInterestRate = uint256(1e18) / 365 days;
     uint256 oneAndHalfPercentPerSecondInterestRate = uint256(1.5e18) / 365 days;
-    address testStabilityModule = address(uint160(uint256(keccak256("stability module"))));
+    address testStabilityModule =
+        address(uint160(uint256(keccak256("stability module"))));
 
     function labelAddresses() private {
         vm.label(owner, "Owner");
@@ -70,7 +72,11 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         usdc = new ERC20Token("Circle USD", "USDC", 6); // changing the last parameter her i.e decimals and running th tests shows that it works for all token decimals <= 18
 
-        vault = new Vault(xNGN, onePercentPerSecondInterestRate, type(uint256).max);
+        vault = new Vault(
+            xNGN,
+            onePercentPerSecondInterestRate,
+            type(uint256).max
+        );
 
         feed = new Feed(vault);
 
@@ -82,7 +88,12 @@ contract BaseTest is Test, ErrorsAndEvents {
         osm = new OSM(median);
 
         vault.createCollateralType(
-            usdc, oneAndHalfPercentPerSecondInterestRate, 50e18, 10e18, type(uint256).max, 100 * (10 ** usdc.decimals())
+            usdc,
+            oneAndHalfPercentPerSecondInterestRate,
+            50e18,
+            10e18,
+            type(uint256).max,
+            100 * (10 ** usdc.decimals())
         );
         vault.updateFeedModule(address(feed));
         vault.updateRateModule(simpleInterestRate);
@@ -92,19 +103,37 @@ contract BaseTest is Test, ErrorsAndEvents {
         // set the osm of usdc collateral
         feed.setCollateralOSM(usdc, IOSM(address(osm)));
         // sign and update price
-        (uint256[] memory _prices, uint256[] memory _timestamps, bytes[] memory _signatures) =
-            updateParameters(median, uint256(keccak256("Node0")), 1000e6);
+        (
+            uint256[] memory _prices,
+            uint256[] memory _timestamps,
+            bytes[] memory _signatures
+        ) = updateParameters(median, uint256(keccak256("Node0")), 1000e6);
         median.update(_prices, _timestamps, _signatures);
         // update osm to track price of median
         osm.update();
         // tell feed to store osm price
         feed.updatePrice(usdc);
 
-        ERC20Token(address(usdc)).mint(user1, 100_000 * (10 ** usdc.decimals()));
-        ERC20Token(address(usdc)).mint(user2, 100_000 * (10 ** usdc.decimals()));
-        ERC20Token(address(usdc)).mint(user3, 100_000 * (10 ** usdc.decimals()));
-        ERC20Token(address(usdc)).mint(user4, 100_000 * (10 ** usdc.decimals()));
-        ERC20Token(address(usdc)).mint(user5, 100_000 * (10 ** usdc.decimals()));
+        ERC20Token(address(usdc)).mint(
+            user1,
+            100_000 * (10 ** usdc.decimals())
+        );
+        ERC20Token(address(usdc)).mint(
+            user2,
+            100_000 * (10 ** usdc.decimals())
+        );
+        ERC20Token(address(usdc)).mint(
+            user3,
+            100_000 * (10 ** usdc.decimals())
+        );
+        ERC20Token(address(usdc)).mint(
+            user4,
+            100_000 * (10 ** usdc.decimals())
+        );
+        ERC20Token(address(usdc)).mint(
+            user5,
+            100_000 * (10 ** usdc.decimals())
+        );
 
         vm.stopPrank();
 
@@ -152,10 +181,18 @@ contract BaseTest is Test, ErrorsAndEvents {
         _;
     }
 
-    function updateParameters(Median _median, uint256 privKey, uint256 _price)
+    function updateParameters(
+        Median _median,
+        uint256 privKey,
+        uint256 _price
+    )
         private
         view
-        returns (uint256[] memory _prices, uint256[] memory _timestamps, bytes[] memory _signatures)
+        returns (
+            uint256[] memory _prices,
+            uint256[] memory _timestamps,
+            bytes[] memory _signatures
+        )
     {
         _prices = new uint256[](1);
         _timestamps = new uint256[](1);
@@ -167,31 +204,44 @@ contract BaseTest is Test, ErrorsAndEvents {
         _prices[0] = _price;
         _timestamps[0] = block.timestamp;
 
-        bytes32 messageDigest =
-            keccak256(abi.encode(_prices[0], _timestamps[0], _median.currencyPair())).toEthSignedMessageHash();
+        bytes32 messageDigest = keccak256(
+            abi.encode(_prices[0], _timestamps[0], _median.currencyPair())
+        ).toEthSignedMessageHash();
         (_v[0], _r[0], _s[0]) = vm.sign(privKey, messageDigest);
 
         _signatures[0] = abi.encodePacked(_r[0], _s[0], _v[0]);
     }
 
     function getBaseRateInfo() internal view returns (IVault.RateInfo memory) {
-        (uint256 rate, uint256 accumulatedRate, uint256 lastUpdateTime) = vault.baseRateInfo();
+        (uint256 rate, uint256 accumulatedRate, uint256 lastUpdateTime) = vault
+            .baseRateInfo();
 
         return IVault.RateInfo(rate, accumulatedRate, lastUpdateTime);
     }
 
-    function getVaultMapping(ERC20Token _collateralToken, address _owner)
-        internal
-        view
-        returns (IVault.VaultInfo memory)
-    {
-        (uint256 depositedCollateral, uint256 borrowedAmount, uint256 accruedFees, uint256 lastTotalAccumulatedRate) =
-            vault.vaultMapping(_collateralToken, _owner);
+    function getVaultMapping(
+        ERC20Token _collateralToken,
+        address _owner
+    ) internal view returns (IVault.VaultInfo memory) {
+        (
+            uint256 depositedCollateral,
+            uint256 borrowedAmount,
+            uint256 accruedFees,
+            uint256 lastTotalAccumulatedRate
+        ) = vault.vaultMapping(_collateralToken, _owner);
 
-        return IVault.VaultInfo(depositedCollateral, borrowedAmount, accruedFees, lastTotalAccumulatedRate);
+        return
+            IVault.VaultInfo(
+                depositedCollateral,
+                borrowedAmount,
+                accruedFees,
+                lastTotalAccumulatedRate
+            );
     }
 
-    function getCollateralMapping(ERC20Token _collateralToken) internal view returns (IVault.CollateralInfo memory) {
+    function getCollateralMapping(
+        ERC20Token _collateralToken
+    ) internal view returns (IVault.CollateralInfo memory) {
         (
             uint256 totalDepositedCollateral,
             uint256 totalBorrowedAmount,
@@ -204,44 +254,60 @@ contract BaseTest is Test, ErrorsAndEvents {
             uint256 additionalCollateralPrecision
         ) = vault.collateralMapping(_collateralToken);
 
-        return IVault.CollateralInfo(
-            totalDepositedCollateral,
-            totalBorrowedAmount,
-            liquidationThreshold,
-            liquidationBonus,
-            rateInfo,
-            price,
-            debtCeiling,
-            collateralFloorPerPosition,
-            additionalCollateralPrecision
-        );
+        return
+            IVault.CollateralInfo(
+                totalDepositedCollateral,
+                totalBorrowedAmount,
+                liquidationThreshold,
+                liquidationBonus,
+                rateInfo,
+                price,
+                debtCeiling,
+                collateralFloorPerPosition,
+                additionalCollateralPrecision
+            );
     }
 
-    function calculateCurrentTotalAccumulatedRate(ERC20Token _collateralToken) internal view returns (uint256) {
-        IVault.CollateralInfo memory _collateral = getCollateralMapping(_collateralToken);
+    function calculateCurrentTotalAccumulatedRate(
+        ERC20Token _collateralToken
+    ) internal view returns (uint256) {
+        IVault.CollateralInfo memory _collateral = getCollateralMapping(
+            _collateralToken
+        );
         // calculates pending collateral rate and adds it to the last stored collateral rate
-        uint256 _collateralCurrentAccumulatedRate = _collateral.rateInfo.accumulatedRate
-            + (_collateral.rateInfo.rate * (block.timestamp - _collateral.rateInfo.lastUpdateTime));
+        uint256 _collateralCurrentAccumulatedRate = _collateral
+            .rateInfo
+            .accumulatedRate +
+            (_collateral.rateInfo.rate *
+                (block.timestamp - _collateral.rateInfo.lastUpdateTime));
 
         // calculates pending base rate and adds it to the last stored base rate
-        (uint256 _rate, uint256 _accumulatedRate, uint256 _lastUpdateTime) = vault.baseRateInfo();
-        uint256 _baseCurrentAccumulatedRate = _accumulatedRate + (_rate * (block.timestamp - _lastUpdateTime));
+        (
+            uint256 _rate,
+            uint256 _accumulatedRate,
+            uint256 _lastUpdateTime
+        ) = vault.baseRateInfo();
+        uint256 _baseCurrentAccumulatedRate = _accumulatedRate +
+            (_rate * (block.timestamp - _lastUpdateTime));
 
         // adds together to get total rate since inception
         return _collateralCurrentAccumulatedRate + _baseCurrentAccumulatedRate;
     }
 
-    function calculateUserCurrentAccruedFees(ERC20Token _collateralToken, address _owner)
-        internal
-        view
-        returns (uint256 accruedFees)
-    {
-        IVault.VaultInfo memory userVaultInfo = getVaultMapping(_collateralToken, _owner);
-        accruedFees = userVaultInfo.accruedFees
-            + (
-                (calculateCurrentTotalAccumulatedRate(usdc) - userVaultInfo.lastTotalAccumulatedRate)
-                    * userVaultInfo.borrowedAmount
-            ) / HUNDRED_PERCENTAGE;
+    function calculateUserCurrentAccruedFees(
+        ERC20Token _collateralToken,
+        address _owner
+    ) internal view returns (uint256 accruedFees) {
+        IVault.VaultInfo memory userVaultInfo = getVaultMapping(
+            _collateralToken,
+            _owner
+        );
+        accruedFees =
+            userVaultInfo.accruedFees +
+            ((calculateCurrentTotalAccumulatedRate(usdc) -
+                userVaultInfo.lastTotalAccumulatedRate) *
+                userVaultInfo.borrowedAmount) /
+            HUNDRED_PERCENTAGE;
     }
 
     function mutateAddress(address addr) internal pure returns (address) {

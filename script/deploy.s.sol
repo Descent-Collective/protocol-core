@@ -12,7 +12,11 @@ import {SimpleInterestRate, IRate} from "../src/modules/rate.sol";
 contract DeployScript is BaseScript {
     using stdJson for string;
 
-    function run() external broadcast returns (Currency xNGN, Vault vault, Feed feed, IRate rate) {
+    function run()
+        external
+        broadcast
+        returns (Currency xNGN, Vault vault, Feed feed, IRate rate)
+    {
         string memory deployConfigJson = getDeployConfigJson();
         uint256 baseRate = deployConfigJson.readUint(".baseRate");
         uint256 debtCeiling = deployConfigJson.readUint(".debtCeiling");
@@ -35,14 +39,27 @@ contract DeployScript is BaseScript {
 
         console2.log("\n  Getting or deploying usdc contract");
         ERC20Token usdc = getOrCreateUsdc();
-        console2.log("Usdc gotten or deployed successfully at address:", address(usdc));
+        console2.log(
+            "Usdc gotten or deployed successfully at address:",
+            address(usdc)
+        );
 
         console2.log("\n  Creating collateral type");
-        uint256 _rate = deployConfigJson.readUint(".collaterals.USDC.collateralRate");
-        uint256 _liquidationThreshold = deployConfigJson.readUint(".collaterals.USDC.liquidationThreshold");
-        uint256 _liquidationBonus = deployConfigJson.readUint(".collaterals.USDC.liquidationBonus");
-        uint256 _debtCeiling = deployConfigJson.readUint(".collaterals.USDC.debtCeiling");
-        uint256 _collateralFloorPerPosition = deployConfigJson.readUint(".collaterals.USDC.collateralFloorPerPosition");
+        uint256 _rate = deployConfigJson.readUint(
+            ".collaterals.USDC.collateralRate"
+        );
+        uint256 _liquidationThreshold = deployConfigJson.readUint(
+            ".collaterals.USDC.liquidationThreshold"
+        );
+        uint256 _liquidationBonus = deployConfigJson.readUint(
+            ".collaterals.USDC.liquidationBonus"
+        );
+        uint256 _debtCeiling = deployConfigJson.readUint(
+            ".collaterals.USDC.debtCeiling"
+        );
+        uint256 _collateralFloorPerPosition = deployConfigJson.readUint(
+            ".collaterals.USDC.collateralFloorPerPosition"
+        );
         vault.createCollateralType({
             _collateralToken: usdc,
             _rate: _rate,
@@ -56,7 +73,10 @@ contract DeployScript is BaseScript {
         console2.log("  Liquidation threshold:", _liquidationThreshold);
         console2.log("  Liquidation bonus:", _liquidationBonus);
         console2.log("  Debt ceiling:", _debtCeiling);
-        console2.log("  Collateral floor per position:", _collateralFloorPerPosition);
+        console2.log(
+            "  Collateral floor per position:",
+            _collateralFloorPerPosition
+        );
 
         console2.log("\n  Setting feed contract in vault");
         vault.updateFeedModule(address(feed));
@@ -69,7 +89,10 @@ contract DeployScript is BaseScript {
         console2.log("\n  Updating price of usdc from feed");
         uint256 _price = deployConfigJson.readUint(".collaterals.USDC.price");
         feed.mockUpdatePrice(usdc, _price);
-        console2.log("Updating price of usdc from feed done successfully to:", _price);
+        console2.log(
+            "Updating price of usdc from feed done successfully to:",
+            _price
+        );
 
         console2.log("\n  Giving vault minter role for xNGN");
         xNGN.setMinterRole(address(vault), true);
@@ -77,10 +100,14 @@ contract DeployScript is BaseScript {
     }
 
     function getOrCreateUsdc() private returns (ERC20Token usdc) {
-        if (currenctChain == Chains.Localnet) {
+        if (currentChain == Chains.Localnet) {
             usdc = new ERC20Token("Circle USD", "USDC", 6);
         } else {
-            usdc = ERC20Token(getDeployConfigJson().readAddress(".collaterals.USDC.collateralAddress"));
+            usdc = ERC20Token(
+                getDeployConfigJson().readAddress(
+                    ".collaterals.USDC.collateralAddress"
+                )
+            );
         }
     }
 }
