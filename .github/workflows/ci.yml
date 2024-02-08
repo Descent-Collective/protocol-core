@@ -1,0 +1,37 @@
+name: "CI"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{github.workflow}}-${{github.ref}}
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - "sepolia-deploy"
+
+jobs:
+  lint:
+    uses: "Descent-Collective/reusable-workflows/.github/workflows/forge-lint.yml@main"
+
+  build:
+    uses: "Descent-Collective/reusable-workflows/.github/workflows/forge-build.yml@main"
+
+  test-fuzz:
+    needs: ["lint", "build"]
+    uses: "Descent-Collective/reusable-workflows/.github/workflows/forge-test.yml@main"
+    with:
+      foundry-fuzz-runs: 5000
+      foundry-profile: "test-optimized"
+      match-path: "test/fuzz/**/*.sol"
+      name: "Fuzz tests"
+
+  test-invariant:
+    needs: ["lint", "build"]
+    uses: "Descent-Collective/reusable-workflows/.github/workflows/forge-test.yml@main"
+    with:
+      foundry-fuzz-runs: 5000
+      foundry-profile: "test-optimized"
+      match-path: "test/invariant/**/*.sol"
+      name: "Invariant tests"
