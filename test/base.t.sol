@@ -70,11 +70,7 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         usdc = new ERC20Token("Circle USD", "USDC", 6); // changing the last parameter her i.e decimals and running th tests shows that it works for all token decimals <= 18
 
-        vault = new Vault(
-            xNGN,
-            onePercentPerSecondInterestRate,
-            type(uint256).max
-        );
+        vault = new Vault(xNGN, onePercentPerSecondInterestRate, type(uint256).max);
 
         feed = new Feed(vault);
 
