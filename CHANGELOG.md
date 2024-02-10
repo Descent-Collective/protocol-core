@@ -72,3 +72,18 @@ Solidity compiler: [0.8.21]
 - Replace open zeppelin with solady.
 - Use rounding down for liquidation reward calculation
 - Added invariant tests and fix noticed bugs
+
+# Sepolia Version 0.1.1
+
+## Compiler settings
+
+Solidity compiler: [0.8.21]
+
+### contracts
+- Vault Contract: `0x3d35807343CbF4fDb16E42297F2214f62848D032`
+- Currency Contract(xNGN):    `0xB8747e5cce01AA5a51021989BA11aE33097db485`
+- Feed Contract     `0xFBD26B871D55ba56B7a780eF1fF243Db7A3E81f4`
+- Rate Contract     `0x00A0BcB0e2099f4a0564c26e24eBfA866D3235D6`
+
+## Changes
+- Fix rate config bug
