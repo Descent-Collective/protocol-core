@@ -9,7 +9,7 @@ contract ErrorsAndEvents {
     event CurrencyBurned(address indexed owner, uint256 amount);
     event FeesPaid(address indexed owner, uint256 amount);
     event Liquidated(
-        address indexed owner, address liquidator, uint256 currencyAmountPaid, uint256 collateralAmountCovered
+        address indexed vault, address indexed owner, address liquidator, uint256 currencyAmountPaid, uint256 collateralAmountCovered
     );
 
     error ZeroAddress();

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.21;
 
-import {Test, ERC20Token, IVault, Vault, console2, Currency} from "../../base.t.sol";
+import {Test, ERC20Token, IVault, Vault, console2, Currency, Liquidator} from "../../base.t.sol";
+import {ILiquidator} from "../../../src/interfaces/ILiquidator.sol";
 import {VaultGetters} from "../helpers/vaultGetters.sol";
 import {TimeManager} from "../helpers/timeManager.sol";
 
@@ -11,6 +12,7 @@ contract VaultHandler is Test {
     Vault vault;
     ERC20Token usdc;
     Currency xNGN;
+    Liquidator liquidatorContract;
     address owner = vm.addr(uint256(keccak256("OWNER")));
     address user1 = vm.addr(uint256(keccak256("User1")));
     address user2 = vm.addr(uint256(keccak256("User2")));
@@ -29,13 +31,14 @@ contract VaultHandler is Test {
     uint256 public totalMints;
     uint256 public totalBurns;
 
-    constructor(Vault _vault, ERC20Token _usdc, Currency _xNGN, VaultGetters _vaultGetters, TimeManager _timeManager) {
+    constructor(Vault _vault, ERC20Token _usdc, Currency _xNGN, VaultGetters _vaultGetters, TimeManager _timeManager, Liquidator _liquidatorContract) {
         timeManager = _timeManager;
 
         vault = _vault;
         usdc = _usdc;
         vaultGetters = _vaultGetters;
         xNGN = _xNGN;
+        liquidatorContract = _liquidatorContract;
 
         actors[0] = user1;
         actors[1] = user2;
@@ -174,9 +177,8 @@ contract VaultHandler is Test {
     {
         vm.startPrank(liquidator);
 
-        if (vaultGetters.getHealthFactor(vault, usdc, currentOwner)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, currentOwner, address(this), type(uint256).max);
-
+        if (vaultGetters.getHealthFactor(vault, usdc, currentOwner)) vm.expectRevert(ILiquidator.PositionIsSafe.selector);
+        liquidatorContract.liquidate(vault, usdc, currentOwner, address(this), type(uint256).max);
         vm.stopPrank();
     }
 

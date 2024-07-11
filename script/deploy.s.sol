@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {Vault} from "../src/vault.sol";
 import {Currency} from "../src/currency.sol";
+import {Liquidator} from "../src/liquidator.sol";
 import {Feed} from "../src/modules/feed.sol";
 
 import {BaseScript, stdJson, console2} from "./base.s.sol";
@@ -12,7 +13,7 @@ import {SimpleInterestRate, IRate} from "../src/modules/rate.sol";
 contract DeployScript is BaseScript {
     using stdJson for string;
 
-    function run() external broadcast returns (Currency xNGN, Vault vault, Feed feed, IRate rate) {
+    function run() external broadcast returns (Currency xNGN, Liquidator liquidator, Vault vault, Feed feed, IRate rate) {
         string memory deployConfigJson = getDeployConfigJson();
         uint256 baseRate = deployConfigJson.readUint(".baseRate");
         uint256 debtCeiling = deployConfigJson.readUint(".debtCeiling");
@@ -21,8 +22,12 @@ contract DeployScript is BaseScript {
         xNGN = new Currency("xNGN", "xNGN");
         console2.log("xNGN deployed successfully at address:", address(xNGN));
 
+        console2.log("\n Deploying Liquidator contract");
+        liquidator = new Liquidator();
+        console2.log("liquidator deployed successfully at address:", address(liquidator));
+
         console2.log("\n  Deploying vault contract");
-        vault = new Vault(xNGN, baseRate, debtCeiling);
+        vault = new Vault(xNGN, baseRate, debtCeiling, liquidator);
         console2.log("Vault deployed successfully at address:", address(vault));
 
         console2.log("\n  Deploying feed contract");
