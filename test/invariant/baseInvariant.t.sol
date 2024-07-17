@@ -3,6 +3,7 @@ pragma solidity 0.8.21;
 
 import {BaseTest, IVault, Currency} from "../base.t.sol";
 import {VaultHandler} from "./handlers/vaultHandler.sol";
+import {LiquidatorHandler} from "./handlers/liquidatorHandler.sol";
 import {ERC20Handler} from "./handlers/erc20Handler.sol";
 import {OSMHandler} from "./handlers/osmHandler.sol";
 import {MedianHandler} from "./handlers/medianHandler.sol";
@@ -14,6 +15,7 @@ contract BaseInvariantTest is BaseTest {
     TimeManager timeManager;
     VaultGetters vaultGetters;
     VaultHandler vaultHandler;
+    LiquidatorHandler liquidatorHandler;
     ERC20Handler usdcHandler;
     ERC20Handler xNGNHandler;
     OSMHandler osmHandler;
@@ -31,6 +33,7 @@ contract BaseInvariantTest is BaseTest {
         timeManager = new TimeManager();
         vaultGetters = new VaultGetters();
         vaultHandler = new VaultHandler(vault, usdc, xNGN, vaultGetters, timeManager);
+        liquidatorHandler = new LiquidatorHandler(vaultGetters, liquidatorContract, usdc, xNGN,  vault, timeManager);
         usdcHandler = new ERC20Handler(Currency(address(usdc)), timeManager);
         xNGNHandler = new ERC20Handler(xNGN, timeManager);
         osmHandler = new OSMHandler(osm, timeManager);
@@ -45,6 +48,7 @@ contract BaseInvariantTest is BaseTest {
         vm.label(address(osmHandler), "osmHandler");
         vm.label(address(medianHandler), "medianHandler");
         vm.label(address(feedHandler), "feedHandler");
+        vm.label(address(liquidatorHandler), "liquidatorHandler");
 
         // target handlers
         targetContract(address(vaultHandler));
@@ -53,8 +57,9 @@ contract BaseInvariantTest is BaseTest {
         targetContract(address(osmHandler));
         targetContract(address(medianHandler));
         targetContract(address(feedHandler));
+        targetContract(address(liquidatorHandler));
 
-        bytes4[] memory vaultSelectors = new bytes4[](11);
+        bytes4[] memory vaultSelectors = new bytes4[](10);
         vaultSelectors[0] = VaultHandler.depositCollateral.selector;
         vaultSelectors[1] = VaultHandler.withdrawCollateral.selector;
         vaultSelectors[2] = VaultHandler.mintCurrency.selector;
@@ -65,7 +70,6 @@ contract BaseInvariantTest is BaseTest {
         vaultSelectors[7] = VaultHandler.deny.selector;
         vaultSelectors[8] = VaultHandler.updateBaseRate.selector;
         vaultSelectors[9] = VaultHandler.updateCollateralData.selector;
-        vaultSelectors[10] = VaultHandler.liquidate.selector;
 
         bytes4[] memory xNGNSelectors = new bytes4[](4);
         xNGNSelectors[0] = ERC20Handler.transfer.selector;
@@ -89,6 +93,9 @@ contract BaseInvariantTest is BaseTest {
         bytes4[] memory feedSelectors = new bytes4[](1);
         feedSelectors[0] = FeedHandler.updatePrice.selector;
 
+        bytes4[] memory liquidatorSelectors = new bytes4[](1);
+        liquidatorSelectors[0] = LiquidatorHandler.liquidate.selector;
+
         // target selectors of handlers
         targetSelector(FuzzSelector({addr: address(vaultHandler), selectors: vaultSelectors}));
         targetSelector(FuzzSelector({addr: address(xNGNHandler), selectors: xNGNSelectors}));
@@ -96,6 +103,7 @@ contract BaseInvariantTest is BaseTest {
         targetSelector(FuzzSelector({addr: address(osmHandler), selectors: osmSelectors}));
         targetSelector(FuzzSelector({addr: address(medianHandler), selectors: medianSelectors}));
         targetSelector(FuzzSelector({addr: address(feedHandler), selectors: feedSelectors}));
+        targetSelector(FuzzSelector({addr: address(liquidatorHandler), selectors: liquidatorSelectors}));
     }
 
     // forgefmt: disable-start

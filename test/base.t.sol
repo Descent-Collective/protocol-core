@@ -5,6 +5,7 @@ import {Test, StdInvariant, console2} from "forge-std/Test.sol";
 import {Vault, IVault, Currency} from "../src/vault.sol";
 import {Feed, IOSM} from "../src/modules/feed.sol";
 import {ERC20Token} from "../src/mocks/ERC20Token.sol";
+import {Liquidator} from "../src/liquidator.sol";
 import {ErrorsAndEvents} from "./helpers/ErrorsAndEvents.sol";
 import {IRate, SimpleInterestRate} from "../src/modules/rate.sol";
 import {Median} from "descent-collective/oracle-module/median.sol";
@@ -28,6 +29,7 @@ contract BaseTest is Test, ErrorsAndEvents {
     Vault vault;
     Currency xNGN;
     ERC20Token usdc;
+    Liquidator liquidatorContract;
     Feed feed;
     IRate simpleInterestRate;
     OSM osm;
@@ -59,6 +61,7 @@ contract BaseTest is Test, ErrorsAndEvents {
         vm.label(address(usdc), "USDC");
         vm.label(testStabilityModule, "Test stability module");
         vm.label(address(simpleInterestRate), "Simple interest module");
+        vm.label(address(liquidatorContract), "Liquidator");
     }
 
     function setUp() public virtual {
@@ -70,7 +73,9 @@ contract BaseTest is Test, ErrorsAndEvents {
 
         usdc = new ERC20Token("Circle USD", "USDC", 6); // changing the last parameter her i.e decimals and running th tests shows that it works for all token decimals <= 18
 
-        vault = new Vault(xNGN, onePercentPerSecondInterestRate, type(uint256).max);
+        liquidatorContract = new Liquidator();
+
+        vault = new Vault(xNGN, onePercentPerSecondInterestRate, type(uint256).max, liquidatorContract);
 
         feed = new Feed(vault);
 

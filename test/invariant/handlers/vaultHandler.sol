@@ -42,20 +42,6 @@ contract VaultHandler is Test {
         actors[2] = user3;
         actors[3] = user4;
         actors[4] = user5;
-
-        // FOR LIQUIDATIONS BY LIQUIDATOR
-        // mint usdc to address(this)
-        vm.startPrank(owner);
-        Currency(address(usdc)).mint(liquidator, 100_000_000_000 * (10 ** usdc.decimals()));
-        vm.stopPrank();
-
-        // use address(this) to deposit so that it can borrow currency needed for liquidation below
-        vm.startPrank(liquidator);
-        usdc.approve(address(vault), type(uint256).max);
-        vault.depositCollateral(usdc, liquidator, 100_000_000_000 * (10 ** usdc.decimals()));
-        vault.mintCurrency(usdc, liquidator, liquidator, 500_000_000_000e18);
-        xNGN.approve(address(vault), type(uint256).max);
-        vm.stopPrank();
     }
 
     modifier skipTime(uint256 skipTimeSeed) {
@@ -165,19 +151,6 @@ contract VaultHandler is Test {
         amount = bound(amount, 0, maxAmount);
         totalBurns += amount;
         vault.burnCurrency(usdc, currentOwner, amount);
-    }
-
-    function liquidate(uint256 skipTimeSeed, uint256 ownerIndexSeed)
-        external
-        skipTime(skipTimeSeed)
-        setOwner(ownerIndexSeed)
-    {
-        vm.startPrank(liquidator);
-
-        if (vaultGetters.getHealthFactor(vault, usdc, currentOwner)) vm.expectRevert(IVault.PositionIsSafe.selector);
-        vault.liquidate(usdc, currentOwner, address(this), type(uint256).max);
-
-        vm.stopPrank();
     }
 
     function recoverToken(uint256 skipTimeSeed, bool isUsdc, address to) external skipTime(skipTimeSeed) {

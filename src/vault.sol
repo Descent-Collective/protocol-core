@@ -10,6 +10,7 @@ import {Currency} from "./currency.sol";
 import {Pausable} from "./helpers/pausable.sol";
 import {ERC20Token} from "./mocks/ERC20Token.sol";
 import {IRate} from "./interfaces/IRate.sol";
+import {Liquidator} from "./liquidator.sol";
 
 contract Vault is IVault, Ownable, Pausable {
     uint256 private constant PRECISION_DEGREE = 18;
@@ -25,6 +26,8 @@ contract Vault is IVault, Ownable, Pausable {
     address public feedModule; // feed contract address
     IRate public rateModule; // rate calculation module
 
+    Liquidator public liquidator; // liquidator contract address
+
     // Global parameters
     RateInfo public baseRateInfo; // base rate info
     uint256 public debtCeiling; // global debt ceiling
@@ -37,7 +40,7 @@ contract Vault is IVault, Ownable, Pausable {
     mapping(ERC20Token => mapping(address => VaultInfo)) public vaultMapping; // collateral address => user address => vault data
     mapping(address => mapping(address => bool)) public relyMapping; // borrower -> addresss -> is allowed to take actions on borrowers vaults on their behalf
 
-    constructor(Currency _currencyToken, uint256 _baseRate, uint256 _debtCeiling) {
+    constructor(Currency _currencyToken, uint256 _baseRate, uint256 _debtCeiling, Liquidator _liquidatorContract) {
         _initializeOwner(msg.sender);
         CURRENCY_TOKEN = _currencyToken;
 
@@ -45,6 +48,7 @@ contract Vault is IVault, Ownable, Pausable {
         baseRateInfo.rate = _baseRate;
 
         debtCeiling = _debtCeiling;
+        liquidator = _liquidatorContract;
     }
 
     /**
@@ -72,6 +76,16 @@ contract Vault is IVault, Ownable, Pausable {
     modifier onlyOwnerOrReliedUpon(address _owner) {
         if (_owner != msg.sender && !relyMapping[_owner][msg.sender]) {
             revert NotOwnerOrReliedUpon();
+        }
+        _;
+    }
+
+    /**
+     * @dev reverts if the msg.sender is not the 'liquidator' contract
+     */
+    modifier onlyLiquidator() {
+        if (address(liquidator) != msg.sender) {
+            revert NotLiquidatorContract();
         }
         _;
     }
@@ -454,66 +468,94 @@ contract Vault is IVault, Ownable, Pausable {
         _burnCurrency(_collateral, _vault, _owner, msg.sender, _amount);
     }
 
+    // ------------------------------------------------ LIQUIDATOR-ONLY FUNCTIONS------------------------------------------------
     /**
-     * @notice liquidates a vault making sure the liquidation strictly improves the collateral ratio i.e doesn't leave it the same as before or decreases it (if that's possible)
-     *
-     * @param _collateralToken contract address of collateral used by vault that is to be liquidate, also the token to recieved by the `_to` address after liquidation
-     * @param _owner owner of the vault to liquidate
-     * @param _to address to send the liquidated collateral (collateral covered) to
-     * @param _currencyAmountToPay the amount of currency tokens to pay back for `_owner`
-     *
-     * @dev updates fees accrued for `_owner`'s vault since last fee update, this is important as it ensures that the collateral-ratio check at the start and end of the function uses an updated total owed amount i.e (borrowedAmount + accruedFees) when checking `_owner`'s collateral-ratio
-     * @dev should revert if the collateral does not exist
-     *      should revert if the vault is not under-water
-     *      should revert if liqudiation did not strictly imporve the collateral ratio of the vault
+     * @dev increments accrued fees of a vault by it's accrued fees since it's`_vault.lastUpdateTime`.
+     * @dev should never revert!
+     * @dev exposes '_accrueFees' for external access by 'liquidator' contract
+     * @dev only 'liquidator' contract can call
      */
-    function liquidate(ERC20Token _collateralToken, address _owner, address _to, uint256 _currencyAmountToPay)
-        external
-        collateralExists(_collateralToken)
-    {
-        // get collateral ratio
-        // require it's below liquidation threshold
-        // liquidate and take discount
-        // burn currency from caller
-
+    function accrueLiquidationFees(ERC20Token _collateralToken, address _owner) external onlyLiquidator {
         VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
         CollateralInfo storage _collateral = collateralMapping[_collateralToken];
 
-        // need to accrue fees first in order to use updated fees for collateral ratio calculation below
         _accrueFees(_collateral, _vault);
+    }
 
-        uint256 _preCollateralRatio = _getCollateralRatio(_collateral, _vault);
-        if (_preCollateralRatio <= _collateral.liquidationThreshold) {
-            revert PositionIsSafe();
-        }
+    /**
+     * @dev returns the collateral ratio of a vault where anything below 1e18 is liquidatable
+     * @dev should never revert!
+     * @dev exposes '_getCollateralRatio' for external access by 'liquidator' contract
+     * @dev only 'liquidator' contract can call
+     */
+    function getCollateralRatioAndLiquidationThreshold(ERC20Token _collateralToken, address _owner) 
+        external 
+        view 
+        onlyLiquidator 
+        returns(uint256 collateralRatio, uint256 liquidationThreshold)  
+    {
+        VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
+        CollateralInfo storage _collateral = collateralMapping[_collateralToken];
 
-        if (_currencyAmountToPay == type(uint256).max) {
-            // This is here to prevent frontrunning of full liquidation
-            // malicious owners can monitor the mempool and frontrun any attempt to liquidate their position by liquidating it
-            // themselves but partially, (by 1 wei of collateral is enough) which causes underflow when the liquidator's tx is to be executed
-            // With this, liquidators can parse in type(uint256).max to liquidate everything regardless of the current borrowed amount.
-            _currencyAmountToPay = _vault.borrowedAmount + _vault.accruedFees;
-        }
+        collateralRatio = _getCollateralRatio(_collateral, _vault);
+        liquidationThreshold = _collateral.liquidationThreshold;
+    }
 
-        uint256 _collateralAmountCovered = _getCollateralAmountFromCurrencyValue(_collateral, _currencyAmountToPay);
-        uint256 _bonus = (_collateralAmountCovered * _collateral.liquidationBonus) / HUNDRED_PERCENTAGE;
-        uint256 _total = _collateralAmountCovered + _bonus;
+    /**
+     * @dev returns the conversion of an amount of currency to a given supported collateral
+     * @dev only 'liquidator' contract can call
+     * @dev should never revert!
+     */
+    function getCollateralAmountFromCurrencyValue(ERC20Token _collateralToken, uint256 _amount)
+        external
+        view
+        onlyLiquidator
+        returns (uint256)
+    {
+        CollateralInfo storage _collateral = collateralMapping[_collateralToken];
 
-        // To make liquidations always possible, if _vault.depositedCollateral not enough to pay bonus, give out highest possible bonus
-        // For situations where the user's vault is insolvent, this would be called by the system stability module after a debt auction is used to raise the currency
-        if (_total > _vault.depositedCollateral) {
-            _total = _vault.depositedCollateral;
-        }
+        return (_amount * PRECISION)
+            / (_collateral.price * ADDITIONAL_FEED_PRECISION * (10 ** _collateral.additionalCollateralPrecision));
+    }
 
-        emit Liquidated(_owner, msg.sender, _currencyAmountToPay, _total);
+    /**
+     * @dev exposes '_withdrawCollateral' function for external access by liquidator contract
+     * @dev only liquidator contract can call
+     */
+    function withdrawCollateralL(ERC20Token _collateralToken, address _owner, address _to, uint256 _amount) external onlyLiquidator {
+        _withdrawCollateral(_collateralToken, _owner, _to, _amount);
+    }
 
-        _withdrawCollateral(_collateralToken, _owner, _to, _total);
-        _burnCurrency(_collateral, _vault, _owner, msg.sender, _currencyAmountToPay);
+    /**
+     * @dev burns currency from `_from` or/and tranfers currency from `_from` to this contract
+     * @dev if `_amount` > the vaults borrowed amount, the rest is used to pay accrued fees (if it is too big for that too, it reverts). else it's only used to pay the borrowed amount
+     * @dev borrowed amount paid back is burnt while accrued fees paid back is sent to this contract
+     * @dev reverts if CURRENCY_TOKEN.burn() fails
+     *      reverts if _payAccruedFees() fails
+     * @dev exposes '_burnCurrency' function for external access by liquidator contract
+     * @dev only 'liquidator' contract can call
+     */
+    function burnCurrencyL(
+        ERC20Token _collateralToken,
+        address _owner,
+        address _from,
+        uint256 _amount
+    ) external onlyLiquidator {
+        VaultInfo storage _vault = vaultMapping[_collateralToken][_owner];
+        CollateralInfo storage _collateral = collateralMapping[_collateralToken];
+        
+        _burnCurrency(_collateral, _vault, _owner, _from, _amount);
+    }
 
-        // collateral ratio must never increase or stay the same during a liquidation.
-        if (_preCollateralRatio <= _getCollateralRatio(_collateral, _vault)) {
-            revert CollateralRatioNotImproved();
-        }
+    function getCollateralRate(ERC20Token _collateralToken) external view returns(uint256 rate) {
+        return collateralMapping[_collateralToken].rateInfo.rate;
+    }
+
+    /**
+     * @dev exposes 'HUNDRED_PERCENTAGE' value for liquidator contract
+     */
+    function hundredPercentage() external pure returns(uint256) {
+        return HUNDRED_PERCENTAGE;
     }
 
     // ------------------------------------------------ INTERNAL FUNCTIONS ------------------------------------------------
@@ -666,19 +708,6 @@ contract Vault is IVault, Ownable, Pausable {
                 * ADDITIONAL_FEED_PRECISION
         ) / PRECISION;
         return _currencyValueOfCollateral;
-    }
-
-    /**
-     * @dev returns the conversion of an amount of currency to a given supported collateral
-     * @dev should never revert!
-     */
-    function _getCollateralAmountFromCurrencyValue(CollateralInfo storage _collateral, uint256 _amount)
-        private
-        view
-        returns (uint256)
-    {
-        return (_amount * PRECISION)
-            / (_collateral.price * ADDITIONAL_FEED_PRECISION * (10 ** _collateral.additionalCollateralPrecision));
     }
 
     /**

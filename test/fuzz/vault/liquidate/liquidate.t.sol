@@ -35,7 +35,7 @@ contract LiquidateTest is BaseTest {
         vm.expectRevert(CollateralDoesNotExist.selector);
 
         // call with non existing collateral
-        vault.liquidate(collateral, user, user2, amount);
+        liquidatorContract.liquidate(vault, collateral, user, user2, amount);
     }
 
     modifier whenCollateralExists() {
@@ -52,7 +52,7 @@ contract LiquidateTest is BaseTest {
 
         // it should revert with custom error PositionIsSafe()
         vm.expectRevert(PositionIsSafe.selector);
-        vault.liquidate(usdc, user1, user2, amount);
+        liquidatorContract.liquidate(vault, usdc, user1, user2, amount);
     }
 
     modifier whenTheVaultIsNotSafe() {
@@ -71,7 +71,7 @@ contract LiquidateTest is BaseTest {
 
         // it should revert with underflow error
         vm.expectRevert(INTEGER_UNDERFLOW_OVERFLOW_PANIC_ERROR);
-        vault.liquidate(usdc, user1, user2, amount);
+        liquidatorContract.liquidate(vault, usdc, user1, user2, amount);
     }
 
     modifier whenTheCurrencyAmountToBurnIsLessThanOrEqualToTheOwnersBorrowedAmountAndAccruedFees() {
@@ -88,7 +88,7 @@ contract LiquidateTest is BaseTest {
 
         // it should revert with custom error CollateralRatioNotImproved()
         vm.expectRevert(CollateralRatioNotImproved.selector);
-        vault.liquidate(usdc, user1, user2, 1);
+        liquidatorContract.liquidate(vault, usdc, user1, user2, 1);
     }
 
     modifier whenVaultsCollateralRatioImprovesAfterLiquidation() {
@@ -135,8 +135,8 @@ contract LiquidateTest is BaseTest {
         uint256 initialUser2Bal = usdc.balanceOf(user2);
 
         // it should emit Liquidated() event with with expected indexed and unindexed parameters
-        vm.expectEmit(true, false, false, true, address(vault));
-        emit Liquidated(user1, user2, totalCurrencyPaid, collateralToPayOut);
+        vm.expectEmit(true, true, false, true, address(liquidatorContract));
+        emit Liquidated(address(vault), user1, user2, totalCurrencyPaid, collateralToPayOut);
 
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
@@ -148,7 +148,7 @@ contract LiquidateTest is BaseTest {
 
         // liquidate
         uint256 amount = useUintMax ? type(uint256).max : totalCurrencyPaid;
-        vault.liquidate(usdc, user1, user2, amount);
+        liquidatorContract.liquidate(vault, usdc, user1, user2, amount);
 
         IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
@@ -210,15 +210,15 @@ contract LiquidateTest is BaseTest {
         uint256 initialUser2Bal = usdc.balanceOf(user2);
 
         // it should emit Liquidated() event with with expected indexed and unindexed parameters
-        vm.expectEmit(true, false, false, true, address(vault));
-        emit Liquidated(user1, user2, amountToLiquidate, collateralToPayOut);
+        vm.expectEmit(true, true, false, true, address(liquidatorContract));
+        emit Liquidated(address(vault), user1, user2, amountToLiquidate, collateralToPayOut);
 
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
         emit CurrencyBurned(user1, amountToLiquidate);
 
         // liquidate
-        vault.liquidate(usdc, user1, user2, amountToLiquidate);
+        liquidatorContract.liquidate(vault, usdc, user1, user2, amountToLiquidate);
 
         IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);
@@ -281,8 +281,8 @@ contract LiquidateTest is BaseTest {
         uint256 initialUser2Bal = usdc.balanceOf(user2);
 
         // it should emit Liquidated() event with with expected indexed and unindexed parameters
-        vm.expectEmit(true, false, false, true, address(vault));
-        emit Liquidated(user1, user2, amountToLiquidate, collateralToPayOut);
+        vm.expectEmit(true, true, false, true, address(liquidatorContract));
+        emit Liquidated(address(vault), user1, user2, amountToLiquidate, collateralToPayOut);
 
         // it should emit CurrencyBurned() event with with expected indexed and unindexed parameters
         vm.expectEmit(true, false, false, true, address(vault));
@@ -293,7 +293,7 @@ contract LiquidateTest is BaseTest {
         emit FeesPaid(user1, amountToLiquidate - initialUserVaultInfo.borrowedAmount);
 
         // liquidate
-        vault.liquidate(usdc, user1, user2, amountToLiquidate);
+        liquidatorContract.liquidate(vault, usdc, user1, user2, amountToLiquidate);
 
         IVault.VaultInfo memory afterUserVaultInfo = getVaultMapping(usdc, user1);
         IVault.CollateralInfo memory afterCollateralInfo = getCollateralMapping(usdc);

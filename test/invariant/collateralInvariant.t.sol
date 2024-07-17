@@ -80,20 +80,20 @@ contract CollateralInvariantTest is BaseInvariantTest {
         vm.startPrank(liquidator);
 
         if (vaultGetters.getHealthFactor(vault, usdc, user1)) vm.expectRevert(PositionIsSafe.selector);
-        vault.liquidate(usdc, user1, address(this), type(uint256).max);
+        liquidatorContract.liquidate(vault, usdc, user1, address(this), type(uint256).max);
 
         if (vaultGetters.getHealthFactor(vault, usdc, user2)) vm.expectRevert(PositionIsSafe.selector);
-        vault.liquidate(usdc, user2, address(this), type(uint256).max);
+        liquidatorContract.liquidate(vault, usdc, user2, address(this), type(uint256).max);
 
         if (vaultGetters.getHealthFactor(vault, usdc, user3)) vm.expectRevert(PositionIsSafe.selector);
-        vault.liquidate(usdc, user3, address(this), type(uint256).max);
+        liquidatorContract.liquidate(vault, usdc, user3, address(this), type(uint256).max);
 
         if (vaultGetters.getHealthFactor(vault, usdc, user4)) vm.expectRevert(PositionIsSafe.selector);
-        vault.liquidate(usdc, user4, address(this), type(uint256).max);
+        liquidatorContract.liquidate(vault, usdc, user4, address(this), type(uint256).max);
 
         if (vaultGetters.getHealthFactor(vault, usdc, user5)) vm.expectRevert(PositionIsSafe.selector);
-        vault.liquidate(usdc, user5, address(this), type(uint256).max);
-    }
+        liquidatorContract.liquidate(vault, usdc, user5, address(this), type(uint256).max);
+     }
 
     function invariant_collateral_rateInfo_rate() external useCurrentTime {
         assertGt(getCollateralMapping(usdc).rateInfo.rate, 0);
